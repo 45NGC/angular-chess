@@ -13,5 +13,5 @@ export interface Piece {
 	color: PieceColor;
 }
 
-export const isWhite = (p: Piece | null) => p?.color === 'white';
-export const isBlack = (p: Piece | null) => p?.color === 'black';
+export const isWhite = (p: Piece | null): boolean => p?.color === 'white';
+export const isBlack = (p: Piece | null): boolean => p?.color === 'black';
