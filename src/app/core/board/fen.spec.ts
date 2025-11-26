@@ -1,6 +1,5 @@
 import { Board } from './board';
 import { loadFEN, boardToFEN } from './fen';
-import { Piece } from './piece';
 
 describe('FEN Parser', () => {
 
