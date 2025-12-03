@@ -38,4 +38,42 @@ describe('Board', () => {
 
 		expect(board.get(10)).toEqual(piece);
 	});
+
+	it('clone() should produce a deep copy of board', () => {
+		const board = new Board();
+		const piece: Piece = { type: 'queen', color: 'white' };
+		board.set(5, piece);
+
+		const cloned = board.clone();
+
+		expect(cloned.get(5)).toEqual(piece);
+
+		expect(cloned).not.toBe(board);
+		expect(cloned.squares).not.toBe(board.squares);
+
+		cloned.set(5, null);
+		expect(board.get(5)).toEqual(piece);
+	});
+
+	it('findKing() should return the correct square of the king', () => {
+		const board = new Board();
+		const whiteKing: Piece = { type: 'king', color: 'white' };
+		const blackKing: Piece = { type: 'king', color: 'black' };
+
+		board.set(7, whiteKing);
+		board.set(60, blackKing);
+
+		expect(board.findKing('white')).toBe(7);
+		expect(board.findKing('black')).toBe(60);
+	});
+
+	it('findKing() should throw if the king is not found', () => {
+		const board = new Board();
+
+		expect(() => board.findKing('white'))
+			.toThrowError('King of color white not found on board');
+
+		expect(() => board.findKing('black'))
+			.toThrowError('King of color black not found on board');
+	});
 });
