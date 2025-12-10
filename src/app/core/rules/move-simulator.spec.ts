@@ -71,4 +71,57 @@ describe("MoveSimulator", () => {
 		expect(result.get(25)).toEqual(piece);
 	});
 
+	test("promotes a pawn when move.promotion is set", () => {
+		const board = new Board();
+		const pawn: Piece = { type: "pawn", color: "white" };
+		board.set(48, pawn);
+		const move: Move = {
+			from: 48,
+			to: 56,
+			promotion: "queen"
+		};
+
+		const result = MoveSimulator.simulate(board, move);
+
+		expect(result.get(56)).toEqual({ type: "queen", color: "white" });
+		expect(result.get(48)).toBeNull();
+	});
+
+	test("promotion keeps the correct color", () => {
+		const board = new Board();
+		const pawn: Piece = { type: "pawn", color: "black" };
+		board.set(15, pawn);
+
+		const move: Move = {
+			from: 15,
+			to: 7,
+			promotion: "rook"
+		};
+
+		const result = MoveSimulator.simulate(board, move);
+
+		expect(result.get(7)).toEqual({ type: "rook", color: "black" });
+	});
+
+	test("promotion does not affect other squares", () => {
+		const board = new Board();
+		const pawn: Piece = { type: "pawn", color: "white" };
+		const other: Piece = { type: "knight", color: "black" };
+
+		board.set(48, pawn);
+		board.set(22, other);
+
+		const move: Move = {
+			from: 48,
+			to: 56,
+			promotion: "bishop"
+		};
+
+		const result = MoveSimulator.simulate(board, move);
+
+		expect(result.get(22)).toEqual(other);
+		expect(result.get(48)).toBeNull();
+		expect(result.get(56)).toEqual({ type: "bishop", color: "white" });
+	});
+
 });

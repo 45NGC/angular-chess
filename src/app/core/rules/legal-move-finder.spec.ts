@@ -224,6 +224,110 @@ describe('LegalMoveFinder', () => {
 
 			expect(moves).toEqual([]);
 		});
+
+		// ------------------------------------------------------------
+		// PROMOTIONS
+		// ------------------------------------------------------------
+		it('white pawn promotes when moving forward into last rank', () => {
+			const board = createEmptyBoard();
+			const pawn: Piece = { type: 'pawn', color: 'white' };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			const pawnSquare = toIndex(6, 3);       // d7
+			const target = toIndex(7, 3);           // d8
+
+			board.set(pawnSquare, pawn);
+			board.set(toIndex(0, 4), whiteKing);
+			board.set(toIndex(0, 7), blackKing);
+
+			const pawnMoves = moveFinder.getLegalMoves(board, pawnSquare);
+
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: target, promotion: 'queen' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: target, promotion: 'rook' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: target, promotion: 'bishop' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: target, promotion: 'knight' });
+
+			expect(pawnMoves).toHaveLength(4);
+		});
+
+		it('white pawn promotes when capturing into last rank', () => {
+			const board = createEmptyBoard();
+			const pawn: Piece = { type: 'pawn', color: 'white' };
+			const enemy: Piece = { type: 'rook', color: 'black' };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			const pawnSquare = toIndex(6, 3);         // d7
+			const enemySquare = toIndex(7, 4);        // e8
+
+			board.set(pawnSquare, pawn);
+			board.set(enemySquare, enemy);
+			board.set(toIndex(0, 4), whiteKing);
+			board.set(toIndex(0, 7), blackKing);
+
+			const pawnMoves = moveFinder.getLegalMoves(board, pawnSquare);
+
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: enemySquare, promotion: 'queen' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: enemySquare, promotion: 'rook' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: enemySquare, promotion: 'bishop' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: enemySquare, promotion: 'knight' });
+
+			// It only has this moves available because the king is under attack, so the pawn can not 
+			// promote going forward because this would let the king under attack of the black rook
+			expect(pawnMoves).toHaveLength(4);
+		});
+
+		it('black pawn promotes when moving forward into last rank', () => {
+			const board = createEmptyBoard();
+			const pawn: Piece = { type: 'pawn', color: 'black' };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			const pawnSquare = toIndex(1, 3);       // d2
+			const target = toIndex(0, 3);           // d1
+
+			board.set(pawnSquare, pawn);
+			board.set(toIndex(7, 4), blackKing);
+			board.set(toIndex(7, 7), whiteKing);
+
+			const pawnMoves = moveFinder.getLegalMoves(board, pawnSquare);
+
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: target, promotion: 'queen' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: target, promotion: 'rook' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: target, promotion: 'bishop' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: target, promotion: 'knight' });
+
+			expect(pawnMoves).toHaveLength(4);
+		});
+
+		it('black pawn promotes when capturing into last rank', () => {
+			const board = createEmptyBoard();
+			const pawn: Piece = { type: 'pawn', color: 'black' };
+			const enemy: Piece = { type: 'queen', color: 'white' };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			const pawnSquare = toIndex(1, 3);       // d2
+			const enemySquare = toIndex(0, 2);      // c1
+
+			board.set(pawnSquare, pawn);
+			board.set(enemySquare, enemy);
+			board.set(toIndex(7, 2), blackKing);
+			board.set(toIndex(7, 7), whiteKing);
+
+			const pawnMoves = moveFinder.getLegalMoves(board, pawnSquare);
+
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: enemySquare, promotion: 'queen' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: enemySquare, promotion: 'rook' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: enemySquare, promotion: 'bishop' });
+			expect(pawnMoves).toContainEqual({ from: pawnSquare, to: enemySquare, promotion: 'knight' });
+
+			// It only has this moves available because the king is under attack, so the pawn can not 
+			// promote going forward because this would let the king under attack of the white queen
+			expect(pawnMoves).toHaveLength(4);
+		});
+
 	});
 
 	// ----------------------------------------------------------------

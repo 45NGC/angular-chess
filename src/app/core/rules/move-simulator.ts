@@ -11,7 +11,16 @@ export class MoveSimulator {
             throw new Error(`Cannot simulate move: no piece at ${move.from}`);
         }
 
-        boardClone.set(move.to, piece);
+        // ----- PROMOTION -----
+        let pieceToPlace = piece;
+        if (move.promotion && piece.type === 'pawn') {
+            pieceToPlace = {
+                type: move.promotion,
+                color: piece.color
+            };
+        }
+
+        boardClone.set(move.to, pieceToPlace);
         boardClone.set(move.from, null);
 
         return boardClone;

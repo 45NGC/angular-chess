@@ -132,13 +132,22 @@ export class LegalMoveFinder {
 		// ----------------------------------------------------------------
 		// 1 STEP PUSH
 		// ----------------------------------------------------------------
-		const oneStepRank = rank + forwardDirection;
+		const nextRank = rank + forwardDirection;
 
-		if (oneStepRank >= 0 && oneStepRank <= 7) {
-			const oneStepTarget = toIndex(oneStepRank, file);
+		if (nextRank >= 0 && nextRank <= 7) {
+			const nextIndex = toIndex(nextRank, file);
 
-			if (!board.get(oneStepTarget)) {
-				moves.push({ from: square, to: oneStepTarget });
+			const isPromotionRank =
+				(color === 'white' && nextRank === 7) ||
+				(color === 'black' && nextRank === 0);
+
+			if (!board.get(nextIndex)) {
+
+				if (isPromotionRank) {
+					this.addPromotions(moves, square, nextIndex);
+				} else {
+					moves.push({ from: square, to: nextIndex });
+				}
 
 				// ----------------------------------------------------------------
 				// 2 STEPS INITIAL PUSH
@@ -149,10 +158,10 @@ export class LegalMoveFinder {
 
 				if (isPawnOnInitialRank) {
 					const twoStepRank = rank + forwardDirection * 2;
-					const twoStepTarget = toIndex(twoStepRank, file);
+					const twoStepIndex = toIndex(twoStepRank, file);
 
-					if (!board.get(twoStepTarget)) {
-						moves.push({ from: square, to: twoStepTarget });
+					if (!board.get(twoStepIndex)) {
+						moves.push({ from: square, to: twoStepIndex });
 					}
 				}
 			}
@@ -164,23 +173,45 @@ export class LegalMoveFinder {
 		const captureOffsets = [-1, +1];
 
 		for (const fileOffset of captureOffsets) {
-			const targetRank = rank + forwardDirection;
+			const nextRankForCapture = rank + forwardDirection;
 			const targetFile = file + fileOffset;
 
-			const isOutOfBounds = targetRank < 0 || targetRank > 7 || targetFile < 0 || targetFile > 7;
+			const isOutOfBounds =
+				nextRankForCapture < 0 || nextRankForCapture > 7 ||
+				targetFile < 0 || targetFile > 7;
 
 			if (isOutOfBounds) continue;
 
-			const targetSquare = toIndex(targetRank, targetFile);
+			const targetSquare = toIndex(nextRankForCapture, targetFile);
 			const pieceAtTarget = board.get(targetSquare);
 
+			const isPromotionRank =
+				(color === 'white' && nextRankForCapture === 7) ||
+				(color === 'black' && nextRankForCapture === 0);
+
 			if (pieceAtTarget && pieceAtTarget.color !== color) {
-				moves.push({ from: square, to: targetSquare });
+
+				if (isPromotionRank) {
+					this.addPromotions(moves, square, targetSquare);
+				} else {
+					moves.push({ from: square, to: targetSquare });
+				}
 			}
 		}
 
 		return moves;
 	}
+
+	private addPromotions(moves: Move[], square: number, targetSquare: number) {
+		moves.push(
+			{ from: square, to: targetSquare, promotion: 'queen' },
+			{ from: square, to: targetSquare, promotion: 'rook' },
+			{ from: square, to: targetSquare, promotion: 'bishop' },
+			{ from: square, to: targetSquare, promotion: 'knight' }
+		);
+	}
+
+
 
 	// ----------------------------------------------------------------
 	// SLIDING PIECES (rook/bishop/queen)
