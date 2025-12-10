@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { Board, toIndex, fromIndex } from '../board/board';
 import { LegalMoveFinder } from './legal-move-finder';
 import { Piece } from '../board/piece';
+import { MoveSimulator } from './move-simulator';
 
 function createEmptyBoard(): Board {
 	return new Board(new Array(64).fill(null));
@@ -326,6 +327,116 @@ describe('LegalMoveFinder', () => {
 			// It only has this moves available because the king is under attack, so the pawn can not 
 			// promote going forward because this would let the king under attack of the white queen
 			expect(pawnMoves).toHaveLength(4);
+		});
+
+		it('white pawn can capture en passant to the right', () => {
+			const board = createEmptyBoard();
+			const whitePawn: Piece = { type: 'pawn', color: 'white' };
+			const blackPawn: Piece = { type: 'pawn', color: 'black' };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			const pawnSquare = toIndex(4, 4); // e5
+			const enemyPawnSquare = toIndex(4, 5); // f5
+
+			board.set(pawnSquare, whitePawn);
+			board.set(enemyPawnSquare, blackPawn);
+			board.set(toIndex(0, 4), whiteKing);
+			board.set(toIndex(7, 4), blackKing);
+
+			// en passant target = f6
+			board.enPassantTarget = toIndex(5, 5);
+
+			const moves = moveFinder.getLegalMoves(board, pawnSquare);
+
+			expect(moves).toContainEqual({
+				from: pawnSquare,
+				to: toIndex(5, 5),
+				enPassant: true
+			});
+		});
+
+		it('white pawn cannot capture en passant if enPassantTarget is null', () => {
+			const board = createEmptyBoard();
+			const whitePawn: Piece = { type: 'pawn', color: 'white' };
+			const blackPawn: Piece = { type: 'pawn', color: 'black' };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			const pawnSquare = toIndex(4, 4); // e5
+			const enemyPawnSquare = toIndex(4, 5); // f5
+
+			board.set(pawnSquare, whitePawn);
+			board.set(enemyPawnSquare, blackPawn);
+			board.set(toIndex(0, 4), whiteKing);
+			board.set(toIndex(7, 4), blackKing);
+
+			board.enPassantTarget = null;
+
+			const moves = moveFinder.getLegalMoves(board, pawnSquare);
+
+			expect(moves.some(m => m.enPassant)).toBe(false);
+		});
+
+		it('en passant removes the captured pawn when simulated', () => {
+			const board = createEmptyBoard();
+			const whitePawn: Piece = { type: 'pawn', color: 'white' };
+			const blackPawn: Piece = { type: 'pawn', color: 'black' };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			const pawnSquare = toIndex(4, 4); // e5
+			const enemyPawnSquare = toIndex(4, 5); // f5
+
+			board.set(pawnSquare, whitePawn);
+			board.set(enemyPawnSquare, blackPawn);
+			board.set(toIndex(0, 4), whiteKing);
+			board.set(toIndex(7, 4), blackKing);
+
+			board.enPassantTarget = toIndex(5, 5);
+
+			const enPassantMove = {
+				from: pawnSquare,
+				to: toIndex(5, 5),
+				enPassant: true
+			};
+
+			const result = MoveSimulator.simulate(board, enPassantMove);
+
+			expect(result.get(enemyPawnSquare)).toBeNull();
+			expect(result.get(toIndex(5, 5))).toEqual(whitePawn);
+		});
+
+		it('only adjacent pawns can capture en passant', () => {
+			const board = createEmptyBoard();
+			const whitePawn1: Piece = { type: 'pawn', color: 'white' };
+			const whitePawn2: Piece = { type: 'pawn', color: 'white' };
+			const whitePawn3: Piece = { type: 'pawn', color: 'white' };
+			const blackPawn: Piece = { type: 'pawn', color: 'black' };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			const pawnSquare1 = toIndex(4, 4); // e5
+			const pawnSquare2 = toIndex(4, 6); // g5
+			const pawnSquare3 = toIndex(4, 2); // c5
+			const enemyPawnSquare = toIndex(4, 5); // f5
+
+			board.set(pawnSquare1, whitePawn1);
+			board.set(pawnSquare2, whitePawn2);
+			board.set(pawnSquare3, whitePawn3);
+			board.set(enemyPawnSquare, blackPawn);
+			board.set(toIndex(0, 4), whiteKing);
+			board.set(toIndex(7, 4), blackKing);
+
+			board.enPassantTarget = toIndex(5, 5);
+
+			const pawn1Moves = moveFinder.getLegalMoves(board, pawnSquare1);
+			const pawn2Moves = moveFinder.getLegalMoves(board, pawnSquare2);
+			const pawn3Moves = moveFinder.getLegalMoves(board, pawnSquare3);
+
+			expect(pawn1Moves.some(m => m.enPassant)).toBe(true);
+			expect(pawn2Moves.some(m => m.enPassant)).toBe(true);
+			expect(pawn3Moves.some(m => m.enPassant)).toBe(false);
 		});
 
 	});

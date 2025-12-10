@@ -37,6 +37,8 @@ export type Square = number;
 export class Board {
 	squares: (Piece | null)[] = new Array(64).fill(null);
 
+	enPassantTarget: number | null = null;
+
 	constructor(initial?: (Piece | null)[]) {
 		if (initial) this.squares = [...initial];
 	}
@@ -50,7 +52,9 @@ export class Board {
 	}
 
 	clone(): Board {
-		return new Board([...this.squares]);
+		const cloneBoard = new Board([...this.squares]);
+		cloneBoard.enPassantTarget = this.enPassantTarget;
+		return cloneBoard;
 	}
 
 	findKing(color: PieceColor): number {

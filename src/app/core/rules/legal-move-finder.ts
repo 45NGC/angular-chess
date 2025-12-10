@@ -199,6 +199,32 @@ export class LegalMoveFinder {
 			}
 		}
 
+		// ----------------------------------------------------------------
+		// EN PASSANT
+		// ----------------------------------------------------------------
+		if (board.enPassantTarget !== null) {
+			for (const fileOffset of captureOffsets) {
+
+				const targetFile = file + fileOffset;
+				const nextRankEnPassant = rank + forwardDirection;
+
+				if (
+					nextRankEnPassant < 0 || nextRankEnPassant > 7 ||
+					targetFile < 0 || targetFile > 7
+				) continue;
+
+				const enPassantSquare = toIndex(nextRankEnPassant, targetFile);
+
+				if (enPassantSquare === board.enPassantTarget) {
+					moves.push({
+						from: square,
+						to: enPassantSquare,
+						enPassant: true
+					});
+				}
+			}
+		}
+
 		return moves;
 	}
 
