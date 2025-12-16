@@ -124,4 +124,57 @@ describe("MoveSimulator", () => {
 		expect(result.get(56)).toEqual({ type: "bishop", color: "white" });
 	});
 
+	test("en passant capture removes the captured pawn", () => {
+		const board = new Board();
+
+		const whitePawn: Piece = { type: "pawn", color: "white" };
+		const blackPawn: Piece = { type: "pawn", color: "black" };
+
+		// White pawn on e5 (rank 4, file 4)
+		// Black pawn on d5 (rank 4, file 3)
+		board.set(36, whitePawn); // e5
+		board.set(35, blackPawn); // d5
+
+		// En passant target is d6
+		board.enPassantTarget = 43; // d6
+
+		const move: Move = {
+			from: 36, // e5
+			to: 43,   // d6
+			enPassant: true
+		};
+
+		const result = MoveSimulator.simulate(board, move);
+
+		expect(result.get(43)).toEqual(whitePawn); // pawn moved
+		expect(result.get(35)).toBeNull();          // captured pawn removed
+		expect(result.get(36)).toBeNull();          // origin cleared
+	});
+
+	test("en passant does not affect other pawns", () => {
+		const board = new Board();
+
+		const whitePawn: Piece = { type: "pawn", color: "white" };
+		const blackPawn: Piece = { type: "pawn", color: "black" };
+		const otherPawn: Piece = { type: "pawn", color: "black" };
+
+		board.set(36, whitePawn); // e5
+		board.set(35, blackPawn); // d5 (captured)
+		board.set(34, otherPawn); // c5 (must stay)
+
+		board.enPassantTarget = 43; // d6
+
+		const move: Move = {
+			from: 36,
+			to: 43,
+			enPassant: true
+		};
+
+		const result = MoveSimulator.simulate(board, move);
+
+		expect(result.get(34)).toEqual(otherPawn); // untouched
+	});
+
+
+
 });

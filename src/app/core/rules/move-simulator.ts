@@ -1,4 +1,4 @@
-import { Board } from "../board/board";
+import { Board, fromIndex, toIndex } from "../board/board";
 import { Move } from "./move";
 
 export class MoveSimulator {
@@ -11,13 +11,29 @@ export class MoveSimulator {
             throw new Error(`Cannot simulate move: no piece at ${move.from}`);
         }
 
-        // ----- EN PASSANT -----
+        // Reset en passant by default
+		boardClone.enPassantTarget = null;
+
+        // ----- EN PASSANT CAPTURE -----
         if (move.enPassant && piece.type === 'pawn') {
             const offsetToCapturedPawn = piece.color === 'white' ? -8 : 8;
             const capturedPawnSquare = move.to + offsetToCapturedPawn;
 
             boardClone.set(capturedPawnSquare, null);
         }
+
+        // ----- DOUBLE PAWN PUSH (set en passant target) -----
+		if (piece.type === 'pawn') {
+			const { rank: fromRank, file } = fromIndex(move.from);
+			const { rank: toRank } = fromIndex(move.to);
+
+			const isDoublePush = Math.abs(toRank - fromRank) === 2;
+
+			if (isDoublePush) {
+				const passedRank = (fromRank + toRank) / 2;
+				boardClone.enPassantTarget = toIndex(passedRank, file);
+			}
+		}
 
         // ----- PROMOTION -----
         let pieceToPlace = piece;

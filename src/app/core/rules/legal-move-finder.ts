@@ -202,6 +202,7 @@ export class LegalMoveFinder {
 		// ----------------------------------------------------------------
 		// EN PASSANT
 		// ----------------------------------------------------------------
+		//TODO: Esta implementada a parte de que si esta disponible un enPassantTarget poder capturalo, o que falta e que ao facer un movimiento doble de peon se cree este enPassantTarget.
 		if (board.enPassantTarget !== null) {
 			for (const fileOffset of captureOffsets) {
 
