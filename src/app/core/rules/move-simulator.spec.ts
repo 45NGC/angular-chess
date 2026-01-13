@@ -175,6 +175,74 @@ describe("MoveSimulator", () => {
 		expect(result.get(34)).toEqual(otherPawn); // untouched
 	});
 
+	test("double pawn push sets enPassantTarget", () => {
+		const board = new Board();
+		const pawn: Piece = { type: "pawn", color: "white" };
 
+		// Pawn on e2
+		board.set(12, pawn); // e2
+
+		const move: Move = {
+			from: 12,
+			to: 28 // e4
+		};
+
+		const result = MoveSimulator.simulate(board, move);
+
+		// e3 should be en passant target
+		expect(result.enPassantTarget).toBe(20);
+	});
+
+	test("non-double pawn move clears enPassantTarget", () => {
+		const board = new Board();
+		const pawn: Piece = { type: "pawn", color: "white" };
+
+		board.set(12, pawn);
+		board.enPassantTarget = 20;
+
+		const move: Move = {
+			from: 12,
+			to: 20 // e3
+		};
+
+		const result = MoveSimulator.simulate(board, move);
+
+		expect(result.enPassantTarget).toBeNull();
+	});
+
+	test("enPassantTarget is overwritten by the latest double pawn push", () => {
+		const board = new Board();
+
+		const whitePawn1: Piece = { type: "pawn", color: "white" };
+		const whitePawn2: Piece = { type: "pawn", color: "white" };
+
+		// Pawn 1 on e2
+		board.set(12, whitePawn1); // e2
+
+		// Pawn 2 on d2
+		board.set(11, whitePawn2); // d2
+
+		// First double push: e2 -> e4
+		const move1: Move = {
+			from: 12,
+			to: 28 // e4
+		};
+
+		const boardAfterFirst = MoveSimulator.simulate(board, move1);
+
+		// en passant target should be e3
+		expect(boardAfterFirst.enPassantTarget).toBe(20);
+
+		// Second double push: d2 -> d4
+		const move2: Move = {
+			from: 11,
+			to: 27 // d4
+		};
+
+		const boardAfterSecond = MoveSimulator.simulate(boardAfterFirst, move2);
+
+		// en passant target should now be d3 (not e3 anymore)
+		expect(boardAfterSecond.enPassantTarget).toBe(19);
+	});
 
 });
