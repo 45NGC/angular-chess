@@ -7,7 +7,7 @@ describe("MoveSimulator", () => {
 
 	test("moves a piece from source to target", () => {
 		const board = new Board();
-		const piece: Piece = { type: "pawn", color: "white" };
+		const piece: Piece = { type: "pawn", color: "white", hasMoved: true };
 		board.set(10, piece);
 
 		const move: Move = { from: 10, to: 18 };
@@ -19,7 +19,7 @@ describe("MoveSimulator", () => {
 
 	test("clears the original square", () => {
 		const board = new Board();
-		const piece: Piece = { type: "rook", color: "black" };
+		const piece: Piece = { type: "rook", color: "black", hasMoved: true };
 		board.set(20, piece);
 
 		const move: Move = { from: 20, to: 28 };
@@ -33,8 +33,8 @@ describe("MoveSimulator", () => {
 	test("does not modify unrelated squares", () => {
 		const board = new Board();
 
-		const piece1: Piece = { type: "bishop", color: "white" };
-		const piece2: Piece = { type: "knight", color: "black" };
+		const piece1: Piece = { type: "bishop", color: "white", hasMoved: true };
+		const piece2: Piece = { type: "knight", color: "black", hasMoved: true };
 
 		board.set(5, piece2);
 		board.set(12, piece1);
@@ -59,7 +59,7 @@ describe("MoveSimulator", () => {
 
 	test("does not mutate the original board", () => {
 		const board = new Board();
-		const piece: Piece = { type: "queen", color: "white" };
+		const piece: Piece = { type: "queen", color: "white", hasMoved: true };
 		board.set(9, piece);
 
 		const move: Move = { from: 9, to: 25 };
@@ -73,7 +73,7 @@ describe("MoveSimulator", () => {
 
 	test("promotes a pawn when move.promotion is set", () => {
 		const board = new Board();
-		const pawn: Piece = { type: "pawn", color: "white" };
+		const pawn: Piece = { type: "pawn", color: "white", hasMoved: true };
 		board.set(48, pawn);
 		const move: Move = {
 			from: 48,
@@ -83,13 +83,13 @@ describe("MoveSimulator", () => {
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(result.get(56)).toEqual({ type: "queen", color: "white" });
+		expect(result.get(56)).toEqual({ type: "queen", color: "white", hasMoved: true });
 		expect(result.get(48)).toBeNull();
 	});
 
 	test("promotion keeps the correct color", () => {
 		const board = new Board();
-		const pawn: Piece = { type: "pawn", color: "black" };
+		const pawn: Piece = { type: "pawn", color: "black", hasMoved: true };
 		board.set(15, pawn);
 
 		const move: Move = {
@@ -100,13 +100,13 @@ describe("MoveSimulator", () => {
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(result.get(7)).toEqual({ type: "rook", color: "black" });
+		expect(result.get(7)).toEqual({ type: "rook", color: "black", hasMoved: true });
 	});
 
 	test("promotion does not affect other squares", () => {
 		const board = new Board();
-		const pawn: Piece = { type: "pawn", color: "white" };
-		const other: Piece = { type: "knight", color: "black" };
+		const pawn: Piece = { type: "pawn", color: "white", hasMoved: true };
+		const other: Piece = { type: "knight", color: "black", hasMoved: true };
 
 		board.set(48, pawn);
 		board.set(22, other);
@@ -121,14 +121,14 @@ describe("MoveSimulator", () => {
 
 		expect(result.get(22)).toEqual(other);
 		expect(result.get(48)).toBeNull();
-		expect(result.get(56)).toEqual({ type: "bishop", color: "white" });
+		expect(result.get(56)).toEqual({ type: "bishop", color: "white", hasMoved: true });
 	});
 
 	test("en passant capture removes the captured pawn", () => {
 		const board = new Board();
 
-		const whitePawn: Piece = { type: "pawn", color: "white" };
-		const blackPawn: Piece = { type: "pawn", color: "black" };
+		const whitePawn: Piece = { type: "pawn", color: "white", hasMoved: true };
+		const blackPawn: Piece = { type: "pawn", color: "black", hasMoved: true };
 
 		// White pawn on e5 (rank 4, file 4)
 		// Black pawn on d5 (rank 4, file 3)

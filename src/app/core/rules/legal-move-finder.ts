@@ -117,6 +117,95 @@ export class LegalMoveFinder {
 			}
 		}
 
+		// ------------------------------------------------------------
+		// CASTLING
+		// ------------------------------------------------------------
+		const king = board.get(square);
+		if (!king || king.hasMoved) {
+			return moves;
+		}
+
+		// King cannot castle if currently in check
+		const isKingInCheck = AttackedSquares.isSquareAttacked(
+			board,
+			square,
+			this.opponent(color)
+		);
+
+		if (isKingInCheck) {
+			return moves;
+		}
+
+		const homeRank = color === "white" ? 0 : 7;
+
+		// KING SIDE CASTLING 
+		const kingSideRookSquare = toIndex(homeRank, 7);
+		const kingSideRook = board.get(kingSideRookSquare);
+
+		if (
+			kingSideRook &&
+			kingSideRook.type === "rook" &&
+			!kingSideRook.hasMoved &&
+			!board.get(toIndex(homeRank, 5)) &&
+			!board.get(toIndex(homeRank, 6))
+		) {
+			const squaresToCheck = [
+				toIndex(homeRank, 5),
+				toIndex(homeRank, 6)
+			];
+
+			const isSafe = squaresToCheck.every(square =>
+				!AttackedSquares.isSquareAttacked(
+					board,
+					square,
+					this.opponent(color)
+				)
+			);
+
+			if (isSafe) {
+				moves.push({
+					from: square,
+					to: toIndex(homeRank, 6),
+					castling: "kingSide"
+				});
+			}
+		}
+
+		// QUEEN SIDE CASTLING
+		const queenSideRookSquare = toIndex(homeRank, 0);
+		const queenSideRook = board.get(queenSideRookSquare);
+
+		if (
+			queenSideRook &&
+			queenSideRook.type === "rook" &&
+			!queenSideRook.hasMoved &&
+			!board.get(toIndex(homeRank, 1)) &&
+			!board.get(toIndex(homeRank, 2)) &&
+			!board.get(toIndex(homeRank, 3))
+		) {
+			const squaresToCheck = [
+				toIndex(homeRank, 3),
+				toIndex(homeRank, 2)
+			];
+
+			const isSafe = squaresToCheck.every(square =>
+				!AttackedSquares.isSquareAttacked(
+					board,
+					square,
+					this.opponent(color)
+				)
+			);
+
+			if (isSafe) {
+				moves.push({
+					from: square,
+					to: toIndex(homeRank, 2),
+					castling: "queenSide"
+				});
+			}
+		}
+
+
 		return moves;
 	}
 
