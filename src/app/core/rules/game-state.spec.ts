@@ -1,6 +1,5 @@
 import { GameState } from './game-state';
 import { Board } from '../board/board';
-import { Piece } from '../board/piece';
 import { Move } from './move';
 
 describe('GameState', () => {
@@ -20,15 +19,16 @@ describe('GameState', () => {
 
 	it('should move a piece and clear the original square', () => {
 		const board = new Board();
-		const piece: Piece = { type: 'knight', color: 'white' };
 
-		board.set(10, piece);
+		board.set(56, { type: 'king', color: 'black' }); // a8
+		board.set(42, { type: 'king', color: 'white' }); // c6
+		board.set(10, { type: 'pawn', color: 'white' }); // c2
 
 		const state = new GameState(board);
 		const move: Move = { from: 10, to: 18 };
 		state.applyMove(move);
 
-		expect(state.board.get(18)).toEqual(piece);
+		expect(state.board.get(18)).toEqual({ type: 'pawn', color: 'white' });
 		expect(state.board.get(10)).toBeNull();
 	});
 
@@ -36,7 +36,9 @@ describe('GameState', () => {
 		const state = new GameState();
 		const board = state.board;
 
-		board.set(10, { type: 'pawn', color: 'white' });
+		board.set(56, { type: 'king', color: 'black' }); // a8
+		board.set(42, { type: 'king', color: 'white' }); // c6
+		board.set(10, { type: 'pawn', color: 'white' }); // c2
 
 		state.applyMove({ from: 10, to: 18 });
 
@@ -45,8 +47,11 @@ describe('GameState', () => {
 
 	it('should capture an opposing piece', () => {
 		const board = new Board();
-		board.set(10, { type: 'bishop', color: 'white' });
-		board.set(18, { type: 'pawn', color: 'black' });
+
+		board.set(56, { type: 'king', color: 'white' }); // a8
+		board.set(42, { type: 'king', color: 'black' }); // c6
+		board.set(10, { type: 'bishop', color: 'white' }); // c2
+		board.set(18, { type: 'pawn', color: 'black' }); // c3
 
 		const state = new GameState(board);
 
@@ -78,4 +83,39 @@ describe('GameState', () => {
 		expect(state.board.get(30)).toBeNull();
 	});
 
+	it('should detect checkmate', () => {
+		const board = new Board();
+
+		board.set(56, { type: 'king', color: 'black' }); // a8
+		board.set(49, { type: 'queen', color: 'white' }); // b7
+		board.set(42, { type: 'king', color: 'white' }); // c6
+
+		const state = new GameState(board);
+		state.turn = 'black';
+
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({
+			type: 'checkmate',
+			winner: 'white'
+		});
+	});
+
+
+	it('should detect stalemate', () => {
+		const board = new Board();
+
+		board.set(56, { type: 'king', color: 'black' });  // a8
+		board.set(41, { type: 'queen', color: 'white' }); // b6
+		board.set(42, { type: 'king', color: 'white' });  // c6
+
+		const state = new GameState(board);
+		state.turn = 'black';
+
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({
+			type: 'stalemate'
+		});
+	});
 });
