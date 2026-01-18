@@ -1,0 +1,11 @@
+<h2>Angular Chess</h2>
+
+<p>Turn: {{ state.turn }}</p>
+
+<div class="board">
+	<div class="rank" *ngFor="let rank of ranks">
+		<div class="square" *ngFor="let file of files" [class.light]="isLightSquare(rank, file)"
+			[class.dark]="!isLightSquare(rank, file)">
+		</div>
+	</div>
+</div>
