@@ -3,9 +3,18 @@
 <p>Turn: {{ state.turn }}</p>
 
 <div class="board">
-	<div class="rank" *ngFor="let rank of ranks">
-		<div class="square" *ngFor="let file of files" [class.light]="isLightSquare(rank, file)"
-			[class.dark]="!isLightSquare(rank, file)">
-		</div>
-	</div>
+  <div class="rank" *ngFor="let rank of ranks">
+    <div
+      class="square"
+      *ngFor="let file of files"
+      [class.dark]="isDarkSquare(rank, file)"
+      [class.light]="!isDarkSquare(rank, file)"
+    >
+      <img
+        *ngIf="state.board.get(rank * 8 + file)"
+        [src]="pieceToImage(state.board.get(rank * 8 + file))"
+        class="piece"
+      />
+    </div>
+  </div>
 </div>
