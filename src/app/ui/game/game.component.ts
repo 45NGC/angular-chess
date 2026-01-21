@@ -2,7 +2,9 @@ import { Component } from '@angular/core';
 import { GameState } from '../../core/rules/game-state';
 import { CommonModule } from '@angular/common';
 import { loadFEN } from '../../core/board/fen';
-import { Board } from '../../core/board/board';
+import { Board, toIndex } from '../../core/board/board';
+import { Move } from '../../core/rules/move';
+import { LegalMoveFinder } from '../../core/rules/legal-move-finder';
 
 @Component({
 	selector: 'app-game',
@@ -12,16 +14,19 @@ import { Board } from '../../core/board/board';
 	styleUrls: ['./game.component.css']
 })
 export class GameComponent {
-	state!: GameState;
+	state: GameState;
+	selectedSquare: number | null = null;
+	legalMoves: Move[] = [];
+	ranks = Array.from({ length: 8 }, (_, i) => 7 - i);
+	files = Array.from({ length: 8 }, (_, i) => i);
+
+	private moveFinder = new LegalMoveFinder();
 
 	constructor() {
 		const board = new Board();
 		loadFEN(board, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
 		this.state = new GameState(board);
 	}
-
-	ranks = Array.from({ length: 8 }, (_, i) => 7 - i);
-	files = Array.from({ length: 8 }, (_, i) => i);
 
 	isDarkSquare(rank: number, file: number): boolean {
 		return (rank + file) % 2 === 0;
@@ -31,5 +36,41 @@ export class GameComponent {
 		if (!piece) return null;
 
 		return `../../assets/pieces/${piece.color}-${piece.type}.png`;
+	}
+
+	onSquareClick(rank: number, file: number): void {
+		const square = toIndex(rank, file);
+		const piece = this.state.board.get(square);
+
+		// -------------------------------------------------
+		// No piece selected yet → try selecting one
+		// -------------------------------------------------
+		if (this.selectedSquare === null) {
+			if (!piece || piece.color !== this.state.turn) return;
+
+			this.selectedSquare = square;
+			this.legalMoves = this.moveFinder.getLegalMoves(
+				this.state.board,
+				square
+			);
+			return;
+		}
+
+		// -------------------------------------------------
+		// Piece already selected → try moving
+		// -------------------------------------------------
+		const move = this.legalMoves.find(m => m.to === square);
+
+		if (move) {
+			this.state.applyMove(move);
+		}
+
+		// Clear selection in all cases
+		this.selectedSquare = null;
+		this.legalMoves = [];
+	}
+
+	isLegalTarget(square: number): boolean {
+		return this.legalMoves.some(m => m.to === square);
 	}
 }
