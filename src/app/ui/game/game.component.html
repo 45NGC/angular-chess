@@ -2,8 +2,8 @@
   <div class="rank" *ngFor="let rank of ranks">
     <div
       class="square"
-      [class.light]="(rank + file) % 2 === 0"
-      [class.dark]="(rank + file) % 2 !== 0"
+      [class.dark]="(rank + file) % 2 === 0"
+      [class.light]="(rank + file) % 2 !== 0"
       [class.legal]="isLegalTarget(rank * 8 + file)"
       *ngFor="let file of files"
       (click)="onSquareClick(rank, file)"

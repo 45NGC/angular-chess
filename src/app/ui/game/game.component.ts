@@ -28,10 +28,6 @@ export class GameComponent {
 		this.state = new GameState(board);
 	}
 
-	isDarkSquare(rank: number, file: number): boolean {
-		return (rank + file) % 2 === 0;
-	}
-
 	pieceToImage(piece: any): string | null {
 		if (!piece) return null;
 
@@ -42,32 +38,34 @@ export class GameComponent {
 		const square = toIndex(rank, file);
 		const piece = this.state.board.get(square);
 
-		// -------------------------------------------------
-		// No piece selected yet → try selecting one
-		// -------------------------------------------------
 		if (this.selectedSquare === null) {
 			if (!piece || piece.color !== this.state.turn) return;
-
-			this.selectedSquare = square;
-			this.legalMoves = this.moveFinder.getLegalMoves(
-				this.state.board,
-				square
-			);
+			this.showLegalMoves(square);
 			return;
 		}
 
-		// -------------------------------------------------
-		// Piece already selected → try moving
-		// -------------------------------------------------
+		if (piece && piece.color === this.state.turn) {
+			this.showLegalMoves(square);
+			return;
+		}
+
 		const move = this.legalMoves.find(m => m.to === square);
 
 		if (move) {
 			this.state.applyMove(move);
 		}
 
-		// Clear selection in all cases
 		this.selectedSquare = null;
 		this.legalMoves = [];
+	}
+
+	showLegalMoves(square: number): void {
+		this.selectedSquare = square;
+		this.legalMoves = this.moveFinder.getLegalMoves(
+			this.state.board,
+			square
+		);
+
 	}
 
 	isLegalTarget(square: number): boolean {
