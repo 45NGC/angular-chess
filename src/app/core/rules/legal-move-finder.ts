@@ -120,22 +120,21 @@ export class LegalMoveFinder {
 		// ------------------------------------------------------------
 		// CASTLING
 		// ------------------------------------------------------------
-		const king = board.get(square);
-		if (!king || king.hasMoved) {
-			return moves;
-		}
 
+		
 		// King cannot castle if currently in check
 		const isKingInCheck = AttackedSquares.isSquareAttacked(
 			board,
 			square,
 			this.opponent(color)
 		);
-
+		
 		if (isKingInCheck) {
 			return moves;
 		}
-
+		
+		// Get castling rights
+		const currentPlayerCastlingRights = color === 'white' ? board.castlingRights.white : board.castlingRights.black;
 		const homeRank = color === "white" ? 0 : 7;
 
 		// KING SIDE CASTLING 
@@ -145,7 +144,7 @@ export class LegalMoveFinder {
 		if (
 			kingSideRook &&
 			kingSideRook.type === "rook" &&
-			!kingSideRook.hasMoved &&
+			currentPlayerCastlingRights.short &&
 			!board.get(toIndex(homeRank, 5)) &&
 			!board.get(toIndex(homeRank, 6))
 		) {
@@ -178,7 +177,7 @@ export class LegalMoveFinder {
 		if (
 			queenSideRook &&
 			queenSideRook.type === "rook" &&
-			!queenSideRook.hasMoved &&
+			currentPlayerCastlingRights.long &&
 			!board.get(toIndex(homeRank, 1)) &&
 			!board.get(toIndex(homeRank, 2)) &&
 			!board.get(toIndex(homeRank, 3))

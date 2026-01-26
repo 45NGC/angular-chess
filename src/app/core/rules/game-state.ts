@@ -27,9 +27,32 @@ export class GameState {
 		this.board.set(move.to, piece);
 		this.board.set(move.from, null);
 
+		if(move.castling){
+			this.handleCastling(move.castling);
+		}
+
 		this.turn = this.turn === 'white' ? 'black' : 'white';
 
+		this.board.updateCastlingRights(move, piece);
 		this.updateGameResult();
+	}
+
+	private handleCastling(type: 'kingSide' | 'queenSide'): void {
+		const isWhite = this.turn === 'white';
+
+		const rookFrom = isWhite
+			? type === 'kingSide' ? 7 : 0
+			: type === 'kingSide' ? 63 : 56;
+
+		const rookTo = isWhite
+			? type === 'kingSide' ? 5 : 3
+			: type === 'kingSide' ? 61 : 59;
+
+		const rook = this.board.get(rookFrom);
+		if (!rook) return;
+
+		this.board.set(rookTo, rook);
+		this.board.set(rookFrom, null);
 	}
 
 	private updateGameResult(): void {

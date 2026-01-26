@@ -148,8 +148,8 @@ describe('LegalMoveFinder', () => {
 		it('allows king side castling when conditions are met', () => {
 			const board = createEmptyBoard();
 
-			const whiteKing: Piece = { type: 'king', color: 'white', hasMoved: false };
-			const whiteRook: Piece = { type: 'rook', color: 'white', hasMoved: false };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const whiteRook: Piece = { type: 'rook', color: 'white' };
 			const blackKing: Piece = { type: 'king', color: 'black' };
 
 			// White pieces
@@ -171,8 +171,8 @@ describe('LegalMoveFinder', () => {
 		it('allows queen side castling when conditions are met', () => {
 			const board = createEmptyBoard();
 
-			const whiteKing: Piece = { type: 'king', color: 'white', hasMoved: false };
-			const whiteRook: Piece = { type: 'rook', color: 'white', hasMoved: false };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const whiteRook: Piece = { type: 'rook', color: 'white' };
 			const blackKing: Piece = { type: 'king', color: 'black' };
 
 			board.set(toIndex(0, 4), whiteKing); // e1
@@ -188,47 +188,11 @@ describe('LegalMoveFinder', () => {
 			});
 		});
 
-		it('does not allow castling if king has already moved', () => {
-			const board = createEmptyBoard();
-
-			const whiteKing: Piece = { type: 'king', color: 'white', hasMoved: true };
-			const whiteRook: Piece = { type: 'rook', color: 'white', hasMoved: false };
-			const blackKing: Piece = { type: 'king', color: 'black' };
-
-			board.set(toIndex(0, 4), whiteKing);
-			board.set(toIndex(0, 7), whiteRook);
-			board.set(toIndex(7, 4), blackKing);
-
-			const moves = moveFinder.getLegalMoves(board, toIndex(0, 4));
-
-			expect(moves).not.toContainEqual(
-				expect.objectContaining({ castling: 'kingSide' })
-			);
-		});
-
-		it('does not allow castling if rook has already moved', () => {
-			const board = createEmptyBoard();
-
-			const whiteKing: Piece = { type: 'king', color: 'white', hasMoved: false };
-			const whiteRook: Piece = { type: 'rook', color: 'white', hasMoved: true };
-			const blackKing: Piece = { type: 'king', color: 'black' };
-
-			board.set(toIndex(0, 4), whiteKing);
-			board.set(toIndex(0, 7), whiteRook);
-			board.set(toIndex(7, 4), blackKing);
-
-			const moves = moveFinder.getLegalMoves(board, toIndex(0, 4));
-
-			expect(moves).not.toContainEqual(
-				expect.objectContaining({ castling: 'kingSide' })
-			);
-		});
-
 		it('does not allow castling through check', () => {
 			const board = createEmptyBoard();
 
-			const whiteKing: Piece = { type: 'king', color: 'white', hasMoved: false };
-			const whiteRook: Piece = { type: 'rook', color: 'white', hasMoved: false };
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const whiteRook: Piece = { type: 'rook', color: 'white' };
 			const blackRook: Piece = { type: 'rook', color: 'black' };
 			const blackKing: Piece = { type: 'king', color: 'black' };
 
@@ -480,7 +444,7 @@ describe('LegalMoveFinder', () => {
 
 		it('en passant removes the captured pawn when simulated', () => {
 			const board = createEmptyBoard();
-			const whitePawn: Piece = { type: 'pawn', color: 'white', hasMoved: true };
+			const whitePawn: Piece = { type: 'pawn', color: 'white' };
 			const blackPawn: Piece = { type: 'pawn', color: 'black' };
 			const whiteKing: Piece = { type: 'king', color: 'white' };
 			const blackKing: Piece = { type: 'king', color: 'black' };

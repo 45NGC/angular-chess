@@ -11,7 +11,6 @@ export type PieceType =
 export interface Piece {
 	type: PieceType;
 	color: PieceColor;
-	hasMoved?: boolean;
 }
 
 export const isWhite = (p: Piece | null): boolean => p?.color === 'white';

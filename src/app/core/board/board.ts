@@ -2,6 +2,16 @@ import { Piece, PieceColor } from './piece';
 
 export type Square = number;
 
+export type CastlingRights = {
+	short: boolean;
+	long: boolean;
+};
+
+export type CastlingAvailability = {
+	white: CastlingRights;
+	black: CastlingRights;
+};
+
 /**
  * Board index reference (0..63)
  *
@@ -39,6 +49,12 @@ export class Board {
 
 	enPassantTarget: number | null = null;
 
+	castlingRights: CastlingAvailability = {
+		white: { short: true, long: true },
+		black: { short: true, long: true }
+	};
+
+
 	constructor(initial?: (Piece | null)[]) {
 		if (initial) this.squares = [...initial];
 	}
@@ -54,6 +70,11 @@ export class Board {
 	clone(): Board {
 		const cloneBoard = new Board([...this.squares]);
 		cloneBoard.enPassantTarget = this.enPassantTarget;
+
+		cloneBoard.castlingRights = {
+			white: { ...this.castlingRights.white },
+			black: { ...this.castlingRights.black }
+		};
 		return cloneBoard;
 	}
 
@@ -65,6 +86,36 @@ export class Board {
 			}
 		}
 		throw new Error(`King of color ${color} not found on board`);
+	}
+
+	updateCastlingRights(move: { from: number, to: number }, piece: Piece): void {
+		const { from } = move;
+
+		if (piece.type === 'king') {
+			if (piece.color === 'white') {
+				this.castlingRights.white = { short: false, long: false };
+			} else {
+				this.castlingRights.black = { short: false, long: false };
+			}
+			return;
+		}
+
+		if (piece.type === 'rook') {
+			if (piece.color === 'white') {
+				if (from === 0) { // a1
+					this.castlingRights.white.long = false;
+				} else if (from === 7) { // h1
+					this.castlingRights.white.short = false;
+				}
+			}
+			else {
+				if (from === 56) { // a8
+					this.castlingRights.black.long = false;
+				} else if (from === 63) { // h8
+					this.castlingRights.black.short = false;
+				}
+			}
+		}
 	}
 }
 

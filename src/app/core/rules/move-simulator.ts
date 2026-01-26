@@ -70,7 +70,6 @@ export class MoveSimulator {
 
         pieceToPlace = {
             ...pieceToPlace,
-            hasMoved: true
         };
 
         boardClone.set(move.to, pieceToPlace);
