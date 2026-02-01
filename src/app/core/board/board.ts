@@ -1,3 +1,4 @@
+import { A1, A8, BOARD_SIZE, H1, H8, SQUARE_COUNT } from '../constants/chess.constants';
 import { Piece, PieceColor } from './piece';
 
 export type Square = number;
@@ -45,7 +46,7 @@ export type CastlingAvailability = {
 
 
 export class Board {
-	squares: (Piece | null)[] = new Array(64).fill(null);
+	squares: (Piece | null)[] = new Array(SQUARE_COUNT).fill(null);
 
 	enPassantTarget: number | null = null;
 
@@ -79,7 +80,7 @@ export class Board {
 	}
 
 	findKing(color: PieceColor): number {
-		for (let square = 0; square < 64; square++) {
+		for (let square = 0; square < SQUARE_COUNT; square++) {
 			const piece = this.squares[square];
 			if (piece && piece.type === 'king' && piece.color === color) {
 				return square;
@@ -102,16 +103,16 @@ export class Board {
 
 		if (piece.type === 'rook') {
 			if (piece.color === 'white') {
-				if (from === 0) { // a1
+				if (from === A1) {
 					this.castlingRights.white.long = false;
-				} else if (from === 7) { // h1
+				} else if (from === H1) {
 					this.castlingRights.white.short = false;
 				}
 			}
 			else {
-				if (from === 56) { // a8
+				if (from === A8) {
 					this.castlingRights.black.long = false;
-				} else if (from === 63) { // h8
+				} else if (from === H8) {
 					this.castlingRights.black.short = false;
 				}
 			}
@@ -125,7 +126,7 @@ export class Board {
  * file: 0..7  → columns (0 = column a)
  */
 export function toIndex(rank: number, file: number): number {
-	return rank * 8 + file;
+	return rank * BOARD_SIZE + file;
 }
 
 /**
@@ -133,7 +134,7 @@ export function toIndex(rank: number, file: number): number {
  */
 export function fromIndex(index: number): { rank: number; file: number } {
 	return {
-		rank: Math.floor(index / 8),
-		file: index % 8
+		rank: Math.floor(index / BOARD_SIZE),
+		file: index % BOARD_SIZE
 	};
 }

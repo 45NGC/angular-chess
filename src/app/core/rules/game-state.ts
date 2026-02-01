@@ -1,5 +1,6 @@
 
 import { Board } from '../board/board';
+import { A1, A8, D1, D8, F1, F8, H1, H8 } from '../constants/chess.constants';
 import { AttackedSquares } from './attacked-squares';
 import { LegalMoveFinder } from './legal-move-finder';
 import { Move } from './move';
@@ -41,12 +42,12 @@ export class GameState {
 		const isWhite = this.turn === 'white';
 
 		const rookFrom = isWhite
-			? type === 'kingSide' ? 7 : 0
-			: type === 'kingSide' ? 63 : 56;
+			? type === 'kingSide' ? H1 : A1
+			: type === 'kingSide' ? H8 : A8;
 
 		const rookTo = isWhite
-			? type === 'kingSide' ? 5 : 3
-			: type === 'kingSide' ? 61 : 59;
+			? type === 'kingSide' ? F1 : D1
+			: type === 'kingSide' ? F8 : D8;
 
 		const rook = this.board.get(rookFrom);
 		if (!rook) return;

@@ -4,19 +4,19 @@ export const SQUARE_COUNT = 64;
 export const WHITE_BACK_RANK = 0;
 export const BLACK_BACK_RANK = 7;
 
-export const WHITE_PAWN_RANK = 1;
-export const BLACK_PAWN_RANK = 6;
+export const WHITE_PAWN_INITIAL_RANK = 1;
+export const BLACK_PAWN_INITIAL_RANK = 6;
 
 
-export const WHITE_KING_SIDE_ROOK_INDEX = 7;
-export const WHITE_KING_SIDE_ROOK_CASTLE_INDEX = 5;
-export const WHITE_QUEEN_SIDE_ROOK_INDEX = 0;
-export const WHITE_QUEEN_SIDE_ROOK_CASTLE_INDEX = 3;
+export const H1 = 7;
+export const F1 = 5;
+export const A1 = 0;
+export const D1 = 3;
 
-export const BLACK_KING_SIDE_ROOK_INDEX = 63;
-export const BLACK_KING_SIDE_ROOK_CASTLE_INDEX = 61;
-export const BLACK_QUEEN_SIDE_ROOK_INDEX = 56;
-export const BLACK_QUEEN_SIDE_ROOK_CASTLE_INDEX = 59;
+export const H8 = 63;
+export const F8 = 61;
+export const A8 = 56;
+export const D8 = 59;
 
 export const CASTLING = {
 	white: {

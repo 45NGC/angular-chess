@@ -3,6 +3,7 @@ import { PieceColor } from '../board/piece';
 import { Move } from './move';
 import { AttackedSquares } from './attacked-squares';
 import { MoveSimulator } from './move-simulator';
+import { BLACK_BACK_RANK, BLACK_PAWN_INITIAL_RANK, WHITE_BACK_RANK, WHITE_PAWN_INITIAL_RANK } from '../constants/chess.constants';
 
 export class LegalMoveFinder {
 
@@ -226,8 +227,8 @@ export class LegalMoveFinder {
 			const nextIndex = toIndex(nextRank, file);
 
 			const isPromotionRank =
-				(color === 'white' && nextRank === 7) ||
-				(color === 'black' && nextRank === 0);
+				(color === 'white' && nextRank === BLACK_BACK_RANK) ||
+				(color === 'black' && nextRank === WHITE_BACK_RANK);
 
 			if (!board.get(nextIndex)) {
 
@@ -241,8 +242,8 @@ export class LegalMoveFinder {
 				// 2 STEPS INITIAL PUSH
 				// ----------------------------------------------------------------
 				const isPawnOnInitialRank =
-					(color === 'white' && rank === 1) ||
-					(color === 'black' && rank === 6);
+					(color === 'white' && rank === WHITE_PAWN_INITIAL_RANK) ||
+					(color === 'black' && rank === BLACK_PAWN_INITIAL_RANK);
 
 				if (isPawnOnInitialRank) {
 					const twoStepRank = rank + forwardDirection * 2;
