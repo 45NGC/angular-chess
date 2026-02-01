@@ -228,7 +228,7 @@ describe('LegalMoveFinder', () => {
 
 			const expected = [
 				{ from: pawnSquare, to: toIndex(2, 0) },
-				{ from: pawnSquare, to: toIndex(3, 0) }
+				{ from: pawnSquare, to: toIndex(3, 0), doublePush: true }
 			];
 
 			expect(moves).toEqual(expected);
@@ -267,7 +267,7 @@ describe('LegalMoveFinder', () => {
 			const moves = moveFinder.getLegalMoves(board, pawnSquare);
 
 			expect(moves).toContainEqual({ from: pawnSquare, to: toIndex(2, 1) });
-			expect(moves).toContainEqual({ from: pawnSquare, to: toIndex(3, 1) });
+			expect(moves).toContainEqual({ from: pawnSquare, to: toIndex(3, 1), doublePush: true });
 			expect(moves).toContainEqual({ from: pawnSquare, to: blackPawnSquare });
 		});
 
