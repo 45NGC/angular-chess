@@ -17,15 +17,3 @@ export const H8 = 63;
 export const F8 = 61;
 export const A8 = 56;
 export const D8 = 59;
-
-export const CASTLING = {
-	white: {
-		kingSide: { rookFrom: 7, rookTo: 5 },
-		queenSide: { rookFrom: 0, rookTo: 3 }
-	},
-	black: {
-		kingSide: { rookFrom: 63, rookTo: 61 },
-		queenSide: { rookFrom: 56, rookTo: 59 }
-	}
-} as const;
-

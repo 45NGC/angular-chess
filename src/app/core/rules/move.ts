@@ -5,4 +5,5 @@ export interface Move {
 	promotion?: 'queen' | 'rook' | 'bishop' | 'knight';
 	enPassant?: boolean;
 	castling?: "kingSide" | "queenSide";
+	doublePush?: boolean;
 }

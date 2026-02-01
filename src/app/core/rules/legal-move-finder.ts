@@ -122,18 +122,18 @@ export class LegalMoveFinder {
 		// CASTLING
 		// ------------------------------------------------------------
 
-		
+
 		// King cannot castle if currently in check
 		const isKingInCheck = AttackedSquares.isSquareAttacked(
 			board,
 			square,
 			this.opponent(color)
 		);
-		
+
 		if (isKingInCheck) {
 			return moves;
 		}
-		
+
 		// Get castling rights
 		const currentPlayerCastlingRights = color === 'white' ? board.castlingRights.white : board.castlingRights.black;
 		const homeRank = color === "white" ? 0 : 7;
@@ -250,7 +250,7 @@ export class LegalMoveFinder {
 					const twoStepIndex = toIndex(twoStepRank, file);
 
 					if (!board.get(twoStepIndex)) {
-						moves.push({ from: square, to: twoStepIndex });
+						moves.push({ from: square, to: twoStepIndex, doublePush: true });
 					}
 				}
 			}
@@ -292,24 +292,27 @@ export class LegalMoveFinder {
 		// EN PASSANT
 		// ----------------------------------------------------------------
 		if (board.enPassantTarget !== null) {
-			for (const fileOffset of captureOffsets) {
+			const { rank: targetRank, file: targetFile } = fromIndex(board.enPassantTarget);
 
-				const targetFile = file + fileOffset;
-				const nextRankEnPassant = rank + forwardDirection;
+			const canCaptureEnPassant =
+				(color === 'white' && rank === 4) ||
+				(color === 'black' && rank === 3);
 
-				if (
-					nextRankEnPassant < 0 || nextRankEnPassant > 7 ||
-					targetFile < 0 || targetFile > 7
-				) continue;
+			if (canCaptureEnPassant) {
+				for (const fileOffset of captureOffsets) {
+					const captureFile = file + fileOffset;
 
-				const enPassantSquare = toIndex(nextRankEnPassant, targetFile);
+					
+					if (captureFile === targetFile) {
+						const moveToRank = rank + forwardDirection;
+						const moveToSquare = toIndex(moveToRank, captureFile);
 
-				if (enPassantSquare === board.enPassantTarget) {
-					moves.push({
-						from: square,
-						to: enPassantSquare,
-						enPassant: true
-					});
+						moves.push({
+							from: square,
+							to: moveToSquare,
+							enPassant: true
+						});
+					}
 				}
 			}
 		}

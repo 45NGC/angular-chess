@@ -1,5 +1,5 @@
 
-import { Board } from '../board/board';
+import { Board, fromIndex, toIndex } from '../board/board';
 import { A1, A8, D1, D8, F1, F8, H1, H8 } from '../constants/chess.constants';
 import { AttackedSquares } from './attacked-squares';
 import { LegalMoveFinder } from './legal-move-finder';
@@ -25,10 +25,20 @@ export class GameState {
 		const piece = this.board.get(move.from);
 		if (!piece) return;
 
+		if (move.doublePush) {
+			this.handleDoublePush(move);
+		} else {
+			this.board.enPassantTarget = null;
+		}
+
 		this.board.set(move.to, piece);
 		this.board.set(move.from, null);
 
-		if(move.castling){
+		if (move.enPassant) {
+			this.handleEnPassant(move);
+		}
+
+		if (move.castling) {
 			this.handleCastling(move.castling);
 		}
 
@@ -36,6 +46,23 @@ export class GameState {
 
 		this.board.updateCastlingRights(move, piece);
 		this.updateGameResult();
+
+	}
+
+	private handleDoublePush(move: Move) {
+		const { rank, file } = fromIndex(move.from);
+
+		const targetRank = this.turn === 'white' ? rank - 1 : rank + 1;
+		this.board.enPassantTarget = toIndex(targetRank, file);
+	}
+
+	private handleEnPassant(move: Move) {
+		const { rank, file } = fromIndex(move.to);
+
+		const capturedRank = this.turn === 'white' ? rank - 1 : rank + 1;
+		const capturedSquare = toIndex(capturedRank, file);
+		this.board.set(capturedSquare, null);
+
 	}
 
 	private handleCastling(type: 'kingSide' | 'queenSide'): void {
