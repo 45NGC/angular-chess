@@ -19,6 +19,7 @@ export class GameComponent {
 	legalMoves: Move[] = [];
 	ranks = Array.from({ length: 8 }, (_, i) => 7 - i);
 	files = Array.from({ length: 8 }, (_, i) => i);
+	showGameOverModal = false;
 
 	private moveFinder = new LegalMoveFinder();
 
@@ -53,6 +54,7 @@ export class GameComponent {
 
 		if (move) {
 			this.state.applyMove(move);
+			this.checkGameOver();
 		}
 
 		this.selectedSquare = null;
@@ -70,5 +72,37 @@ export class GameComponent {
 
 	isLegalTarget(square: number): boolean {
 		return this.legalMoves.some(m => m.to === square);
+	}
+
+	private checkGameOver(): void {
+		if (this.state.result.type !== 'ongoing') {
+			this.showGameOverModal = true;
+		}
+	}
+
+	resetGame(): void {
+		const board = new Board();
+		loadFEN(board, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
+		this.state = new GameState(board);
+		this.selectedSquare = null;
+		this.legalMoves = [];
+		this.showGameOverModal = false;
+	}
+
+	getResultMessage(): string {
+		const result = this.state.result;
+
+		switch (result.type) {
+			case 'checkmate':
+				return `${result.winner === 'white' ? 'WHITE' : 'BLACK'} WON`;
+			case 'stalemate':
+				return 'STALEMATE';
+			default:
+				return '';
+		}
+	}
+
+	closeModal(): void {
+		this.showGameOverModal = false;
 	}
 }
