@@ -5,6 +5,7 @@ import { loadFEN } from '../../core/board/fen';
 import { Board, toIndex } from '../../core/board/board';
 import { Move } from '../../core/rules/move';
 import { LegalMoveFinder } from '../../core/rules/legal-move-finder';
+import { BOARD_SIZE, INITIAL_POSITION_FEN } from '../../core/constants/chess.constants';
 
 @Component({
 	selector: 'app-game',
@@ -17,15 +18,15 @@ export class GameComponent {
 	state: GameState;
 	selectedSquare: number | null = null;
 	legalMoves: Move[] = [];
-	ranks = Array.from({ length: 8 }, (_, i) => 7 - i);
-	files = Array.from({ length: 8 }, (_, i) => i);
+	ranks = Array.from({ length: BOARD_SIZE }, (_, i) => 7 - i);
+	files = Array.from({ length: BOARD_SIZE }, (_, i) => i);
 	showGameOverModal = false;
 
 	private moveFinder = new LegalMoveFinder();
 
 	constructor() {
 		const board = new Board();
-		loadFEN(board, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
+		loadFEN(board, INITIAL_POSITION_FEN);
 		this.state = new GameState(board);
 	}
 
@@ -74,15 +75,9 @@ export class GameComponent {
 		return this.legalMoves.some(m => m.to === square);
 	}
 
-	private checkGameOver(): void {
-		if (this.state.result.type !== 'ongoing') {
-			this.showGameOverModal = true;
-		}
-	}
-
 	resetGame(): void {
 		const board = new Board();
-		loadFEN(board, 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR');
+		loadFEN(board, INITIAL_POSITION_FEN);
 		this.state = new GameState(board);
 		this.selectedSquare = null;
 		this.legalMoves = [];
@@ -104,5 +99,11 @@ export class GameComponent {
 
 	closeModal(): void {
 		this.showGameOverModal = false;
+	}
+
+	private checkGameOver(): void {
+		if (this.state.result.type !== 'ongoing') {
+			this.showGameOverModal = true;
+		}
 	}
 }

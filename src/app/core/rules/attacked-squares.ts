@@ -1,5 +1,6 @@
 import { Board, fromIndex, toIndex } from '../board/board';
 import { PieceColor } from '../board/piece';
+import { SQUARE_COUNT } from '../constants/chess.constants';
 
 export class AttackedSquares {
 
@@ -11,7 +12,7 @@ export class AttackedSquares {
 	static getAttackedSquares(board: Board, attackerColor: PieceColor): Set<number> {
 		const attackedSquares = new Set<number>();
 
-		for (let squareIndex = 0; squareIndex < 64; squareIndex++) {
+		for (let squareIndex = 0; squareIndex < SQUARE_COUNT; squareIndex++) {
 			const pieceOnSquare = board.get(squareIndex);
 			if (!pieceOnSquare || pieceOnSquare.color !== attackerColor) continue;
 

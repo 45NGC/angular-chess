@@ -17,3 +17,5 @@ export const H8 = 63;
 export const F8 = 61;
 export const A8 = 56;
 export const D8 = 59;
+
+export const INITIAL_POSITION_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
