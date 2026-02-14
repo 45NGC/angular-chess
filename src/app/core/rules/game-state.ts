@@ -25,6 +25,8 @@ export class GameState {
 		const piece = this.board.get(move.from);
 		if (!piece) return;
 
+		const isPromotion = !!move.promotion;
+
 		if (move.doublePush) {
 			this.handleDoublePush(move);
 		} else {
@@ -33,6 +35,14 @@ export class GameState {
 
 		this.board.set(move.to, piece);
 		this.board.set(move.from, null);
+
+		if (isPromotion) {
+			this.board.set(move.to, {
+				type: move.promotion!,
+				color: piece.color
+			});
+		}
+
 
 		if (move.enPassant) {
 			this.handleEnPassant(move);

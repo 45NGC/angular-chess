@@ -16,18 +16,19 @@
     </div>
   </div>
 
-  <div class="modal-overlay" *ngIf="showGameOverModal" (click)="closeModal()">
-    <div class="modal-content" (click)="$event.stopPropagation()">
-      <h2>GAME OVER</h2>
+  <app-game-over-dialog
+    *ngIf="showGameOverDialog"
+    [message]="getResultMessage()"
+    (restart)="onRestart()"
+    (exit)="onExit()"
+  >
+  </app-game-over-dialog>
 
-      <div class="result-message">
-        {{ getResultMessage() }}
-      </div>
-
-      <div class="modal-actions">
-        <button class="btn-primary" (click)="resetGame()">RESTART</button>
-        <button class="btn-secondary" (click)="closeModal()">EXIT</button>
-      </div>
-    </div>
-  </div>
+  <app-promotion-dialog
+    *ngIf="showPromotionDialog"
+    [color]="state.turn"
+    (selected)="onPromotionSelected($event)"
+    (close)="closePromotionDialog()"
+  >
+  </app-promotion-dialog>
 </div>
