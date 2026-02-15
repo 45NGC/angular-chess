@@ -1,10 +1,21 @@
-<div class="modal-overlay" (click)="onExit()">
-  <div class="modal-content" (click)="$event.stopPropagation()">
-    <h2>GAME OVER</h2>
-    <div class="result-message">{{ message }}</div>
-    <div class="modal-actions">
-      <button class="btn-primary" (click)="onRestart()">RESTART</button>
-      <button class="btn-secondary" (click)="onExit()">EXIT</button>
+<div class="gameover-overlay" (click)="onExit()">
+  <div class="gameover-container" (click)="$event.stopPropagation()">
+    <div class="title">GAME OVER</div>
+
+    <div class="result-message">
+      {{ message }}
+    </div>
+
+    <div class="actions-container">
+      <div class="action-option" (click)="onRestart()">
+        ↻
+        <span>RESTART</span>
+      </div>
+
+      <div class="action-option exit-option" (click)="onExit()">
+        ✕
+        <span>EXIT</span>
+      </div>
     </div>
   </div>
 </div>
