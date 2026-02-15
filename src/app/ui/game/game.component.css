@@ -6,6 +6,19 @@
 	height: 100vh;
 }
 
+.promotion-side-panel {
+	position: absolute;
+	left: calc(50% + 350px);
+	transform: translateY(-25%);
+}
+
+.game-container {
+	position: relative;
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	width: 100%;
+}
 
 .board {
 	display: grid;

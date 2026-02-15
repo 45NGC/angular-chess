@@ -1,34 +1,37 @@
-<div class="board">
-  <div class="rank" *ngFor="let rank of ranks">
-    <div
-      class="square"
-      [class.dark]="(rank + file) % 2 === 0"
-      [class.light]="(rank + file) % 2 !== 0"
-      [class.legal]="isLegalTarget(rank * 8 + file)"
-      *ngFor="let file of files"
-      (click)="onSquareClick(rank, file)"
-    >
-      <img
-        *ngIf="state.board.get(rank * 8 + file) as piece"
-        [src]="pieceToImage(piece)"
-        class="piece"
-      />
+<div class="game-container">
+  <div class="board">
+    <div class="rank" *ngFor="let rank of ranks">
+      <div
+        class="square"
+        [class.dark]="(rank + file) % 2 === 0"
+        [class.light]="(rank + file) % 2 !== 0"
+        [class.legal]="isLegalTarget(rank * 8 + file)"
+        *ngFor="let file of files"
+        (click)="onSquareClick(rank, file)"
+      >
+        <img
+          *ngIf="state.board.get(rank * 8 + file) as piece"
+          [src]="pieceToImage(piece)"
+          class="piece"
+        />
+      </div>
     </div>
+
+    <app-game-over-dialog
+      *ngIf="showGameOverDialog"
+      [message]="getResultMessage()"
+      (restart)="onRestart()"
+      (exit)="onExit()"
+    >
+    </app-game-over-dialog>
   </div>
 
-  <app-game-over-dialog
-    *ngIf="showGameOverDialog"
-    [message]="getResultMessage()"
-    (restart)="onRestart()"
-    (exit)="onExit()"
-  >
-  </app-game-over-dialog>
-
-  <app-promotion-dialog
-    *ngIf="showPromotionDialog"
-    [color]="state.turn"
-    (selected)="onPromotionSelected($event)"
-    (close)="closePromotionDialog()"
-  >
-  </app-promotion-dialog>
+  <div class="promotion-side-panel" *ngIf="showPromotionDialog">
+    <app-promotion-dialog
+      [color]="state.turn"
+      (selected)="onPromotionSelected($event)"
+      (close)="closePromotionDialog()"
+    >
+    </app-promotion-dialog>
+  </div>
 </div>
