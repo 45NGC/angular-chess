@@ -32,7 +32,7 @@ This Angular project implements the core rules of chess and provides a local two
 
 ## How does it work?
 
-The project is built with Angular and runs entirely in the browser. The chess logic resides in the `core` module, which is independent of the UI. The UI components (`ui/game`) render an interactive board and handle user clicks. When a piece is selected, the legal moves are highlighted using the `legal-move-finder` service. After a move is made, the `move-simulator` and `game-state` services update the board and evaluate the new position.
+The project runs entirely in the browser. The chess logic resides in the `core` module, which is independent of the UI. The UI components (`ui/game`) render an interactive board and handle user clicks. When a piece is selected, the legal moves are highlighted using the `legal-move-finder` service. After a move is made, the `move-simulator` and `game-state` services update the board and evaluate the new position.
 
 Promotion and game‑over dialogs are implemented as Angular components and appear when needed.
 
