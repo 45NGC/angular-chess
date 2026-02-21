@@ -1,6 +1,14 @@
 import { Board, fromIndex, toIndex } from '../board/board';
 import { PieceColor } from '../board/piece';
-import { SQUARE_COUNT } from '../constants/chess.constants';
+import {
+	BOARD_SIZE,
+	SQUARE_COUNT,
+	KNIGHT_OFFSETS,
+	KING_OFFSETS,
+	BISHOP_DIRECTIONS,
+	ROOK_DIRECTIONS,
+	QUEEN_DIRECTIONS
+} from '../constants/chess.constants';
 
 export class AttackedSquares {
 
@@ -28,22 +36,15 @@ export class AttackedSquares {
 					break;
 
 				case 'bishop':
-					AttackedSquares.addSlidingAttacks(board, squareIndex, attackedSquares, [
-						[1, 1], [1, -1], [-1, 1], [-1, -1]
-					]);
+					AttackedSquares.addSlidingAttacks(board, squareIndex, attackedSquares, BISHOP_DIRECTIONS);
 					break;
 
 				case 'rook':
-					AttackedSquares.addSlidingAttacks(board, squareIndex, attackedSquares, [
-						[1, 0], [-1, 0], [0, 1], [0, -1]
-					]);
+					AttackedSquares.addSlidingAttacks(board, squareIndex, attackedSquares, ROOK_DIRECTIONS);
 					break;
 
 				case 'queen':
-					AttackedSquares.addSlidingAttacks(board, squareIndex, attackedSquares, [
-						[1, 1], [1, -1], [-1, 1], [-1, -1],
-						[1, 0], [-1, 0], [0, 1], [0, -1]
-					]);
+					AttackedSquares.addSlidingAttacks(board, squareIndex, attackedSquares, QUEEN_DIRECTIONS);
 					break;
 
 				case 'king':
@@ -53,6 +54,10 @@ export class AttackedSquares {
 		}
 
 		return attackedSquares;
+	}
+
+	private static isValidSquare(rank: number, file: number): boolean {
+		return rank >= 0 && rank < BOARD_SIZE && file >= 0 && file < BOARD_SIZE;
 	}
 
 	// ----------------------------------------------------------------
@@ -70,11 +75,7 @@ export class AttackedSquares {
 			const targetRank = pieceRank + forwardDirection;
 			const targetFile = pieceFile + fileOffset;
 
-			const inBounds =
-				targetRank >= 0 && targetRank < 8 &&
-				targetFile >= 0 && targetFile < 8;
-
-			if (inBounds) {
+			if (AttackedSquares.isValidSquare(targetRank, targetFile)) {
 				attackedSquares.add(toIndex(targetRank, targetFile));
 			}
 		}
@@ -88,20 +89,11 @@ export class AttackedSquares {
 		pieceFile: number,
 		attackedSquares: Set<number>
 	) {
-		const knightAttackPattern = [
-			[2, 1], [2, -1], [-2, 1], [-2, -1],
-			[1, 2], [1, -2], [-1, 2], [-1, -2]
-		];
-
-		for (const [rankOffset, fileOffset] of knightAttackPattern) {
+		for (const [rankOffset, fileOffset] of KNIGHT_OFFSETS) {
 			const targetRank = pieceRank + rankOffset;
 			const targetFile = pieceFile + fileOffset;
 
-			const inBounds =
-				targetRank >= 0 && targetRank < 8 &&
-				targetFile >= 0 && targetFile < 8;
-
-			if (inBounds) {
+			if (AttackedSquares.isValidSquare(targetRank, targetFile)) {
 				attackedSquares.add(toIndex(targetRank, targetFile));
 			}
 		}
@@ -115,21 +107,12 @@ export class AttackedSquares {
 		pieceFile: number,
 		attackedSquares: Set<number>
 	) {
-		for (let rankOffset = -1; rankOffset <= 1; rankOffset++) {
-			for (let fileOffset = -1; fileOffset <= 1; fileOffset++) {
+		for (const [rankOffset, fileOffset] of KING_OFFSETS) {
+			const targetRank = pieceRank + rankOffset;
+			const targetFile = pieceFile + fileOffset;
 
-				if (rankOffset === 0 && fileOffset === 0) continue;
-
-				const targetRank = pieceRank + rankOffset;
-				const targetFile = pieceFile + fileOffset;
-
-				const inBounds =
-					targetRank >= 0 && targetRank < 8 &&
-					targetFile >= 0 && targetFile < 8;
-
-				if (inBounds) {
-					attackedSquares.add(toIndex(targetRank, targetFile));
-				}
+			if (AttackedSquares.isValidSquare(targetRank, targetFile)) {
+				attackedSquares.add(toIndex(targetRank, targetFile));
 			}
 		}
 	}
@@ -141,24 +124,20 @@ export class AttackedSquares {
 		board: Board,
 		squareIndex: number,
 		attackedSquares: Set<number>,
-		directions: number[][]
+		directions: readonly [number, number][]
 	) {
 		const { rank: startRank, file: startFile } = fromIndex(squareIndex);
 
 		for (const [rankOffset, fileOffset] of directions) {
-
 			let targetRank = startRank + rankOffset;
 			let targetFile = startFile + fileOffset;
 
-			while (
-				targetRank >= 0 && targetRank < 8 &&
-				targetFile >= 0 && targetFile < 8
-			) {
+			while (AttackedSquares.isValidSquare(targetRank, targetFile)) {
 				const targetSquareIndex = toIndex(targetRank, targetFile);
 				attackedSquares.add(targetSquareIndex);
 
 				const pieceOnTarget = board.get(targetSquareIndex);
-				if (pieceOnTarget) break; // blocked by any piece
+				if (pieceOnTarget) break;
 
 				targetRank += rankOffset;
 				targetFile += fileOffset;
