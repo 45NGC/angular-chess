@@ -1,4 +1,4 @@
-import { Board, fromIndex, toIndex } from '../board/board';
+import { Board, fromIndex, toIndex, isValidSquare } from '../board/board';
 import { PieceColor } from '../board/piece';
 import {
 	BOARD_SIZE,
@@ -56,10 +56,6 @@ export class AttackedSquares {
 		return attackedSquares;
 	}
 
-	private static isValidSquare(rank: number, file: number): boolean {
-		return rank >= 0 && rank < BOARD_SIZE && file >= 0 && file < BOARD_SIZE;
-	}
-
 	// ----------------------------------------------------------------
 	// PAWN
 	// ----------------------------------------------------------------
@@ -75,7 +71,7 @@ export class AttackedSquares {
 			const targetRank = pieceRank + forwardDirection;
 			const targetFile = pieceFile + fileOffset;
 
-			if (AttackedSquares.isValidSquare(targetRank, targetFile)) {
+			if (isValidSquare(targetRank, targetFile)) {
 				attackedSquares.add(toIndex(targetRank, targetFile));
 			}
 		}
@@ -93,7 +89,7 @@ export class AttackedSquares {
 			const targetRank = pieceRank + rankOffset;
 			const targetFile = pieceFile + fileOffset;
 
-			if (AttackedSquares.isValidSquare(targetRank, targetFile)) {
+			if (isValidSquare(targetRank, targetFile)) {
 				attackedSquares.add(toIndex(targetRank, targetFile));
 			}
 		}
@@ -111,7 +107,7 @@ export class AttackedSquares {
 			const targetRank = pieceRank + rankOffset;
 			const targetFile = pieceFile + fileOffset;
 
-			if (AttackedSquares.isValidSquare(targetRank, targetFile)) {
+			if (isValidSquare(targetRank, targetFile)) {
 				attackedSquares.add(toIndex(targetRank, targetFile));
 			}
 		}
@@ -132,7 +128,7 @@ export class AttackedSquares {
 			let targetRank = startRank + rankOffset;
 			let targetFile = startFile + fileOffset;
 
-			while (AttackedSquares.isValidSquare(targetRank, targetFile)) {
+			while (isValidSquare(targetRank, targetFile)) {
 				const targetSquareIndex = toIndex(targetRank, targetFile);
 				attackedSquares.add(targetSquareIndex);
 

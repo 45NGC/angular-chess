@@ -138,3 +138,10 @@ export function fromIndex(index: number): { rank: number; file: number } {
 		file: index % BOARD_SIZE
 	};
 }
+
+/**
+ * Checks if given rank and file are within board limits
+ */
+export function isValidSquare(rank: number, file: number): boolean {
+	return rank >= 0 && rank < BOARD_SIZE && file >= 0 && file < BOARD_SIZE;
+}

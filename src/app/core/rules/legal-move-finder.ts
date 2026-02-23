@@ -1,9 +1,19 @@
-import { Board, fromIndex, toIndex } from '../board/board';
+import { Board, fromIndex, isValidSquare, toIndex } from '../board/board';
 import { PieceColor } from '../board/piece';
 import { Move } from './move';
 import { AttackedSquares } from './attacked-squares';
 import { MoveSimulator } from './move-simulator';
-import { BLACK_BACK_RANK, BLACK_PAWN_INITIAL_RANK, WHITE_BACK_RANK, WHITE_PAWN_INITIAL_RANK } from '../constants/chess.constants';
+import {
+	BLACK_BACK_RANK,
+	BLACK_PAWN_INITIAL_RANK,
+	WHITE_BACK_RANK,
+	WHITE_PAWN_INITIAL_RANK,
+	KNIGHT_OFFSETS,
+	KING_OFFSETS,
+	BISHOP_DIRECTIONS,
+	ROOK_DIRECTIONS,
+	QUEEN_DIRECTIONS
+} from '../constants/chess.constants';
 
 export class LegalMoveFinder {
 
@@ -16,7 +26,6 @@ export class LegalMoveFinder {
 
 		for (const move of pseudoLegalMoves) {
 			const nextBoard = MoveSimulator.simulate(board, move);
-
 			const kingSquare = nextBoard.findKing(piece.color);
 			const isKingInCheck = AttackedSquares.isSquareAttacked(nextBoard, kingSquare, this.opponent(piece.color));
 
@@ -55,31 +64,18 @@ export class LegalMoveFinder {
 	// ----------------------------------------------------------------
 	private knightMoves(board: Board, square: number, color: PieceColor): Move[] {
 		const { rank, file } = fromIndex(square);
-
-		const knightMovePattern = [
-			[+2, +1], [+2, -1],
-			[-2, +1], [-2, -1],
-			[+1, +2], [+1, -2],
-			[-1, +2], [-1, -2]
-		];
-
 		const moves: Move[] = [];
 
-		for (const [rankOffset, fileOffset] of knightMovePattern) {
+		for (const [rankOffset, fileOffset] of KNIGHT_OFFSETS) {
 			const targetRank = rank + rankOffset;
 			const targetFile = file + fileOffset;
 
-			const isOutOfBounds = targetRank < 0 || targetRank > 7 || targetFile < 0 || targetFile > 7;
-
-			if (isOutOfBounds) continue;
+			if (!isValidSquare(targetRank, targetFile)) continue;
 
 			const targetSquare = toIndex(targetRank, targetFile);
 			const pieceAtTarget = board.get(targetSquare);
 
-			const isCaptureOrEmpty =
-				!pieceAtTarget || pieceAtTarget.color !== color;
-
-			if (isCaptureOrEmpty) {
+			if (!pieceAtTarget || pieceAtTarget.color !== color) {
 				moves.push({ from: square, to: targetSquare });
 			}
 		}
@@ -94,192 +90,118 @@ export class LegalMoveFinder {
 		const { rank, file } = fromIndex(square);
 		const moves: Move[] = [];
 
-		for (let rankOffset = -1; rankOffset <= 1; rankOffset++) {
-			for (let fileOffset = -1; fileOffset <= 1; fileOffset++) {
+		// Normal king moves
+		for (const [rankOffset, fileOffset] of KING_OFFSETS) {
+			const targetRank = rank + rankOffset;
+			const targetFile = file + fileOffset;
 
-				if (rankOffset === 0 && fileOffset === 0) continue;
+			if (!isValidSquare(targetRank, targetFile)) continue;
 
-				const targetRank = rank + rankOffset;
-				const targetFile = file + fileOffset;
+			const targetSquare = toIndex(targetRank, targetFile);
+			const pieceAtTarget = board.get(targetSquare);
 
-				const isOutOfBounds = targetRank < 0 || targetRank > 7 || targetFile < 0 || targetFile > 7;
-
-				if (isOutOfBounds) continue;
-
-				const targetSquare = toIndex(targetRank, targetFile);
-				const pieceAtTarget = board.get(targetSquare);
-
-				const isCaptureOrEmpty =
-					!pieceAtTarget || pieceAtTarget.color !== color;
-
-				if (isCaptureOrEmpty) {
-					moves.push({ from: square, to: targetSquare });
-				}
+			if (!pieceAtTarget || pieceAtTarget.color !== color) {
+				moves.push({ from: square, to: targetSquare });
 			}
 		}
 
-		// ------------------------------------------------------------
-		// CASTLING
-		// ------------------------------------------------------------
-
-
-		// King cannot castle if currently in check
-		const isKingInCheck = AttackedSquares.isSquareAttacked(
-			board,
-			square,
-			this.opponent(color)
-		);
-
-		if (isKingInCheck) {
-			return moves;
-		}
-
-		// Get castling rights
-		const currentPlayerCastlingRights = color === 'white' ? board.castlingRights.white : board.castlingRights.black;
-		const homeRank = color === "white" ? 0 : 7;
-
-		// KING SIDE CASTLING 
-		const kingSideRookSquare = toIndex(homeRank, 7);
-		const kingSideRook = board.get(kingSideRookSquare);
-
-		if (
-			kingSideRook &&
-			kingSideRook.type === "rook" &&
-			currentPlayerCastlingRights.short &&
-			!board.get(toIndex(homeRank, 5)) &&
-			!board.get(toIndex(homeRank, 6))
-		) {
-			const squaresToCheck = [
-				toIndex(homeRank, 5),
-				toIndex(homeRank, 6)
-			];
-
-			const isSafe = squaresToCheck.every(square =>
-				!AttackedSquares.isSquareAttacked(
-					board,
-					square,
-					this.opponent(color)
-				)
-			);
-
-			if (isSafe) {
-				moves.push({
-					from: square,
-					to: toIndex(homeRank, 6),
-					castling: "kingSide"
-				});
-			}
-		}
-
-		// QUEEN SIDE CASTLING
-		const queenSideRookSquare = toIndex(homeRank, 0);
-		const queenSideRook = board.get(queenSideRookSquare);
-
-		if (
-			queenSideRook &&
-			queenSideRook.type === "rook" &&
-			currentPlayerCastlingRights.long &&
-			!board.get(toIndex(homeRank, 1)) &&
-			!board.get(toIndex(homeRank, 2)) &&
-			!board.get(toIndex(homeRank, 3))
-		) {
-			const squaresToCheck = [
-				toIndex(homeRank, 3),
-				toIndex(homeRank, 2)
-			];
-
-			const isSafe = squaresToCheck.every(square =>
-				!AttackedSquares.isSquareAttacked(
-					board,
-					square,
-					this.opponent(color)
-				)
-			);
-
-			if (isSafe) {
-				moves.push({
-					from: square,
-					to: toIndex(homeRank, 2),
-					castling: "queenSide"
-				});
-			}
-		}
-
+		// Castling moves
+		this.addCastlingMoves(board, square, color, moves);
 
 		return moves;
 	}
 
-	// ---------------------------------------------------------------- 
-	// PAWN 
-	//  --------------------------------------------------------------------
-	private pawnMoves(board: Board, square: number, color: PieceColor): Move[] {
-		const { rank, file } = fromIndex(square);
-		const moves: Move[] = [];
+	private addCastlingMoves(board: Board, kingSquare: number, color: PieceColor, moves: Move[]): void {
+		// King cannot castle if currently in check
+		const isKingInCheck = AttackedSquares.isSquareAttacked(board, kingSquare, this.opponent(color));
+		if (isKingInCheck) return;
 
-		const forwardDirection = color === 'white' ? +1 : -1;
+		const rights = color === 'white' ? board.castlingRights.white : board.castlingRights.black;
+		const homeRank = color === 'white' ? WHITE_BACK_RANK : BLACK_BACK_RANK;
 
-		// ----------------------------------------------------------------
-		// 1 STEP PUSH
-		// ----------------------------------------------------------------
-		const nextRank = rank + forwardDirection;
+		// King-side castling
+		if (rights.short) {
+			const rookSquare = toIndex(homeRank, 7);
+			const rook = board.get(rookSquare);
+			const squaresBetween = [toIndex(homeRank, 5), toIndex(homeRank, 6)];
+			const squaresEmpty = squaresBetween.every(sq => !board.get(sq));
+			const squaresSafe = squaresBetween.every(sq =>
+				!AttackedSquares.isSquareAttacked(board, sq, this.opponent(color))
+			);
 
-		if (nextRank >= 0 && nextRank <= 7) {
-			const nextIndex = toIndex(nextRank, file);
-
-			const isPromotionRank =
-				(color === 'white' && nextRank === BLACK_BACK_RANK) ||
-				(color === 'black' && nextRank === WHITE_BACK_RANK);
-
-			if (!board.get(nextIndex)) {
-
-				if (isPromotionRank) {
-					this.addPromotions(moves, square, nextIndex);
-				} else {
-					moves.push({ from: square, to: nextIndex });
-				}
-
-				// ----------------------------------------------------------------
-				// 2 STEPS INITIAL PUSH
-				// ----------------------------------------------------------------
-				const isPawnOnInitialRank =
-					(color === 'white' && rank === WHITE_PAWN_INITIAL_RANK) ||
-					(color === 'black' && rank === BLACK_PAWN_INITIAL_RANK);
-
-				if (isPawnOnInitialRank) {
-					const twoStepRank = rank + forwardDirection * 2;
-					const twoStepIndex = toIndex(twoStepRank, file);
-
-					if (!board.get(twoStepIndex)) {
-						moves.push({ from: square, to: twoStepIndex, doublePush: true });
-					}
-				}
+			if (rook && rook.type === 'rook' && squaresEmpty && squaresSafe) {
+				moves.push({
+					from: kingSquare,
+					to: toIndex(homeRank, 6),
+					castling: 'kingSide'
+				});
 			}
 		}
 
-		// ----------------------------------------------------------------
-		// CAPTURES
-		// ----------------------------------------------------------------
-		const captureOffsets = [-1, +1];
+		// Queen-side castling
+		if (rights.long) {
+			const rookSquare = toIndex(homeRank, 0);
+			const rook = board.get(rookSquare);
+			const squaresBetween = [toIndex(homeRank, 1), toIndex(homeRank, 2), toIndex(homeRank, 3)];
+			const squaresEmpty = squaresBetween.every(sq => !board.get(sq));
+			const squaresSafe = [toIndex(homeRank, 2), toIndex(homeRank, 3)].every(sq =>
+				!AttackedSquares.isSquareAttacked(board, sq, this.opponent(color))
+			);
 
-		for (const fileOffset of captureOffsets) {
-			const nextRankForCapture = rank + forwardDirection;
-			const targetFile = file + fileOffset;
+			if (rook && rook.type === 'rook' && squaresEmpty && squaresSafe) {
+				moves.push({
+					from: kingSquare,
+					to: toIndex(homeRank, 2),
+					castling: 'queenSide'
+				});
+			}
+		}
+	}
 
-			const isOutOfBounds =
-				nextRankForCapture < 0 || nextRankForCapture > 7 ||
-				targetFile < 0 || targetFile > 7;
+	// ----------------------------------------------------------------
+	// PAWN
+	// ----------------------------------------------------------------
+	private pawnMoves(board: Board, square: number, color: PieceColor): Move[] {
+		const { rank, file } = fromIndex(square);
+		const moves: Move[] = [];
+		const forward = color === 'white' ? 1 : -1;
+		const nextRank = rank + forward;
 
-			if (isOutOfBounds) continue;
+		// Should never happen, but safe.
+		if (!isValidSquare(nextRank, file)) return moves;
 
-			const targetSquare = toIndex(nextRankForCapture, targetFile);
+		const oneStepSquare = toIndex(nextRank, file);
+		const isPromotionRank = (color === 'white' && nextRank === BLACK_BACK_RANK) ||
+			(color === 'black' && nextRank === WHITE_BACK_RANK);
+
+		// One-step push
+		if (!board.get(oneStepSquare)) {
+			if (isPromotionRank) {
+				this.addPromotions(moves, square, oneStepSquare);
+			} else {
+				moves.push({ from: square, to: oneStepSquare });
+			}
+		}
+
+		// Two-step initial push
+		const isInitialRank = (color === 'white' && rank === WHITE_PAWN_INITIAL_RANK) ||
+			(color === 'black' && rank === BLACK_PAWN_INITIAL_RANK);
+		if (isInitialRank && !board.get(oneStepSquare)) {
+			const twoStepRank = rank + 2 * forward;
+			const twoStepSquare = toIndex(twoStepRank, file);
+			if (!board.get(twoStepSquare)) {
+				moves.push({ from: square, to: twoStepSquare, doublePush: true });
+			}
+		}
+
+		// Captures (including en passant)
+		const captureFiles = [file - 1, file + 1];
+		for (const targetFile of captureFiles) {
+			if (!isValidSquare(nextRank, targetFile)) continue;
+			const targetSquare = toIndex(nextRank, targetFile);
 			const pieceAtTarget = board.get(targetSquare);
 
-			const isPromotionRank =
-				(color === 'white' && nextRankForCapture === 7) ||
-				(color === 'black' && nextRankForCapture === 0);
-
 			if (pieceAtTarget && pieceAtTarget.color !== color) {
-
 				if (isPromotionRank) {
 					this.addPromotions(moves, square, targetSquare);
 				} else {
@@ -288,31 +210,18 @@ export class LegalMoveFinder {
 			}
 		}
 
-		// ----------------------------------------------------------------
-		// EN PASSANT
-		// ----------------------------------------------------------------
+		// En passant
 		if (board.enPassantTarget !== null) {
-			const { rank: targetRank, file: targetFile } = fromIndex(board.enPassantTarget);
-
-			const canCaptureEnPassant =
-				(color === 'white' && rank === 4) ||
-				(color === 'black' && rank === 3);
-
-			if (canCaptureEnPassant) {
-				for (const fileOffset of captureOffsets) {
-					const captureFile = file + fileOffset;
-
-					
-					if (captureFile === targetFile) {
-						const moveToRank = rank + forwardDirection;
-						const moveToSquare = toIndex(moveToRank, captureFile);
-
-						moves.push({
-							from: square,
-							to: moveToSquare,
-							enPassant: true
-						});
-					}
+			const epRank = color === 'white' ? 4 : 3; // Only possible on rank 4 (white) or 3 (black)
+			if (rank === epRank) {
+				const epFile = fromIndex(board.enPassantTarget).file;
+				if (Math.abs(file - epFile) === 1) {
+					const captureSquare = toIndex(nextRank, epFile);
+					moves.push({
+						from: square,
+						to: captureSquare,
+						enPassant: true
+					});
 				}
 			}
 		}
@@ -320,37 +229,30 @@ export class LegalMoveFinder {
 		return moves;
 	}
 
-	private addPromotions(moves: Move[], square: number, targetSquare: number) {
-		moves.push(
-			{ from: square, to: targetSquare, promotion: 'queen' },
-			{ from: square, to: targetSquare, promotion: 'rook' },
-			{ from: square, to: targetSquare, promotion: 'bishop' },
-			{ from: square, to: targetSquare, promotion: 'knight' }
-		);
+	private addPromotions(moves: Move[], from: number, to: number): void {
+		const promotions: Array<'queen' | 'rook' | 'bishop' | 'knight'> = ['queen', 'rook', 'bishop', 'knight'];
+		for (const p of promotions) {
+			moves.push({ from, to, promotion: p });
+		}
 	}
 
-
-
 	// ----------------------------------------------------------------
-	// SLIDING PIECES (rook/bishop/queen)
+	// SLIDING PIECES (rook, bishop, queen)
 	// ----------------------------------------------------------------
 	private slidingMoves(
 		board: Board,
 		square: number,
 		color: PieceColor,
-		directions: number[][]
+		directions: readonly [number, number][]
 	): Move[] {
-
-		const moves: Move[] = [];
 		const { rank, file } = fromIndex(square);
+		const moves: Move[] = [];
 
 		for (const [rankOffset, fileOffset] of directions) {
-
 			let targetRank = rank + rankOffset;
 			let targetFile = file + fileOffset;
 
-			while (targetRank >= 0 && targetRank <= 7 && targetFile >= 0 && targetFile <= 7) {
-
+			while (isValidSquare(targetRank, targetFile)) {
 				const targetSquare = toIndex(targetRank, targetFile);
 				const pieceAtTarget = board.get(targetSquare);
 
@@ -372,29 +274,14 @@ export class LegalMoveFinder {
 	}
 
 	private rookMoves(board: Board, square: number, color: PieceColor): Move[] {
-		const rookDirections = [
-			[+1, 0], [-1, 0],
-			[0, +1], [0, -1]
-		];
-
-		return this.slidingMoves(board, square, color, rookDirections);
+		return this.slidingMoves(board, square, color, ROOK_DIRECTIONS);
 	}
 
 	private bishopMoves(board: Board, square: number, color: PieceColor): Move[] {
-		const bishopDirections = [
-			[+1, +1], [+1, -1],
-			[-1, +1], [-1, -1]
-		];
-
-		return this.slidingMoves(board, square, color, bishopDirections);
+		return this.slidingMoves(board, square, color, BISHOP_DIRECTIONS);
 	}
 
 	private queenMoves(board: Board, square: number, color: PieceColor): Move[] {
-		const queenDirections = [
-			[+1, +1], [+1, -1], [-1, +1], [-1, -1],
-			[+1, 0], [-1, 0], [0, +1], [0, -1]
-		];
-
-		return this.slidingMoves(board, square, color, queenDirections);
+		return this.slidingMoves(board, square, color, QUEEN_DIRECTIONS);
 	}
 }
