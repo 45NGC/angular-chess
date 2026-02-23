@@ -1,6 +1,6 @@
 
 import { Board, fromIndex, toIndex } from '../board/board';
-import { A1, A8, D1, D8, F1, F8, H1, H8 } from '../constants/chess.constants';
+import { A1, A8, D1, D8, F1, F8, H1, H8, SQUARE_COUNT } from '../constants/chess.constants';
 import { AttackedSquares } from './attacked-squares';
 import { LegalMoveFinder } from './legal-move-finder';
 import { Move } from './move';
@@ -25,8 +25,6 @@ export class GameState {
 		const piece = this.board.get(move.from);
 		if (!piece) return;
 
-		const isPromotion = !!move.promotion;
-
 		if (move.doublePush) {
 			this.handleDoublePush(move);
 		} else {
@@ -36,13 +34,12 @@ export class GameState {
 		this.board.set(move.to, piece);
 		this.board.set(move.from, null);
 
-		if (isPromotion) {
+		if (move.promotion) {
 			this.board.set(move.to, {
 				type: move.promotion!,
 				color: piece.color
 			});
 		}
-
 
 		if (move.enPassant) {
 			this.handleEnPassant(move);
@@ -123,7 +120,7 @@ export class GameState {
 		const moves: Move[] = [];
 		const moveFinder = new LegalMoveFinder();
 
-		for (let square = 0; square < 64; square++) {
+		for (let square = 0; square < SQUARE_COUNT; square++) {
 			const piece = this.board.get(square);
 			if (!piece || piece.color !== color) continue;
 
