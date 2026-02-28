@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, OnInit } from '@angular/core';
 import { GameState } from '../../core/rules/game-state';
 import { CommonModule } from '@angular/common';
 import { loadFEN } from '../../core/board/fen';
@@ -8,6 +8,7 @@ import { LegalMoveFinder } from '../../core/rules/legal-move-finder';
 import { BOARD_SIZE, INITIAL_POSITION_FEN } from '../../core/constants/chess.constants';
 import { GameOverDialogComponent } from './game-over-dialog/game-over-dialog.component';
 import { PromotionDialogComponent } from './promotion-dialog/promotion-dialog.component';
+import { ActivatedRoute } from '@angular/router';
 
 @Component({
 	selector: 'app-game',
@@ -16,7 +17,7 @@ import { PromotionDialogComponent } from './promotion-dialog/promotion-dialog.co
 	templateUrl: './game.component.html',
 	styleUrls: ['./game.component.css']
 })
-export class GameComponent {
+export class GameComponent implements OnInit {
 	state: GameState;
 	selectedSquare: number | null = null;
 	legalMoves: Move[] = [];
@@ -25,13 +26,23 @@ export class GameComponent {
 	showGameOverDialog = false;
 	showPromotionDialog = false;
 	pendingPromotionMoves: Move[] | null = null;
+	gameMode: string | null = null;
 
 	private moveFinder = new LegalMoveFinder();
 
-	constructor() {
+	constructor(
+		private route: ActivatedRoute
+	) {
 		const board = new Board();
 		loadFEN(board, INITIAL_POSITION_FEN);
 		this.state = new GameState(board);
+	}
+
+	ngOnInit(): void {
+		this.route.paramMap.subscribe(params => {
+			this.gameMode = params.get('mode');
+			console.log('Gamemode : ', this.gameMode);
+		});
 	}
 
 	pieceToImage(piece: any): string | null {

@@ -10,7 +10,7 @@ import { Router } from '@angular/router';
 export class HomeComponent {
 	constructor(private router: Router) { }
 
-	play(): void {
-		this.router.navigate(['/game']);
+	play(mode: string): void {
+		this.router.navigate(['/game', mode]);
 	}
 }
