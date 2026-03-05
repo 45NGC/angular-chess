@@ -6,6 +6,7 @@ import { LegalMoveFinder } from '../core/rules/legal-move-finder';
 import { loadFEN } from '../core/board/fen';
 import { INITIAL_POSITION_FEN } from '../core/constants/chess.constants';
 import { IGameService } from './game-service.interface';
+import { SoundService } from './sound.service';
 
 @Injectable()
 export class LocalGameService implements IGameService {
@@ -18,7 +19,7 @@ export class LocalGameService implements IGameService {
 
 	private moveFinder = new LegalMoveFinder();
 
-	constructor() {
+	constructor(private soundService: SoundService) {
 		this.resetGame();
 	}
 
@@ -115,7 +116,16 @@ export class LocalGameService implements IGameService {
 	}
 
 	private applyMoveAndCheckGameOver(move: Move): void {
+		const capturedPiece = this.state.board.get(move.to);
+
 		this.state.applyMove(move);
+
+		if (capturedPiece) {
+			this.soundService.playCapture();
+		} else {
+			this.soundService.playMove();
+		}
+
 		this.checkGameOver();
 	}
 

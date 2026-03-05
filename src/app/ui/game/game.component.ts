@@ -6,6 +6,7 @@ import { PromotionDialogComponent } from './promotion-dialog/promotion-dialog.co
 import { BOARD_SIZE } from '../../core/constants/chess.constants';
 import { IGameService } from '../../services/game-service.interface';
 import { LocalGameService } from '../../services/local-game.service';
+import { SoundService } from '../../services/sound.service';
 
 @Component({
 	selector: 'app-game',
@@ -27,7 +28,7 @@ export class GameComponent implements OnInit {
 	get showPromotionDialog() { return this.gameService?.showPromotionDialog ?? false; }
 	get pendingPromotionMoves() { return this.gameService?.pendingPromotionMoves ?? null; }
 
-	constructor(private route: ActivatedRoute) { }
+	constructor(private route: ActivatedRoute, private soundService: SoundService) { }
 
 	ngOnInit(): void {
 		this.route.paramMap.subscribe(params => {
@@ -40,7 +41,7 @@ export class GameComponent implements OnInit {
 	private selectService(mode: string | null): void {
 		switch (mode) {
 			case 'local':
-				this.gameService = new LocalGameService();
+				this.gameService = new LocalGameService(this.soundService);
 				break;
 			default:
 				console.error('Modo de juego no soportado:', mode);
