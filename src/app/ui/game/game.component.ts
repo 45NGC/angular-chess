@@ -4,7 +4,7 @@ import { ActivatedRoute } from '@angular/router';
 import { GameOverDialogComponent } from './game-over-dialog/game-over-dialog.component';
 import { PromotionDialogComponent } from './promotion-dialog/promotion-dialog.component';
 import { BOARD_SIZE } from '../../core/constants/chess.constants';
-import { IGameService } from '../../services/game-service.interface';
+import { IGameService } from '../../interfaces/game-service.interface';
 import { LocalGameService } from '../../services/local-game.service';
 import { SoundService } from '../../services/sound.service';
 

@@ -5,7 +5,7 @@ import { Move } from '../core/rules/move';
 import { LegalMoveFinder } from '../core/rules/legal-move-finder';
 import { loadFEN } from '../core/board/fen';
 import { INITIAL_POSITION_FEN } from '../core/constants/chess.constants';
-import { IGameService } from './game-service.interface';
+import { IGameService } from '../interfaces/game-service.interface';
 import { SoundService } from './sound.service';
 
 @Injectable()
