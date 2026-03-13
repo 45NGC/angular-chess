@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { GameState } from '../core/rules/game-state';
 import { Board, toIndex } from '../core/board/board';
 import { Move } from '../core/rules/move';
+import { AttackedSquares } from '../core/rules/attacked-squares';
 import { LegalMoveFinder } from '../core/rules/legal-move-finder';
 import { loadFEN } from '../core/board/fen';
 import { INITIAL_POSITION_FEN } from '../core/constants/chess.constants';
@@ -120,10 +121,19 @@ export class LocalGameService implements IGameService {
 
 		this.state.applyMove(move);
 
-		if (capturedPiece) {
-			this.soundService.playCapture();
+		// Check if the king is in check to play the check sound
+		const kingSquare = this.state.board.findKing(this.state.turn);
+		const attackerColor = this.state.turn === 'white' ? 'black' : 'white';
+		if (AttackedSquares.isSquareAttacked(this.state.board, kingSquare, attackerColor)) {
+			this.soundService.playCheck();
 		} else {
-			this.soundService.playMove();
+
+			if (capturedPiece) {
+				this.soundService.playCapture();
+			} else {
+				this.soundService.playMove();
+			}
+
 		}
 
 		this.checkGameOver();
@@ -131,6 +141,7 @@ export class LocalGameService implements IGameService {
 
 	private checkGameOver(): void {
 		if (this.state.result.type !== 'ongoing') {
+			this.soundService.playEnd();
 			this.showGameOverDialog = true;
 		}
 	}
