@@ -5,3 +5,11 @@
   <button (click)="play('online')">Online</button>
   <button (click)="play('ai')">AI</button>
 </div>
+
+@if (showTimeControlDialog) {
+  <app-time-control-dialog
+    [initial]="lastTimeControl"
+    (confirm)="onTimeControlConfirm($event)"
+    (cancel)="onTimeControlCancel()"
+  ></app-time-control-dialog>
+}

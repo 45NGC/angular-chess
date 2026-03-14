@@ -1,19 +1,35 @@
 <div class="game-container" *ngIf="gameService; else loading">
-  <div class="board">
-    <div class="rank" *ngFor="let rank of ranks">
-      <div
-        class="square"
-        [class.dark]="(rank + file) % 2 === 0"
-        [class.light]="(rank + file) % 2 !== 0"
-        [class.legal]="isLegalTarget(rank * 8 + file)"
-        *ngFor="let file of files"
-        (click)="onSquareClick(rank, file)"
-      >
-        <img
-          *ngIf="state?.board?.get(rank * 8 + file) as piece"
-          [src]="pieceToImage(piece)"
-          class="piece"
-        />
+  <div class="board-area">
+    <div class="board">
+      <div class="rank" *ngFor="let rank of ranks">
+        <div
+          class="square"
+          [class.dark]="(rank + file) % 2 === 0"
+          [class.light]="(rank + file) % 2 !== 0"
+          [class.legal]="isLegalTarget(rank * 8 + file)"
+          *ngFor="let file of files"
+          (click)="onSquareClick(rank, file)"
+        >
+          <img
+            *ngIf="state?.board?.get(rank * 8 + file) as piece"
+            [src]="pieceToImage(piece)"
+            class="piece"
+          />
+        </div>
+      </div>
+    </div>
+
+    <div class="clocks" *ngIf="clockEnabled">
+      <div class="clock clock-black" [class.active]="activeClockColor === 'black'">
+        <span class="clock-label">BLACK</span>
+        <span class="clock-time">{{ formatClockTime('black') }}</span>
+        <span class="clock-inc">+{{ blackIncrementSeconds }}s</span>
+      </div>
+
+      <div class="clock clock-white" [class.active]="activeClockColor === 'white'">
+        <span class="clock-label">WHITE</span>
+        <span class="clock-time">{{ formatClockTime('white') }}</span>
+        <span class="clock-inc">+{{ whiteIncrementSeconds }}s</span>
       </div>
     </div>
 

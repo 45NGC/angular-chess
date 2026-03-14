@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { GameState } from '../core/rules/game-state';
 import { Board, toIndex } from '../core/board/board';
 import { Move } from '../core/rules/move';
@@ -8,6 +8,10 @@ import { loadFEN } from '../core/board/fen';
 import { INITIAL_POSITION_FEN } from '../core/constants/chess.constants';
 import { IGameService } from '../interfaces/game-service.interface';
 import { SoundService } from './sound.service';
+import { TimeControl } from '../interfaces/time-control.interface';
+import { LocalClock, LocalClockState } from './local-clock';
+
+export const LOCAL_TIME_CONTROL = new InjectionToken<TimeControl>('LOCAL_TIME_CONTROL');
 
 @Injectable()
 export class LocalGameService implements IGameService {
@@ -18,9 +22,27 @@ export class LocalGameService implements IGameService {
 	showPromotionDialog = false;
 	pendingPromotionMoves: Move[] | null = null;
 
-	private moveFinder = new LegalMoveFinder();
+	timeControl: TimeControl;
+	clockEnabled = false;
+	whiteTimeMs = 0;
+	blackTimeMs = 0;
+	activeClockColor: 'white' | 'black' | null = null;
 
-	constructor(private soundService: SoundService) {
+	private moveFinder = new LegalMoveFinder();
+	private clock: LocalClock | null = null;
+
+	constructor(
+		private soundService: SoundService,
+		@Optional() @Inject(LOCAL_TIME_CONTROL) timeControl?: TimeControl
+	) {
+		this.timeControl = timeControl ?? {
+			white: { baseMinutes: 0, incrementSeconds: 0 },
+			black: { baseMinutes: 0, incrementSeconds: 0 }
+		};
+		this.clock = new LocalClock(
+			(winner) => this.onTimeout(winner),
+			(snapshot) => this.applyClockSnapshot(snapshot)
+		);
 		this.resetGame();
 	}
 
@@ -33,9 +55,11 @@ export class LocalGameService implements IGameService {
 		this.showGameOverDialog = false;
 		this.showPromotionDialog = false;
 		this.pendingPromotionMoves = null;
+		this.resetClock();
 	}
 
 	handleSquareClick(rank: number, file: number): void {
+		if (this.state.result.type !== 'ongoing') return;
 		const square = toIndex(rank, file);
 		const piece = this.state.board.get(square);
 
@@ -111,15 +135,20 @@ export class LocalGameService implements IGameService {
 				return `${result.winner === 'white' ? 'WHITE' : 'BLACK'} WON`;
 			case 'stalemate':
 				return 'STALEMATE';
+			case 'timeout':
+				return `${result.winner === 'white' ? 'WHITE' : 'BLACK'} WON ON TIME`;
 			default:
 				return '';
 		}
 	}
 
 	private applyMoveAndCheckGameOver(move: Move): void {
+		const mover = this.state.turn;
 		const capturedPiece = this.state.board.get(move.to);
 
 		this.state.applyMove(move);
+
+		this.clock?.switchTurn(mover);
 
 		// Check if the king is in check to play the check sound
 		const kingSquare = this.state.board.findKing(this.state.turn);
@@ -142,7 +171,42 @@ export class LocalGameService implements IGameService {
 	private checkGameOver(): void {
 		if (this.state.result.type !== 'ongoing') {
 			this.soundService.playEnd();
+			this.clock?.stop();
 			this.showGameOverDialog = true;
 		}
+	}
+
+	destroy(): void {
+		this.clock?.stop();
+	}
+
+	private resetClock(): void {
+		if (!this.clock) return;
+		this.clock.configure(
+			this.timeControl.white.baseMinutes,
+			this.timeControl.white.incrementSeconds,
+			this.timeControl.black.baseMinutes,
+			this.timeControl.black.incrementSeconds
+		);
+		this.clockEnabled = this.timeControl.white.baseMinutes > 0 || this.timeControl.black.baseMinutes > 0;
+		if (this.clockEnabled) {
+			this.clock.start('white');
+		} else {
+			this.clock.stop();
+		}
+	}
+
+	private applyClockSnapshot(snap: LocalClockState): void {
+		this.clockEnabled = snap.enabled;
+		this.whiteTimeMs = snap.whiteMs;
+		this.blackTimeMs = snap.blackMs;
+		this.activeClockColor = snap.active;
+	}
+
+	private onTimeout(winner: 'white' | 'black'): void {
+		if (this.state.result.type !== 'ongoing') return;
+		this.state.result = { type: 'timeout', winner };
+		this.soundService.playEnd();
+		this.showGameOverDialog = true;
 	}
 }

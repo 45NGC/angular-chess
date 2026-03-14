@@ -1,0 +1,79 @@
+<div class="overlay" (click)="onCancel()">
+  <div class="container" (click)="$event.stopPropagation()">
+    <div class="title">LOCAL GAME</div>
+    <div class="subtitle">Select time control</div>
+
+    <div class="sides">
+      <div class="side">
+        <div class="side-title">WHITE</div>
+
+        <div class="section">
+          <div class="section-title">Base time</div>
+          <div class="options-grid">
+            <div
+              class="option"
+              *ngFor="let option of baseOptions"
+              [class.selected]="option.minutes === white.baseMinutes"
+              (click)="selectBase('white', option.minutes)"
+            >
+              {{ option.label }}
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Increment per move</div>
+          <div class="options-grid increments">
+            <div
+              class="option"
+              *ngFor="let option of incrementOptions"
+              [class.selected]="option.seconds === white.incrementSeconds"
+              (click)="selectIncrement('white', option.seconds)"
+            >
+              {{ option.label }}
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="side">
+        <div class="side-title">BLACK</div>
+
+        <div class="section">
+          <div class="section-title">Base time</div>
+          <div class="options-grid">
+            <div
+              class="option"
+              *ngFor="let option of baseOptions"
+              [class.selected]="option.minutes === black.baseMinutes"
+              (click)="selectBase('black', option.minutes)"
+            >
+              {{ option.label }}
+            </div>
+          </div>
+        </div>
+
+        <div class="section">
+          <div class="section-title">Increment per move</div>
+          <div class="options-grid increments">
+            <div
+              class="option"
+              *ngFor="let option of incrementOptions"
+              [class.selected]="option.seconds === black.incrementSeconds"
+              (click)="selectIncrement('black', option.seconds)"
+            >
+              {{ option.label }}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="summary">{{ summary }}</div>
+
+    <div class="actions">
+      <div class="action primary" (click)="onConfirm()">START</div>
+      <div class="action" (click)="onCancel()">CANCEL</div>
+    </div>
+  </div>
+</div>

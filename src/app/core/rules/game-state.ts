@@ -8,7 +8,8 @@ import { Move } from './move';
 export type GameResult =
 	| { type: 'ongoing' }
 	| { type: 'checkmate', winner: 'white' | 'black' }
-	| { type: 'stalemate' };
+	| { type: 'stalemate' }
+	| { type: 'timeout', winner: 'white' | 'black' };
 
 
 export class GameState {
