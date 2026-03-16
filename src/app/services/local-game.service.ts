@@ -41,7 +41,7 @@ export class LocalGameService implements IGameService {
 		};
 		this.clock = new LocalClock(
 			(winner) => this.onTimeout(winner),
-			(snapshot) => this.applyClockSnapshot(snapshot)
+			(clockState) => this.applyClockState(clockState)
 		);
 		this.resetGame();
 	}
@@ -196,7 +196,7 @@ export class LocalGameService implements IGameService {
 		}
 	}
 
-	private applyClockSnapshot(snap: LocalClockState): void {
+	private applyClockState(snap: LocalClockState): void {
 		this.clockEnabled = snap.enabled;
 		this.whiteTimeMs = snap.whiteMs;
 		this.blackTimeMs = snap.blackMs;
