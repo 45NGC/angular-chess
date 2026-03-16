@@ -1,7 +1,9 @@
-<div class="promotion-container">
+  <div class="promotion-container">
   <div class="piece-option cancel-option" (click)="onClose()">✕</div>
 
-  <div *ngFor="let type of pieceTypes" class="piece-option" (click)="onSelect(type)">
-    <img [src]="getPieceImage(type)" [alt]="type" />
-  </div>
+  @for (type of pieceTypes; track type) {
+    <div class="piece-option" (click)="onSelect(type)">
+      <img [src]="getPieceImage(type)" [alt]="type" />
+    </div>
+  }
 </div>

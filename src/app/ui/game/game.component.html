@@ -1,57 +1,63 @@
-<div class="game-container" *ngIf="gameService; else loading">
-  <div class="board-area">
-    <div class="board">
-      <div class="rank" *ngFor="let rank of ranks">
-        <div
-          class="square"
-          [class.dark]="(rank + file) % 2 === 0"
-          [class.light]="(rank + file) % 2 !== 0"
-          [class.legal]="isLegalTarget(rank * 8 + file)"
-          *ngFor="let file of files"
-          (click)="onSquareClick(rank, file)"
-        >
-          <img
-            *ngIf="state?.board?.get(rank * 8 + file) as piece"
-            [src]="pieceToImage(piece)"
-            class="piece"
-          />
+@if (gameService) {
+  <div class="game-container">
+    <div class="board-area">
+      <div class="board">
+        @for (rank of ranks; track rank) {
+          <div class="rank">
+            @for (file of files; track file) {
+              <div
+                class="square"
+                [class.dark]="(rank + file) % 2 === 0"
+                [class.light]="(rank + file) % 2 !== 0"
+                [class.legal]="isLegalTarget(rank * 8 + file)"
+                (click)="onSquareClick(rank, file)"
+              >
+                @if (state?.board?.get(rank * 8 + file); as piece) {
+                  <img [src]="pieceToImage(piece)" class="piece" />
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      @if (clockEnabled) {
+        <div class="clocks">
+          <div class="clock clock-black" [class.active]="activeClockColor === 'black'">
+            <span class="clock-label">BLACK</span>
+            <span class="clock-time">{{ formatClockTime('black') }}</span>
+            <span class="clock-inc">+{{ blackIncrementSeconds }}s</span>
+          </div>
+
+          <div class="clock clock-white" [class.active]="activeClockColor === 'white'">
+            <span class="clock-label">WHITE</span>
+            <span class="clock-time">{{ formatClockTime('white') }}</span>
+            <span class="clock-inc">+{{ whiteIncrementSeconds }}s</span>
+          </div>
         </div>
-      </div>
+      }
+
+      @if (showGameOverDialog) {
+        <app-game-over-dialog
+          [message]="getResultMessage()"
+          (restart)="onRestart()"
+          (exit)="onExit()"
+        >
+        </app-game-over-dialog>
+      }
     </div>
 
-    <div class="clocks" *ngIf="clockEnabled">
-      <div class="clock clock-black" [class.active]="activeClockColor === 'black'">
-        <span class="clock-label">BLACK</span>
-        <span class="clock-time">{{ formatClockTime('black') }}</span>
-        <span class="clock-inc">+{{ blackIncrementSeconds }}s</span>
+    @if (showPromotionDialog) {
+      <div class="promotion-side-panel">
+        <app-promotion-dialog
+          [color]="state!.turn"
+          (selected)="onPromotionSelected($event)"
+          (close)="closePromotionDialog()"
+        >
+        </app-promotion-dialog>
       </div>
-
-      <div class="clock clock-white" [class.active]="activeClockColor === 'white'">
-        <span class="clock-label">WHITE</span>
-        <span class="clock-time">{{ formatClockTime('white') }}</span>
-        <span class="clock-inc">+{{ whiteIncrementSeconds }}s</span>
-      </div>
-    </div>
-
-    <app-game-over-dialog
-      *ngIf="showGameOverDialog"
-      [message]="getResultMessage()"
-      (restart)="onRestart()"
-      (exit)="onExit()"
-    >
-    </app-game-over-dialog>
+    }
   </div>
-
-  <div class="promotion-side-panel" *ngIf="showPromotionDialog">
-    <app-promotion-dialog
-      [color]="state!.turn"
-      (selected)="onPromotionSelected($event)"
-      (close)="closePromotionDialog()"
-    >
-    </app-promotion-dialog>
-  </div>
-</div>
-
-<ng-template #loading>
+} @else {
   <p>Loading...</p>
-</ng-template>
+}

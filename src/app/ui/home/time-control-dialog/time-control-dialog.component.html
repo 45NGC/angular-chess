@@ -10,28 +10,30 @@
         <div class="section">
           <div class="section-title">Base time</div>
           <div class="options-grid">
-            <div
-              class="option"
-              *ngFor="let option of baseOptions"
-              [class.selected]="option.minutes === white.baseMinutes"
-              (click)="selectBase('white', option.minutes)"
-            >
-              {{ option.label }}
-            </div>
+            @for (option of baseOptions; track option.minutes) {
+              <div
+                class="option"
+                [class.selected]="option.minutes === white.baseMinutes"
+                (click)="selectBase('white', option.minutes)"
+              >
+                {{ option.label }}
+              </div>
+            }
           </div>
         </div>
 
         <div class="section">
           <div class="section-title">Increment per move</div>
           <div class="options-grid increments">
-            <div
-              class="option"
-              *ngFor="let option of incrementOptions"
-              [class.selected]="option.seconds === white.incrementSeconds"
-              (click)="selectIncrement('white', option.seconds)"
-            >
-              {{ option.label }}
-            </div>
+            @for (option of incrementOptions; track option.seconds) {
+              <div
+                class="option"
+                [class.selected]="option.seconds === white.incrementSeconds"
+                (click)="selectIncrement('white', option.seconds)"
+              >
+                {{ option.label }}
+              </div>
+            }
           </div>
         </div>
       </div>
@@ -42,28 +44,30 @@
         <div class="section">
           <div class="section-title">Base time</div>
           <div class="options-grid">
-            <div
-              class="option"
-              *ngFor="let option of baseOptions"
-              [class.selected]="option.minutes === black.baseMinutes"
-              (click)="selectBase('black', option.minutes)"
-            >
-              {{ option.label }}
-            </div>
+            @for (option of baseOptions; track option.minutes) {
+              <div
+                class="option"
+                [class.selected]="option.minutes === black.baseMinutes"
+                (click)="selectBase('black', option.minutes)"
+              >
+                {{ option.label }}
+              </div>
+            }
           </div>
         </div>
 
         <div class="section">
           <div class="section-title">Increment per move</div>
           <div class="options-grid increments">
-            <div
-              class="option"
-              *ngFor="let option of incrementOptions"
-              [class.selected]="option.seconds === black.incrementSeconds"
-              (click)="selectIncrement('black', option.seconds)"
-            >
-              {{ option.label }}
-            </div>
+            @for (option of incrementOptions; track option.seconds) {
+              <div
+                class="option"
+                [class.selected]="option.seconds === black.incrementSeconds"
+                (click)="selectIncrement('black', option.seconds)"
+              >
+                {{ option.label }}
+              </div>
+            }
           </div>
         </div>
       </div>
