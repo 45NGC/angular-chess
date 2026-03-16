@@ -35,7 +35,7 @@ export class LocalClock {
 
 	constructor(
 		private onTimeout: (winner: ClockColor) => void,
-		private onUpdate?: (snapshot: LocalClockState) => void
+		private onUpdate?: (state: LocalClockState) => void
 	) { }
 
 	configure(
@@ -53,7 +53,7 @@ export class LocalClock {
 		this.blackMs = this.blackBaseMs;
 		this.active = null;
 		this.lastTickAt = 0;
-		this.onUpdate?.(this.getSnapshot());
+		this.onUpdate?.(this.getClockState());
 	}
 
 	start(color: ClockColor): void {
@@ -61,7 +61,7 @@ export class LocalClock {
 		this.active = color;
 		this.lastTickAt = nowMs();
 		this.ensureInterval();
-		this.onUpdate?.(this.getSnapshot());
+		this.onUpdate?.(this.getClockState());
 	}
 
 	stop(): void {
@@ -71,7 +71,7 @@ export class LocalClock {
 			clearInterval(this.intervalId);
 			this.intervalId = null;
 		}
-		this.onUpdate?.(this.getSnapshot());
+		this.onUpdate?.(this.getClockState());
 	}
 
 	switchTurn(mover: ClockColor): void {
@@ -80,10 +80,10 @@ export class LocalClock {
 		this.addIncrement(mover);
 		this.active = mover === 'white' ? 'black' : 'white';
 		this.lastTickAt = nowMs();
-		this.onUpdate?.(this.getSnapshot());
+		this.onUpdate?.(this.getClockState());
 	}
 
-	getSnapshot(): LocalClockState {
+	getClockState(): LocalClockState {
 		return {
 			enabled: this.isEnabled(),
 			active: this.active,
@@ -110,7 +110,7 @@ export class LocalClock {
 	private tick(): void {
 		if (!this.active) return;
 		this.flushElapsed();
-		this.onUpdate?.(this.getSnapshot());
+		this.onUpdate?.(this.getClockState());
 		if (this.getRemaining(this.active) > 0) return;
 		const winner: ClockColor = this.active === 'white' ? 'black' : 'white';
 		this.stop();
