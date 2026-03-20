@@ -4,6 +4,8 @@
 	align-items: center;
 	width: 100%;
 	height: 100vh;
+	--hint-color: rgba(0, 0, 0, 0.4);
+	--board-size: 648px;
 }
 
 .promotion-side-panel {
@@ -23,15 +25,15 @@
 .board-area {
 	position: relative;
 	display: flex;
-	width: 650px;
-	height: 650px;
+	width: var(--board-size);
+	height: var(--board-size);
 }
 
 .board {
 	display: grid;
 	grid-template-rows: repeat(8, 1fr);
-	width: 650px;
-	height: 650px;
+	width: var(--board-size);
+	height: var(--board-size);
 	border: 2px solid #333;
 }
 
@@ -54,18 +56,39 @@
 	background-color: #b58863;
 }
 
-.square.legal {
+.square.legal-move,
+.square.legal-capture {
 	position: relative;
 	cursor: pointer;
 }
 
-.square.legal::after {
+.square.legal-move::after {
 	content: '';
 	width: 14px;
 	height: 14px;
 	border-radius: 50%;
-	background-color: rgba(0, 0, 0, 0.4);
+	background-color: var(--hint-color);
 	position: absolute;
+	pointer-events: none;
+}
+
+.square.legal-capture::after {
+	--corner-size: 24%;
+	--corner-overlap: 1px;
+	--corner-size-safe: calc(var(--corner-size) + var(--corner-overlap));
+	content: '';
+	position: absolute;
+	inset: 0;
+	pointer-events: none;
+	background:
+		linear-gradient(135deg, var(--hint-color) 0 50%, transparent 50% 100%) calc(0% - var(--corner-overlap))
+			calc(0% - var(--corner-overlap)) / var(--corner-size-safe) var(--corner-size-safe) no-repeat,
+		linear-gradient(225deg, var(--hint-color) 0 50%, transparent 50% 100%) calc(100% + var(--corner-overlap))
+			calc(0% - var(--corner-overlap)) / var(--corner-size-safe) var(--corner-size-safe) no-repeat,
+		linear-gradient(45deg, var(--hint-color) 0 50%, transparent 50% 100%) calc(0% - var(--corner-overlap))
+			calc(100% + var(--corner-overlap)) / var(--corner-size-safe) var(--corner-size-safe) no-repeat,
+		linear-gradient(315deg, var(--hint-color) 0 50%, transparent 50% 100%) calc(100% + var(--corner-overlap))
+			calc(100% + var(--corner-overlap)) / var(--corner-size-safe) var(--corner-size-safe) no-repeat;
 }
 
 .piece {

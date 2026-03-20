@@ -9,7 +9,8 @@
                 class="square"
                 [class.dark]="(rank + file) % 2 === 0"
                 [class.light]="(rank + file) % 2 !== 0"
-                [class.legal]="isLegalTarget(rank * 8 + file)"
+                [class.legal-move]="isNonCaptureLegalSquare(rank * 8 + file)"
+                [class.legal-capture]="isCaptureSquare(rank * 8 + file)"
                 (click)="onSquareClick(rank, file)"
               >
                 @if (state?.board?.get(rank * 8 + file); as piece) {

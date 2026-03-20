@@ -112,6 +112,25 @@ export class GameComponent implements OnInit, OnDestroy {
 		return this.legalMoves.some(m => m.to === square);
 	}
 
+	private isSquareCaptureDestination(square: number): boolean {
+		const board = this.state?.board;
+		if (!board) return false;
+		return this.legalMoves.some(m => {
+			if (m.to !== square) return false;
+			if (m.enPassant) return true;
+			return board.get(square) !== null;
+		});
+	}
+
+	isCaptureSquare(square: number): boolean {
+		return this.isSquareCaptureDestination(square);
+	}
+
+	isNonCaptureLegalSquare(square: number): boolean {
+		if (!this.isLegalTarget(square)) return false;
+		return !this.isSquareCaptureDestination(square);
+	}
+
 	resetGame(): void {
 		this.gameService?.resetGame();
 	}
