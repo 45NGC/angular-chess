@@ -1,9 +1,9 @@
-
-import { Board, fromIndex, toIndex } from '../board/board';
-import { A1, A8, D1, D8, F1, F8, H1, H8, SQUARE_COUNT } from '../constants/chess.constants';
+import { Board } from '../board/board';
+import { SQUARE_COUNT } from '../constants/chess.constants';
 import { AttackedSquares } from './attacked-squares';
 import { LegalMoveFinder } from './legal-move-finder';
 import { Move } from './move';
+import { MoveSimulator } from './move-simulator';
 
 export type GameResult =
 	| { type: 'ongoing' }
@@ -26,71 +26,13 @@ export class GameState {
 		const piece = this.board.get(move.from);
 		if (!piece) return;
 
-		if (move.doublePush) {
-			this.handleDoublePush(move);
-		} else {
-			this.board.enPassantTarget = null;
-		}
-
-		this.board.set(move.to, piece);
-		this.board.set(move.from, null);
-
-		if (move.promotion && piece.type === 'pawn') {
-			this.board.set(move.to, {
-				type: move.promotion!,
-				color: piece.color
-			});
-		}
-
-		if (move.enPassant) {
-			this.handleEnPassant(move);
-		}
-
-		if (move.castling) {
-			this.handleCastling(move.castling);
-		}
+		const nextBoard = MoveSimulator.simulate(this.board, move);
+		nextBoard.updateCastlingRights(move, piece);
+		this.board = nextBoard;
 
 		this.turn = this.turn === 'white' ? 'black' : 'white';
-
-		this.board.updateCastlingRights(move, piece);
 		this.updateGameResult();
 
-	}
-
-	private handleDoublePush(move: Move) {
-		const { rank: fromRank, file } = fromIndex(move.from);
-		const { rank: toRank } = fromIndex(move.to);
-
-		// The en passant target is the square the pawn "passed through"
-		const passedRank = (fromRank + toRank) / 2;
-		this.board.enPassantTarget = toIndex(passedRank, file);
-	}
-
-	private handleEnPassant(move: Move) {
-		const { rank, file } = fromIndex(move.to);
-
-		const capturedRank = this.turn === 'white' ? rank - 1 : rank + 1;
-		const capturedSquare = toIndex(capturedRank, file);
-		this.board.set(capturedSquare, null);
-
-	}
-
-	private handleCastling(type: 'kingSide' | 'queenSide'): void {
-		const isWhite = this.turn === 'white';
-
-		const rookFrom = isWhite
-			? type === 'kingSide' ? H1 : A1
-			: type === 'kingSide' ? H8 : A8;
-
-		const rookTo = isWhite
-			? type === 'kingSide' ? F1 : D1
-			: type === 'kingSide' ? F8 : D8;
-
-		const rook = this.board.get(rookFrom);
-		if (!rook) return;
-
-		this.board.set(rookTo, rook);
-		this.board.set(rookFrom, null);
 	}
 
 	private updateGameResult(): void {
