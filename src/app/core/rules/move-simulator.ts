@@ -66,12 +66,14 @@ export class MoveSimulator {
             const rookFrom = isWhite ? H1 : H8;
             const rookTo = isWhite ? F1 : F8;
             const rook = boardClone.get(rookFrom);
+            if (!rook || rook.type !== 'rook' || rook.color !== piece.color) return;
             boardClone.set(rookFrom, null);
             boardClone.set(rookTo, rook);
         } else { // queenSide
             const rookFrom = isWhite ? A1 : A8;
             const rookTo = isWhite ? D1 : D8;
             const rook = boardClone.get(rookFrom);
+            if (!rook || rook.type !== 'rook' || rook.color !== piece.color) return;
             boardClone.set(rookFrom, null);
             boardClone.set(rookTo, rook);
         }
