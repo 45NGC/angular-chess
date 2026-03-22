@@ -51,7 +51,7 @@ describe('LegalMoveFinder', () => {
 			const expectedSquares = [
 				[6, 5], [6, 3], [2, 5], [2, 3],
 				[5, 6], [5, 2], [3, 6], [3, 2]
-			].map(([r, f]) => toIndex(r, f));
+			].map(([rank, file]) => toIndex(rank, file));
 
 			expect(moves).toHaveLength(8);
 			for (const expected of expectedSquares) {
@@ -118,7 +118,7 @@ describe('LegalMoveFinder', () => {
 				[3, 3], [3, 4], [3, 5],
 				[4, 3], [4, 5],
 				[5, 3], [5, 4], [5, 5]
-			].map(([r, f]) => toIndex(r, f));
+			].map(([rank, file]) => toIndex(rank, file));
 
 			expect(moves).toHaveLength(8);
 			for (const expected of expectedSquares) {
@@ -146,6 +146,20 @@ describe('LegalMoveFinder', () => {
 
 		// CASTLING
 		it('allows king side castling when conditions are met', () => {
+			/*
+			 *    a b c d e f g h
+			 *  -----------------
+			 * 8| . . . . k . . .
+			 * 7| . . . . . . . .
+			 * 6| . . . . . . . .
+			 * 5| . . . . . . . .
+			 * 4| . . . . . . . .
+			 * 3| . . . . . . . .
+			 * 2| . . . . . . . .
+			 * 1| . . . . K . . R
+			 *  -----------------
+			 * White to move: O-O is legal
+			 */
 			const board = createEmptyBoard();
 
 			const whiteKing: Piece = { type: 'king', color: 'white' };
@@ -169,6 +183,20 @@ describe('LegalMoveFinder', () => {
 		});
 
 		it('allows queen side castling when conditions are met', () => {
+			/*
+			 *    a b c d e f g h
+			 *  -----------------
+			 * 8| . . . . k . . .
+			 * 7| . . . . . . . .
+			 * 6| . . . . . . . .
+			 * 5| . . . . . . . .
+			 * 4| . . . . . . . .
+			 * 3| . . . . . . . .
+			 * 2| . . . . . . . .
+			 * 1| R . . . K . . .
+			 *  -----------------
+			 * White to move: O-O-O is legal
+			 */
 			const board = createEmptyBoard();
 
 			const whiteKing: Piece = { type: 'king', color: 'white' };
@@ -189,6 +217,20 @@ describe('LegalMoveFinder', () => {
 		});
 
 		it('does not allow castling through check', () => {
+			/*
+			 *    a b c d e f g h
+			 *  -----------------
+			 * 8| . . . . k . . .
+			 * 7| . . . . . . . .
+			 * 6| . . . . . . . .
+			 * 5| . . . . . . . .
+			 * 4| . . . . . . . .
+			 * 3| . . . . . . . .
+			 * 2| . . . . . r . .
+			 * 1| . . . . K . . R
+			 *  -----------------
+			 * Black rook attacks f1, so O-O is illegal (king passes through check)
+			 */
 			const board = createEmptyBoard();
 
 			const whiteKing: Piece = { type: 'king', color: 'white' };
@@ -206,6 +248,95 @@ describe('LegalMoveFinder', () => {
 			expect(moves).not.toContainEqual(
 				expect.objectContaining({ castling: 'kingSide' })
 			);
+		});
+
+		it('does not allow castling when the rook is missing', () => {
+			/*
+			 *    a b c d e f g h
+			 *  -----------------
+			 * 8| . . . . k . . .
+			 * 7| . . . . . . . .
+			 * 6| . . . . . . . .
+			 * 5| . . . . . . . .
+			 * 4| . . . . . . . .
+			 * 3| . . . . . . . .
+			 * 2| . . . . . . . .
+			 * 1| . . . . K . . .
+			 *  -----------------
+			 * No rook on h1, so O-O is illegal
+			 */
+			const board = createEmptyBoard();
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			board.set(toIndex(0, 4), whiteKing); // e1
+			board.set(toIndex(7, 4), blackKing); // e8
+
+			const moves = moveFinder.getLegalMoves(board, toIndex(0, 4));
+
+			expect(moves).not.toContainEqual(expect.objectContaining({ castling: 'kingSide' }));
+		});
+
+		it('does not allow castling when squares between are occupied', () => {
+			/*
+			 *    a b c d e f g h
+			 *  -----------------
+			 * 8| . . . . k . . .
+			 * 7| . . . . . . . .
+			 * 6| . . . . . . . .
+			 * 5| . . . . . . . .
+			 * 4| . . . . . . . .
+			 * 3| . . . . . . . .
+			 * 2| . . . . . . . .
+			 * 1| . . . . K P . R
+			 *  -----------------
+			 * A piece on f1 blocks O-O
+			 */
+			const board = createEmptyBoard();
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const whiteRook: Piece = { type: 'rook', color: 'white' };
+			const whitePawn: Piece = { type: 'pawn', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			board.set(toIndex(0, 4), whiteKing); // e1
+			board.set(toIndex(0, 7), whiteRook); // h1
+			board.set(toIndex(0, 5), whitePawn); // f1
+			board.set(toIndex(7, 4), blackKing); // e8
+
+			const moves = moveFinder.getLegalMoves(board, toIndex(0, 4));
+
+			expect(moves).not.toContainEqual(expect.objectContaining({ castling: 'kingSide' }));
+		});
+
+		it('does not allow castling when castling rights are disabled', () => {
+			/*
+			 *    a b c d e f g h
+			 *  -----------------
+			 * 8| . . . . k . . .
+			 * 7| . . . . . . . .
+			 * 6| . . . . . . . .
+			 * 5| . . . . . . . .
+			 * 4| . . . . . . . .
+			 * 3| . . . . . . . .
+			 * 2| . . . . . . . .
+			 * 1| . . . . K . . R
+			 *  -----------------
+			 * Castling rights short=false, so O-O is illegal
+			 */
+			const board = createEmptyBoard();
+			const whiteKing: Piece = { type: 'king', color: 'white' };
+			const whiteRook: Piece = { type: 'rook', color: 'white' };
+			const blackKing: Piece = { type: 'king', color: 'black' };
+
+			board.set(toIndex(0, 4), whiteKing); // e1
+			board.set(toIndex(0, 7), whiteRook); // h1
+			board.set(toIndex(7, 4), blackKing); // e8
+
+			board.castlingRights.white.short = false;
+
+			const moves = moveFinder.getLegalMoves(board, toIndex(0, 4));
+
+			expect(moves).not.toContainEqual(expect.objectContaining({ castling: 'kingSide' }));
 		});
 	});
 

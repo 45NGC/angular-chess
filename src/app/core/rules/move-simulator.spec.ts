@@ -1,208 +1,246 @@
-import { MoveSimulator } from "./move-simulator";
-import { Board } from "../board/board";
-import { Move } from "./move";
-import { Piece } from "../board/piece";
+import { describe, it, expect } from 'vitest';
+import { MoveSimulator } from './move-simulator';
+import { Board, toIndex } from '../board/board';
+import { Move } from './move';
+import { Piece } from '../board/piece';
 
-describe("MoveSimulator", () => {
+describe('MoveSimulator', () => {
 
-	test("moves a piece from source to target", () => {
+	it('moves a piece from source to target', () => {
 		const board = new Board();
-		const piece: Piece = { type: "pawn", color: "white" };
-		board.set(10, piece);
+		const piece: Piece = { type: 'pawn', color: 'white' };
+		const from = toIndex(1, 2); // c2
+		const to = toIndex(2, 2); // c3
+		board.set(from, piece);
 
-		const move: Move = { from: 10, to: 18 };
+		const move: Move = { from, to };
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(result.get(18)).toEqual(piece);
+		expect(result.get(to)).toEqual(piece);
 	});
 
-	test("clears the original square", () => {
+	it('clears the original square', () => {
 		const board = new Board();
-		const piece: Piece = { type: "rook", color: "black" };
-		board.set(20, piece);
+		const piece: Piece = { type: 'rook', color: 'black' };
+		const from = toIndex(2, 4); // e3
+		const to = toIndex(3, 4); // e4
+		board.set(from, piece);
 
-		const move: Move = { from: 20, to: 28 };
+		const move: Move = { from, to };
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(result.get(20)).toBeNull();
-		expect(result.get(28)).toEqual(piece);
+		expect(result.get(from)).toBeNull();
+		expect(result.get(to)).toEqual(piece);
 	});
 
-	test("does not modify unrelated squares", () => {
+	it('does not modify unrelated squares', () => {
 		const board = new Board();
 
-		const piece1: Piece = { type: "bishop", color: "white" };
-		const piece2: Piece = { type: "knight", color: "black" };
+		const piece1: Piece = { type: 'bishop', color: 'white' };
+		const piece2: Piece = { type: 'knight', color: 'black' };
 
-		board.set(5, piece2);
-		board.set(12, piece1);
+		const otherSquare = toIndex(0, 5); // f1
+		const from = toIndex(1, 4); // e2
+		const to = toIndex(2, 4); // e3
+		board.set(otherSquare, piece2);
+		board.set(from, piece1);
 
-		const move: Move = { from: 12, to: 20 };
+		const move: Move = { from, to };
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(result.get(5)).toEqual(piece2);
-		expect(result.get(12)).toBeNull();
-		expect(result.get(20)).toEqual(piece1);
+		expect(result.get(otherSquare)).toEqual(piece2);
+		expect(result.get(from)).toBeNull();
+		expect(result.get(to)).toEqual(piece1);
 	});
 
-	test("throws if moving from an empty square", () => {
+	it('throws if moving from an empty square', () => {
 		const board = new Board();
 
 		const move: Move = { from: 30, to: 31 };
 
 		expect(() => MoveSimulator.simulate(board, move))
-			.toThrow("Cannot simulate move: no piece at 30");
+			.toThrow('Cannot simulate move: no piece at 30');
 	});
 
-	test("does not mutate the original board", () => {
+	it('does not mutate the original board', () => {
 		const board = new Board();
-		const piece: Piece = { type: "queen", color: "white" };
-		board.set(9, piece);
+		const piece: Piece = { type: 'queen', color: 'white' };
+		const from = toIndex(1, 1); // b2
+		const to = toIndex(3, 1); // b4
+		board.set(from, piece);
 
-		const move: Move = { from: 9, to: 25 };
+		const move: Move = { from, to };
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(board.get(9)).toEqual(piece);
-		expect(board.get(25)).toBeNull();
-		expect(result.get(25)).toEqual(piece);
+		expect(board.get(from)).toEqual(piece);
+		expect(board.get(to)).toBeNull();
+		expect(result.get(to)).toEqual(piece);
 	});
 
-	test("promotes a pawn when move.promotion is set", () => {
+	it('promotes a pawn when move.promotion is set', () => {
 		const board = new Board();
-		const pawn: Piece = { type: "pawn", color: "white" };
-		board.set(48, pawn);
+		const pawn: Piece = { type: 'pawn', color: 'white' };
+		const from = toIndex(6, 0); // a7
+		const to = toIndex(7, 0); // a8
+		board.set(from, pawn);
 		const move: Move = {
-			from: 48,
-			to: 56,
-			promotion: "queen"
+			from,
+			to,
+			promotion: 'queen'
 		};
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(result.get(56)).toEqual({ type: "queen", color: "white" });
-		expect(result.get(48)).toBeNull();
+		expect(result.get(to)).toEqual({ type: 'queen', color: 'white' });
+		expect(result.get(from)).toBeNull();
 	});
 
-	test("promotion keeps the correct color", () => {
+	it('promotion keeps the correct color', () => {
 		const board = new Board();
-		const pawn: Piece = { type: "pawn", color: "black" };
-		board.set(15, pawn);
+		const pawn: Piece = { type: 'pawn', color: 'black' };
+		const from = toIndex(1, 7); // h2
+		const to = toIndex(0, 7); // h1
+		board.set(from, pawn);
 
 		const move: Move = {
-			from: 15,
-			to: 7,
-			promotion: "rook"
+			from,
+			to,
+			promotion: 'rook'
 		};
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(result.get(7)).toEqual({ type: "rook", color: "black" });
+		expect(result.get(to)).toEqual({ type: 'rook', color: 'black' });
 	});
 
-	test("promotion does not affect other squares", () => {
+	it('promotion does not affect other squares', () => {
 		const board = new Board();
-		const pawn: Piece = { type: "pawn", color: "white" };
-		const other: Piece = { type: "knight", color: "black" };
+		const pawn: Piece = { type: 'pawn', color: 'white' };
+		const other: Piece = { type: 'knight', color: 'black' };
 
-		board.set(48, pawn);
-		board.set(22, other);
+		const from = toIndex(6, 0); // a7
+		const to = toIndex(7, 0); // a8
+		const otherSquare = toIndex(2, 6); // g3
+		board.set(from, pawn);
+		board.set(otherSquare, other);
 
 		const move: Move = {
-			from: 48,
-			to: 56,
-			promotion: "bishop"
+			from,
+			to,
+			promotion: 'bishop'
 		};
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(result.get(22)).toEqual(other);
-		expect(result.get(48)).toBeNull();
-		expect(result.get(56)).toEqual({ type: "bishop", color: "white" });
+		expect(result.get(otherSquare)).toEqual(other);
+		expect(result.get(from)).toBeNull();
+		expect(result.get(to)).toEqual({ type: 'bishop', color: 'white' });
 	});
 
-	test("en passant capture removes the captured pawn", () => {
+	it('en passant capture removes the captured pawn', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . . . . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . p P . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . . . . . . . .
+		 *  -----------------
+		 * enPassantTarget: d6, Move: e5 -> d6 (en passant)
+		 */
 		const board = new Board();
 
-		const whitePawn: Piece = { type: "pawn", color: "white" };
-		const blackPawn: Piece = { type: "pawn", color: "black" };
+		const whitePawn: Piece = { type: 'pawn', color: 'white' };
+		const blackPawn: Piece = { type: 'pawn', color: 'black' };
 
-		// White pawn on e5 (rank 4, file 4)
-		// Black pawn on d5 (rank 4, file 3)
-		board.set(36, whitePawn); // e5
-		board.set(35, blackPawn); // d5
+		const from = toIndex(4, 4); // e5
+		const capturedPawnSquare = toIndex(4, 3); // d5
+		const to = toIndex(5, 3); // d6
 
-		// En passant target is d6
-		board.enPassantTarget = 43; // d6
+		board.set(from, whitePawn);
+		board.set(capturedPawnSquare, blackPawn);
+		board.enPassantTarget = to;
 
 		const move: Move = {
-			from: 36, // e5
-			to: 43,   // d6
+			from,
+			to,
 			enPassant: true
 		};
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(result.get(43)).toEqual(whitePawn); // pawn moved
-		expect(result.get(35)).toBeNull();          // captured pawn removed
-		expect(result.get(36)).toBeNull();          // origin cleared
+		expect(result.get(to)).toEqual(whitePawn); // pawn moved
+		expect(result.get(capturedPawnSquare)).toBeNull(); // captured pawn removed
+		expect(result.get(from)).toBeNull(); // origin cleared
 	});
 
-	test("en passant does not affect other pawns", () => {
+	it('en passant does not affect other pawns', () => {
 		const board = new Board();
 
-		const whitePawn: Piece = { type: "pawn", color: "white" };
-		const blackPawn: Piece = { type: "pawn", color: "black" };
-		const otherPawn: Piece = { type: "pawn", color: "black" };
+		const whitePawn: Piece = { type: 'pawn', color: 'white' };
+		const blackPawn: Piece = { type: 'pawn', color: 'black' };
+		const otherPawn: Piece = { type: 'pawn', color: 'black' };
 
-		board.set(36, whitePawn); // e5
-		board.set(35, blackPawn); // d5 (captured)
-		board.set(34, otherPawn); // c5 (must stay)
+		const from = toIndex(4, 4); // e5
+		const capturedPawnSquare = toIndex(4, 3); // d5
+		const otherPawnSquare = toIndex(4, 2); // c5
+		const to = toIndex(5, 3); // d6
 
-		board.enPassantTarget = 43; // d6
+		board.set(from, whitePawn);
+		board.set(capturedPawnSquare, blackPawn);
+		board.set(otherPawnSquare, otherPawn);
+
+		board.enPassantTarget = to;
 
 		const move: Move = {
-			from: 36,
-			to: 43,
+			from,
+			to,
 			enPassant: true
 		};
 
 		const result = MoveSimulator.simulate(board, move);
 
-		expect(result.get(34)).toEqual(otherPawn); // untouched
+		expect(result.get(otherPawnSquare)).toEqual(otherPawn); // untouched
 	});
 
-	test("double pawn push sets enPassantTarget", () => {
+	it('double pawn push sets enPassantTarget', () => {
 		const board = new Board();
-		const pawn: Piece = { type: "pawn", color: "white" };
+		const pawn: Piece = { type: 'pawn', color: 'white' };
 
-		// Pawn on e2
-		board.set(12, pawn); // e2
+		const from = toIndex(1, 4); // e2
+		const to = toIndex(3, 4); // e4
+		board.set(from, pawn);
 
 		const move: Move = {
-			from: 12,
-			to: 28 // e4
+			from,
+			to
 		};
 
 		const result = MoveSimulator.simulate(board, move);
 
-		// e3 should be en passant target
-		expect(result.enPassantTarget).toBe(20);
+		expect(result.enPassantTarget).toBe(toIndex(2, 4)); // e3
 	});
 
-	test("non-double pawn move clears enPassantTarget", () => {
+	it('non-double pawn move clears enPassantTarget', () => {
 		const board = new Board();
-		const pawn: Piece = { type: "pawn", color: "white" };
+		const pawn: Piece = { type: 'pawn', color: 'white' };
 
-		board.set(12, pawn);
-		board.enPassantTarget = 20;
+		const from = toIndex(1, 4); // e2
+		const to = toIndex(2, 4); // e3
+		board.set(from, pawn);
+		board.enPassantTarget = to;
 
 		const move: Move = {
-			from: 12,
-			to: 20 // e3
+			from,
+			to
 		};
 
 		const result = MoveSimulator.simulate(board, move);
@@ -210,39 +248,116 @@ describe("MoveSimulator", () => {
 		expect(result.enPassantTarget).toBeNull();
 	});
 
-	test("enPassantTarget is overwritten by the latest double pawn push", () => {
+	it('enPassantTarget is overwritten by the latest double pawn push', () => {
 		const board = new Board();
 
-		const whitePawn1: Piece = { type: "pawn", color: "white" };
-		const whitePawn2: Piece = { type: "pawn", color: "white" };
+		const whitePawn1: Piece = { type: 'pawn', color: 'white' };
+		const whitePawn2: Piece = { type: 'pawn', color: 'white' };
 
-		// Pawn 1 on e2
-		board.set(12, whitePawn1); // e2
+		const e2 = toIndex(1, 4);
+		const e4 = toIndex(3, 4);
+		const e3 = toIndex(2, 4);
+		const d2 = toIndex(1, 3);
+		const d4 = toIndex(3, 3);
+		const d3 = toIndex(2, 3);
 
-		// Pawn 2 on d2
-		board.set(11, whitePawn2); // d2
+		board.set(e2, whitePawn1);
+		board.set(d2, whitePawn2);
 
-		// First double push: e2 -> e4
 		const move1: Move = {
-			from: 12,
-			to: 28 // e4
+			from: e2,
+			to: e4
 		};
 
 		const boardAfterFirst = MoveSimulator.simulate(board, move1);
 
-		// en passant target should be e3
-		expect(boardAfterFirst.enPassantTarget).toBe(20);
+		expect(boardAfterFirst.enPassantTarget).toBe(e3);
 
-		// Second double push: d2 -> d4
 		const move2: Move = {
-			from: 11,
-			to: 27 // d4
+			from: d2,
+			to: d4
 		};
 
 		const boardAfterSecond = MoveSimulator.simulate(boardAfterFirst, move2);
 
-		// en passant target should now be d3 (not e3 anymore)
-		expect(boardAfterSecond.enPassantTarget).toBe(19);
+		expect(boardAfterSecond.enPassantTarget).toBe(d3);
 	});
 
+	it('moves the rook when castling king side', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . . . . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . . . . K . . R
+		 *  -----------------
+		 * Move: e1 -> g1 (castling kingSide), rook: h1 -> f1
+		 */
+		const board = new Board();
+		const king: Piece = { type: 'king', color: 'white' };
+		const rook: Piece = { type: 'rook', color: 'white' };
+
+		const kingFrom = toIndex(0, 4); // e1
+		const kingTo = toIndex(0, 6); // g1
+		const rookFrom = toIndex(0, 7); // h1
+		const rookTo = toIndex(0, 5); // f1
+
+		board.set(kingFrom, king);
+		board.set(rookFrom, rook);
+
+		const result = MoveSimulator.simulate(board, {
+			from: kingFrom,
+			to: kingTo,
+			castling: 'kingSide'
+		});
+
+		expect(result.get(kingTo)).toEqual(king);
+		expect(result.get(rookTo)).toEqual(rook);
+		expect(result.get(kingFrom)).toBeNull();
+		expect(result.get(rookFrom)).toBeNull();
+	});
+
+	it('moves the rook when castling queen side', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . . . . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| R . . . K . . .
+		 *  -----------------
+		 * Move: e1 -> c1 (castling queenSide), rook: a1 -> d1
+		 */
+		const board = new Board();
+		const king: Piece = { type: 'king', color: 'white' };
+		const rook: Piece = { type: 'rook', color: 'white' };
+
+		const kingFrom = toIndex(0, 4); // e1
+		const kingTo = toIndex(0, 2); // c1
+		const rookFrom = toIndex(0, 0); // a1
+		const rookTo = toIndex(0, 3); // d1
+
+		board.set(kingFrom, king);
+		board.set(rookFrom, rook);
+
+		const result = MoveSimulator.simulate(board, {
+			from: kingFrom,
+			to: kingTo,
+			castling: 'queenSide'
+		});
+
+		expect(result.get(kingTo)).toEqual(king);
+		expect(result.get(rookTo)).toEqual(rook);
+		expect(result.get(kingFrom)).toBeNull();
+		expect(result.get(rookFrom)).toBeNull();
+	});
 });

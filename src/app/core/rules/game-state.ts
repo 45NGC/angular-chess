@@ -35,7 +35,7 @@ export class GameState {
 		this.board.set(move.to, piece);
 		this.board.set(move.from, null);
 
-		if (move.promotion) {
+		if (move.promotion && piece.type === 'pawn') {
 			this.board.set(move.to, {
 				type: move.promotion!,
 				color: piece.color
@@ -58,10 +58,12 @@ export class GameState {
 	}
 
 	private handleDoublePush(move: Move) {
-		const { rank, file } = fromIndex(move.from);
+		const { rank: fromRank, file } = fromIndex(move.from);
+		const { rank: toRank } = fromIndex(move.to);
 
-		const targetRank = this.turn === 'white' ? rank - 1 : rank + 1;
-		this.board.enPassantTarget = toIndex(targetRank, file);
+		// The en passant target is the square the pawn "passed through"
+		const passedRank = (fromRank + toRank) / 2;
+		this.board.enPassantTarget = toIndex(passedRank, file);
 	}
 
 	private handleEnPassant(move: Move) {

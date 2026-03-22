@@ -1,3 +1,4 @@
+import { describe, it, expect } from 'vitest';
 import { Piece, PieceColor, PieceType, isWhite, isBlack } from './piece';
 
 describe('Piece', () => {

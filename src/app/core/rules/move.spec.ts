@@ -1,25 +1,32 @@
+import { describe, it, expect } from 'vitest';
 import { Move } from './move';
 
 describe('Move interface', () => {
 
 	it('should allow a normal move without promotion', () => {
-		const move: Move = { from: 10, to: 18 };
+		const from = 10;
+		const to = 18;
+		const move: Move = { from, to };
 
-		expect(move.from).toBe(10);
-		expect(move.to).toBe(18);
+		expect(move.from).toBe(from);
+		expect(move.to).toBe(to);
 		expect(move.promotion).toBeUndefined();
 	});
 
 	it('should allow a promotion move', () => {
+		const from = 48;
+		const to = 56;
+		const promotion = 'queen' as const;
+
 		const move: Move = {
-			from: 48,
-			to: 56,
-			promotion: 'queen'
+			from,
+			to,
+			promotion
 		};
 
-		expect(move.from).toBe(48);
-		expect(move.to).toBe(56);
-		expect(move.promotion).toBe('queen');
+		expect(move.from).toBe(from);
+		expect(move.to).toBe(to);
+		expect(move.promotion).toBe(promotion);
 	});
 
 });
