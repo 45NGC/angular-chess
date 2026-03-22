@@ -189,11 +189,8 @@ export class LocalGameService implements IGameService {
 			this.timeControl.black.incrementSeconds
 		);
 		this.clockEnabled = this.timeControl.white.baseMinutes > 0 || this.timeControl.black.baseMinutes > 0;
-		if (this.clockEnabled) {
-			this.clock.start('white');
-		} else {
-			this.clock.stop();
-		}
+		// Don't start counting until the first move is made.
+		this.clock.stop();
 	}
 
 	private applyClockState(snap: LocalClockState): void {

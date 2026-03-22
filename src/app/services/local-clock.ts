@@ -80,6 +80,7 @@ export class LocalClock {
 		this.addIncrement(mover);
 		this.active = mover === 'white' ? 'black' : 'white';
 		this.lastTickAt = nowMs();
+		this.ensureInterval();
 		this.onUpdate?.(this.getClockState());
 	}
 
