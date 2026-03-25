@@ -155,3 +155,4 @@ export class LocalClock {
 		return this.blackBaseMs <= 0 ? Number.POSITIVE_INFINITY : this.blackMs;
 	}
 }
+

@@ -9,7 +9,7 @@ import { INITIAL_POSITION_FEN } from '../core/constants/chess.constants';
 import { IGameService } from '../interfaces/game-service.interface';
 import { SoundService } from './sound.service';
 import { TimeControl } from '../interfaces/time-control.interface';
-import { LocalClock, LocalClockState } from './local-clock';
+import { LocalClock, LocalClockState } from '../core/time/local-clock';
 
 export const LOCAL_TIME_CONTROL = new InjectionToken<TimeControl>('LOCAL_TIME_CONTROL');
 
