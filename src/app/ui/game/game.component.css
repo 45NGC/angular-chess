@@ -46,6 +46,20 @@
 	display: flex;
 	align-items: center;
 	justify-content: center;
+	position: relative;
+}
+
+.square.selected {
+	position: relative;
+}
+
+.square.selected::before {
+	content: '';
+	position: absolute;
+	inset: 0;
+	background-color: rgba(255, 235, 59, 0.35);
+	pointer-events: none;
+	z-index: 0;
 }
 
 .square.light {
@@ -70,6 +84,7 @@
 	background-color: var(--hint-color);
 	position: absolute;
 	pointer-events: none;
+	z-index: 2;
 }
 
 .square.legal-capture::after {
@@ -80,6 +95,7 @@
 	position: absolute;
 	inset: 0;
 	pointer-events: none;
+	z-index: 2;
 	background:
 		linear-gradient(135deg, var(--hint-color) 0 50%, transparent 50% 100%) calc(0% - var(--corner-overlap))
 			calc(0% - var(--corner-overlap)) / var(--corner-size-safe) var(--corner-size-safe) no-repeat,
@@ -96,6 +112,8 @@
 	height: 90%;
 	pointer-events: none;
 	user-select: none;
+	position: relative;
+	z-index: 1;
 }
 
 .clock {
