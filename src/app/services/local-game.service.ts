@@ -144,25 +144,26 @@ export class LocalGameService implements IGameService {
 
 	private applyMoveAndCheckGameOver(move: Move): void {
 		const mover = this.state.turn;
-		const capturedPiece = this.state.board.get(move.to);
+		const isCapture = Boolean(this.state.board.get(move.to)) || move.enPassant === true;
 
 		this.state.applyMove(move);
-
 		this.clock?.switchTurn(mover);
 
-		// Check if the king is in check to play the check sound
 		const kingSquare = this.state.board.findKing(this.state.turn);
 		const attackerColor = this.state.turn === 'white' ? 'black' : 'white';
-		if (AttackedSquares.isSquareAttacked(this.state.board, kingSquare, attackerColor)) {
+
+		const isCheck = AttackedSquares.isSquareAttacked(
+			this.state.board,
+			kingSquare,
+			attackerColor
+		);
+
+		if (isCheck) {
 			this.soundService.playCheck();
+		} else if (isCapture) {
+			this.soundService.playCapture();
 		} else {
-
-			if (capturedPiece) {
-				this.soundService.playCapture();
-			} else {
-				this.soundService.playMove();
-			}
-
+			this.soundService.playMove();
 		}
 
 		this.checkGameOver();
