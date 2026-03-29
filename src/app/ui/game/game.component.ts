@@ -63,7 +63,7 @@ export class GameComponent implements OnInit, OnDestroy {
 		this.clockUiIntervalId = window.setInterval(() => {
 			if (!this.clockEnabled) return;
 			this.cdr.detectChanges();
-		}, 200);
+		}, 100);
 	}
 
 	private parseSide(baseMinutesRaw: string | null, incrementSecondsRaw: string | null): { baseMinutes: number; incrementSeconds: number } {
@@ -163,10 +163,24 @@ export class GameComponent implements OnInit, OnDestroy {
 		return `${minutes}:${seconds.toString().padStart(2, '0')}`;
 	}
 
-	formatClockTime(color: 'white' | 'black'): string {
+	private formatTimeFraction(ms: number): string | null {
+		const clamped = Math.max(0, ms);
+		// Show tenths only in the last 15 seconds for readability
+		if (clamped >= 15_000) return null;
+		const tenths = Math.floor((clamped % 1000) / 100);
+		return tenths.toString();
+	}
+
+	formatClockTimeMain(color: 'white' | 'black'): string {
 		const tc = this.timeControl;
 		if (tc && tc[color].baseMinutes === 0) return '∞';
 		return this.formatTime(color === 'white' ? this.whiteTimeMs : this.blackTimeMs);
+	}
+
+	formatClockTimeFraction(color: 'white' | 'black'): string | null {
+		const tc = this.timeControl;
+		if (tc && tc[color].baseMinutes === 0) return null;
+		return this.formatTimeFraction(color === 'white' ? this.whiteTimeMs : this.blackTimeMs);
 	}
 
 	ngOnDestroy(): void {
