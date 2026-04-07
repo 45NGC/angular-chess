@@ -27,7 +27,8 @@ export class LocalGameService implements IGameService {
 	whiteTimeMs = 0;
 	blackTimeMs = 0;
 	activeClockColor: 'white' | 'black' | null = null;
-
+	
+	private static readonly LOW_TIME_THRESHOLD_MS = 15_000;
 	private moveFinder = new LegalMoveFinder();
 	private clock: LocalClock | null = null;
 
@@ -194,11 +195,26 @@ export class LocalGameService implements IGameService {
 		this.clock.stop();
 	}
 
-	private applyClockState(snap: LocalClockState): void {
-		this.clockEnabled = snap.enabled;
-		this.whiteTimeMs = snap.whiteMs;
-		this.blackTimeMs = snap.blackMs;
-		this.activeClockColor = snap.active;
+	private applyClockState(state: LocalClockState): void {
+		const prevWhiteMs = this.whiteTimeMs;
+		const prevBlackMs = this.blackTimeMs;
+
+		this.clockEnabled = state.enabled;
+		this.whiteTimeMs = state.whiteMs;
+		this.blackTimeMs = state.blackMs;
+		this.activeClockColor = state.active;
+
+		const active = state.active;
+		if (!active) return;
+
+		const enabled = active === 'white' ? state.whiteEnabled : state.blackEnabled;
+		if (!enabled) return;
+
+		const prevMs = active === 'white' ? prevWhiteMs : prevBlackMs;
+		const nextMs = active === 'white' ? state.whiteMs : state.blackMs;
+		if (prevMs >= LocalGameService.LOW_TIME_THRESHOLD_MS && nextMs < LocalGameService.LOW_TIME_THRESHOLD_MS) {
+			this.soundService.playLowTime();
+		}
 	}
 
 	private onTimeout(winner: 'white' | 'black'): void {

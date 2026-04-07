@@ -8,12 +8,14 @@ export class SoundService {
   private captureAudio = new Audio('assets/sounds/capture.mp3');
   private checkAudio = new Audio('assets/sounds/check.mp3');
   private endAudio = new Audio('assets/sounds/end.mp3');
+  private lowTimeAudio = new Audio('assets/sounds/lowTime.mp3');
 
   constructor() {
     this.moveAudio.load();
     this.captureAudio.load();
     this.checkAudio.load();
     this.endAudio.load();
+    this.lowTimeAudio.load();
   }
 
   playMove(): void {
@@ -32,6 +34,10 @@ export class SoundService {
 
   playEnd(): void {
     this.play(this.endAudio);
+  }
+
+  playLowTime(): void {
+    this.play(this.lowTimeAudio);
   }
 
   private play(audio: HTMLAudioElement): void {
