@@ -6,6 +6,7 @@ import { AttackedSquares } from '../core/rules/attacked-squares';
 import { LegalMoveFinder } from '../core/rules/legal-move-finder';
 import { loadFEN } from '../core/board/fen';
 import { INITIAL_POSITION_FEN } from '../core/constants/chess.constants';
+import { LOW_TIME_THRESHOLD_MS } from '../core/constants/time.constants';
 import { IGameService } from '../interfaces/game-service.interface';
 import { SoundService } from './sound.service';
 import { TimeControl } from '../interfaces/time-control.interface';
@@ -27,8 +28,7 @@ export class LocalGameService implements IGameService {
 	whiteTimeMs = 0;
 	blackTimeMs = 0;
 	activeClockColor: 'white' | 'black' | null = null;
-	
-	private static readonly LOW_TIME_THRESHOLD_MS = 15_000;
+
 	private moveFinder = new LegalMoveFinder();
 	private clock: LocalClock | null = null;
 
@@ -212,7 +212,7 @@ export class LocalGameService implements IGameService {
 
 		const prevMs = active === 'white' ? prevWhiteMs : prevBlackMs;
 		const nextMs = active === 'white' ? state.whiteMs : state.blackMs;
-		if (prevMs >= LocalGameService.LOW_TIME_THRESHOLD_MS && nextMs < LocalGameService.LOW_TIME_THRESHOLD_MS) {
+		if (prevMs >= LOW_TIME_THRESHOLD_MS && nextMs < LOW_TIME_THRESHOLD_MS) {
 			this.soundService.playLowTime();
 		}
 	}
