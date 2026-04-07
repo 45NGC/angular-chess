@@ -60,48 +60,70 @@ export class LocalGameService implements IGameService {
 	}
 
 	handleSquareClick(rank: number, file: number): void {
-		if (this.state.result.type !== 'ongoing') return;
+		// Ignore clicks when the game is over or when the promotion dialog is awaiting a choice
+		if (!this.canInteractWithBoard()) return;
+		if (this.pendingPromotionMoves) return;
+
 		const square = toIndex(rank, file);
 		const piece = this.state.board.get(square);
 
-		// If a promotion is pending ignore any board clicks
-		if (this.pendingPromotionMoves) return;
-
-		// No piece selected yet, only show piece moves if it belongs to the current player
+		// First click: select a piece (only if it belongs to the side to move) and show its legal moves
 		if (this.selectedSquare === null) {
-			if (!piece || piece.color !== this.state.turn) return;
+			this.trySelectSquare(piece, square);
+			return;
+		}
+
+		// If a piece is already selected and the player clicks another own piece, just change selection
+		if (this.isCurrentPlayerPiece(piece)) {
 			this.showLegalMoves(square);
 			return;
 		}
 
-		// A piece is already selected, and the click is on another piece of the same color
-		if (piece && piece.color === this.state.turn) {
-			this.showLegalMoves(square);
-			return;
-		}
+		// Otherwise, try to play one of the currently highlighted legal moves to the clicked square
+		this.tryMoveToSquare(square);
+	}
 
-		// At this point, the click is on an empty square or an opponent's piece.
-		// Filter legal moves that end on this square
+	private canInteractWithBoard(): boolean {
+		// Board interaction is disabled once a result has been reached
+		return this.state.result.type === 'ongoing';
+	}
+
+	private isCurrentPlayerPiece(piece: ReturnType<Board['get']>): boolean {
+		// Convenience helper for "piece exists and belongs to the side to move"
+		return piece != null && piece.color === this.state.turn;
+	}
+
+	private trySelectSquare(piece: ReturnType<Board['get']>, square: number): void {
+		// Only allow selecting a piece of the side to move
+		if (!this.isCurrentPlayerPiece(piece)) return;
+		this.showLegalMoves(square);
+	}
+
+	private clearSelection(): void {
+		// Clear UI selection and any cached legal moves
+		this.selectedSquare = null;
+		this.legalMoves = [];
+	}
+
+	private tryMoveToSquare(square: number): void {
+		// Filter current legal moves to the destination square
 		const movesToSquare = this.legalMoves.filter(m => m.to === square);
-
-		// If no legal move ends here, cancel the selection
 		if (movesToSquare.length === 0) {
-			this.selectedSquare = null;
-			this.legalMoves = [];
+			// Clicking an unrelated square cancels the current selection
+			this.clearSelection();
 			return;
 		}
 
 		if (movesToSquare.length === 1) {
-			// Normal move or promotion with a single choice selected by the player
+			// Single legal move: execute immediately.
 			this.applyMoveAndCheckGameOver(movesToSquare[0]);
-			this.selectedSquare = null;
-			this.legalMoves = [];
-		} else {
-			// Multiple promotion choices, open the promotion dialog for 
-			// the player to select the promotion
-			this.pendingPromotionMoves = movesToSquare;
-			this.showPromotionDialog = true;
+			this.clearSelection();
+			return;
 		}
+
+		// Multiple moves mean promotion choices: open the promotion dialog
+		this.pendingPromotionMoves = movesToSquare;
+		this.showPromotionDialog = true;
 	}
 
 	private showLegalMoves(square: number): void {
@@ -121,8 +143,7 @@ export class LocalGameService implements IGameService {
 	closePromotionDialog(): void {
 		this.pendingPromotionMoves = null;
 		this.showPromotionDialog = false;
-		this.selectedSquare = null;
-		this.legalMoves = [];
+		this.clearSelection();
 	}
 
 	closeGameOverDialog(): void {
