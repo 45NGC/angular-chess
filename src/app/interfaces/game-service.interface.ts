@@ -23,6 +23,7 @@ export interface IGameService {
   closePromotionDialog(): void;
   closeGameOverDialog(): void;
   getResultMessage(): string;
+  clearSelection(): void;
 
   destroy?(): void;
 }

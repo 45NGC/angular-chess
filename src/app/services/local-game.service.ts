@@ -99,7 +99,7 @@ export class LocalGameService implements IGameService {
 		this.showLegalMoves(square);
 	}
 
-	private clearSelection(): void {
+	clearSelection(): void {
 		// Clear UI selection and any cached legal moves
 		this.selectedSquare = null;
 		this.legalMoves = [];

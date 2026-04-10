@@ -1,4 +1,4 @@
-import { Component, OnDestroy, OnInit } from '@angular/core';
+import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute } from '@angular/router';
 import { combineLatest } from 'rxjs';
@@ -23,6 +23,7 @@ export class GameComponent implements OnInit, OnDestroy {
 	files = Array.from({ length: BOARD_SIZE }, (_, i) => i);
 
 	gameService: IGameService | null = null;
+	elementRef: any;
 
 	get state() { return this.gameService?.state; }
 	get selectedSquare() { return this.gameService?.selectedSquare ?? null; }
@@ -66,6 +67,33 @@ export class GameComponent implements OnInit, OnDestroy {
 		}, 100);
 	}
 
+	@HostListener('document:click', ['$event'])
+	onDocumentClick(event: MouseEvent): void {
+		if (!this.gameService) return;
+
+		if (!this.isClickInsideGameArea(event.target)) {
+			this.handleClickOutside();
+		}
+	}
+
+	private isClickInsideGameArea(target: EventTarget | null): boolean {
+		if (!target || !(target instanceof HTMLElement)) {
+			return false;
+		}
+		return !!target.closest('.board, .clocks, .promotion-side-panel, app-game-over-dialog');
+	}
+
+	private handleClickOutside(): void {
+
+		if (this.gameService?.selectedSquare !== null) {
+			this.gameService?.clearSelection();
+		}
+	}
+
+	onSquareClick(rank: number, file: number): void {
+		this.gameService?.handleSquareClick(rank, file);
+	}
+
 	private parseSide(baseMinutesRaw: string | null, incrementSecondsRaw: string | null): { baseMinutes: number; incrementSeconds: number } {
 		const baseMinutes = Number(baseMinutesRaw ?? '0');
 		const incrementSeconds = Number(incrementSecondsRaw ?? '0');
@@ -102,10 +130,6 @@ export class GameComponent implements OnInit, OnDestroy {
 	pieceToImage(piece: any): string | null {
 		if (!piece) return null;
 		return `../../assets/pieces/${piece.color}-${piece.type}.png`;
-	}
-
-	onSquareClick(rank: number, file: number): void {
-		this.gameService?.handleSquareClick(rank, file);
 	}
 
 	isLegalTarget(square: number): boolean {
