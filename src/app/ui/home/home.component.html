@@ -13,3 +13,10 @@
     (cancel)="onTimeControlCancel()"
   ></app-time-control-dialog>
 }
+
+@if (showAiModeDialog) {
+  <app-ai-mode-dialog
+    (confirm)="onAiModeConfirm()"
+    (cancel)="onAiModeCancel()"
+  ></app-ai-mode-dialog>
+}

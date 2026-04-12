@@ -1,0 +1,42 @@
+<div class="overlay" (click)="onCancel()">
+  <div class="container" (click)="$event.stopPropagation()">
+    <div class="title">AI</div>
+
+    <div class="section">
+      <div class="section-title">Difficulty</div>
+
+      <div class="options-grid">
+        @for (level of levels; track level.key) {
+          <div
+            class="option"
+            [class.selected]="level.key === selectedLevel"
+            (click)="selectLevel(level.key)"
+          >
+            {{ level.label }}
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="section">
+      <div class="section-title">Color</div>
+
+      <div class="options-grid color-grid">
+        @for (color of colors; track color.key) {
+          <div
+            class="option"
+            [class.selected]="color.key === selectedColor"
+            (click)="selectColor(color.key)"
+          >
+            {{ color.label }}
+          </div>
+        }
+      </div>
+    </div>
+
+    <div class="actions">
+      <div class="action primary" (click)="onConfirm()">START</div>
+      <div class="action" (click)="onCancel()">CANCEL</div>
+    </div>
+  </div>
+</div>
