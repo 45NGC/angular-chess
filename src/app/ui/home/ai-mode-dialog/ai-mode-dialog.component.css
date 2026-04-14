@@ -33,6 +33,12 @@
 	}
 }
 
+@media (prefers-reduced-motion: reduce) {
+	.container {
+		animation: none;
+	}
+}
+
 .title {
 	color: white;
 	font-size: 22px;
@@ -59,43 +65,10 @@
 	letter-spacing: 0.5px;
 }
 
-.sides {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 14px;
-}
-
-.side {
-	background-color: #1d1d1d;
-	border-radius: 8px;
-	padding: 12px;
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-}
-
-.side-title {
-	color: white;
-	font-size: 14px;
-	font-weight: 800;
-	letter-spacing: 1px;
-	text-align: center;
-}
-
 .options-grid {
 	display: grid;
 	grid-template-columns: repeat(2, minmax(0, 1fr));
 	gap: 8px;
-}
-
-.options-grid.increments {
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-@media (max-width: 900px) {
-	.sides {
-		grid-template-columns: 1fr;
-	}
 }
 
 .option {
@@ -108,6 +81,9 @@
 	font-weight: 600;
 	transition: background-color 0.2s, outline-color 0.2s;
 	user-select: none;
+	border: 0;
+	font: inherit;
+	appearance: none;
 }
 
 .option:hover {
@@ -117,6 +93,15 @@
 .option.selected {
 	outline: 2px solid #4caf50;
 	background-color: #2f2f2f;
+}
+
+.option:focus-visible {
+	outline: 2px solid #90caf9;
+	outline-offset: 2px;
+}
+
+.option.selected:focus-visible {
+	outline-color: #4caf50;
 }
 
 .summary {
@@ -148,6 +133,9 @@
 	font-weight: bold;
 	letter-spacing: 1px;
 	user-select: none;
+	border: 0;
+	font: inherit;
+	appearance: none;
 }
 
 .action:hover {
@@ -158,8 +146,9 @@
 	background-color: #2e7d32;
 }
 
-.color-grid {
-	grid-template-columns: repeat(2, minmax(0, 1fr));
+.action:focus-visible {
+	outline: 2px solid #90caf9;
+	outline-offset: 2px;
 }
 
 .color-grid .option:last-child {

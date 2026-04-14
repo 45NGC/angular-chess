@@ -16,7 +16,8 @@
 
 @if (showAiModeDialog) {
   <app-ai-mode-dialog
-    (confirm)="onAiModeConfirm()"
+    [initial]="lastAiMode"
+    (confirm)="onAiModeConfirm($event)"
     (cancel)="onAiModeCancel()"
   ></app-ai-mode-dialog>
 }

@@ -1,42 +1,49 @@
 <div class="overlay" (click)="onCancel()">
-  <div class="container" (click)="$event.stopPropagation()">
-    <div class="title">AI</div>
+  <div class="container" role="dialog" aria-modal="true" aria-labelledby="ai-mode-dialog-title" (click)="$event.stopPropagation()">
+    <div class="title" id="ai-mode-dialog-title">AI GAME</div>
+    <div class="subtitle">Select difficulty and your color</div>
 
     <div class="section">
       <div class="section-title">Difficulty</div>
 
       <div class="options-grid">
         @for (level of levels; track level.key) {
-          <div
+          <button
+            type="button"
             class="option"
-            [class.selected]="level.key === selectedLevel"
-            (click)="selectLevel(level.key)"
+            [class.selected]="level.key === selectedDifficulty"
+            [attr.aria-pressed]="level.key === selectedDifficulty"
+            (click)="selectDifficulty(level.key)"
           >
             {{ level.label }}
-          </div>
+          </button>
         }
       </div>
     </div>
 
     <div class="section">
-      <div class="section-title">Color</div>
+      <div class="section-title">Your color</div>
 
       <div class="options-grid color-grid">
         @for (color of colors; track color.key) {
-          <div
+          <button
+            type="button"
             class="option"
-            [class.selected]="color.key === selectedColor"
-            (click)="selectColor(color.key)"
+            [class.selected]="color.key === selectedPlayerColor"
+            [attr.aria-pressed]="color.key === selectedPlayerColor"
+            (click)="selectPlayerColor(color.key)"
           >
             {{ color.label }}
-          </div>
+          </button>
         }
       </div>
     </div>
 
+    <div class="summary">{{ summary }}</div>
+
     <div class="actions">
-      <div class="action primary" (click)="onConfirm()">START</div>
-      <div class="action" (click)="onCancel()">CANCEL</div>
+      <button type="button" class="action primary" (click)="onConfirm()">START</button>
+      <button type="button" class="action" (click)="onCancel()">CANCEL</button>
     </div>
   </div>
 </div>

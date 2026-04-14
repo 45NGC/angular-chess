@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { TimeControlDialogComponent } from './time-control-dialog/time-control-dialog.component';
 import { TimeControl } from '../../interfaces/time-control.interface';
 import { AiModeDialogComponent } from './ai-mode-dialog/ai-mode-dialog.component';
+import { AiModeSettings } from '../../interfaces/ai-mode.interface';
 
 @Component({
 	selector: 'app-home',
@@ -20,6 +21,10 @@ export class HomeComponent {
 	lastTimeControl: TimeControl = {
 		white: { baseMinutes: 5, incrementSeconds: 0 },
 		black: { baseMinutes: 5, incrementSeconds: 0 }
+	};
+	lastAiMode: AiModeSettings = {
+		difficulty: 'beginner',
+		playerColor: 'random'
 	};
 
 	play(mode: string): void {
@@ -51,7 +56,9 @@ export class HomeComponent {
 		this.showTimeControlDialog = false;
 	}
 
-	onAiModeConfirm(): void {
+	onAiModeConfirm(settings: AiModeSettings): void {
+		this.lastAiMode = settings;
+		this.showAiModeDialog = false;
 	}
 
 	onAiModeCancel(): void {
