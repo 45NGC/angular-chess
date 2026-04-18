@@ -10,6 +10,14 @@ export interface IGameService {
   showPromotionDialog: boolean;
   pendingPromotionMoves: Move[] | null;
 
+  // Optional pause data (local games, etc.)
+  isPaused?: boolean;
+  pause?(): void;
+  resume?(): void;
+
+  // Optional move history data (local games, etc.)
+  moveHistory?: Move[];
+
   // Optional clock data (local games, etc.)
   timeControl?: TimeControl;
   clockEnabled?: boolean;

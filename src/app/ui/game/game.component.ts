@@ -1,15 +1,17 @@
 import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ActivatedRoute } from '@angular/router';
+import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
 import { GameOverDialogComponent } from './game-over-dialog/game-over-dialog.component';
 import { PromotionDialogComponent } from './promotion-dialog/promotion-dialog.component';
 import { BOARD_SIZE } from '../../core/constants/chess.constants';
+import { fromIndex } from '../../core/board/board';
 import { IGameService } from '../../interfaces/game-service.interface';
 import { TimeControl } from '../../interfaces/time-control.interface';
 import { LocalGameService } from '../../services/local-game.service';
 import { SoundService } from '../../services/sound.service';
+import { Move } from '../../core/rules/move';
 
 @Component({
 	selector: 'app-game',
@@ -38,11 +40,20 @@ export class GameComponent implements OnInit, OnDestroy {
 	get timeControl() { return this.gameService?.timeControl ?? null; }
 	get whiteIncrementSeconds() { return this.timeControl?.white.incrementSeconds ?? 0; }
 	get blackIncrementSeconds() { return this.timeControl?.black.incrementSeconds ?? 0; }
+	get isPaused() { return this.gameService?.isPaused ?? false; }
+	get moveHistory() { return this.gameService?.moveHistory ?? []; }
+	get pauseSupported() {
+		return typeof this.gameService?.pause === 'function' && typeof this.gameService?.resume === 'function';
+	}
+	get pauseDisabled() {
+		return !this.pauseSupported || this.showGameOverDialog || this.showPromotionDialog || !!this.pendingPromotionMoves;
+	}
 
 	private clockUiIntervalId: number | null = null;
 
 	constructor(
 		private route: ActivatedRoute,
+		private router: Router,
 		private soundService: SoundService,
 		private cdr: ChangeDetectorRef
 	) { }
@@ -62,7 +73,7 @@ export class GameComponent implements OnInit, OnDestroy {
 
 		// In zoneless change detection, UI won't update from setInterval in services.
 		this.clockUiIntervalId = window.setInterval(() => {
-			if (!this.clockEnabled) return;
+			if (!this.clockEnabled || this.isPaused) return;
 			this.cdr.detectChanges();
 		}, 100);
 	}
@@ -80,7 +91,7 @@ export class GameComponent implements OnInit, OnDestroy {
 		if (!target || !(target instanceof HTMLElement)) {
 			return false;
 		}
-		return !!target.closest('.board, .clocks, .promotion-side-panel, app-game-over-dialog');
+		return !!target.closest('.board, .clocks, .promotion-side-panel, app-game-over-dialog, .game-controls, .pause-overlay');
 	}
 
 	private handleClickOutside(): void {
@@ -177,6 +188,51 @@ export class GameComponent implements OnInit, OnDestroy {
 
 	onExit(): void {
 		this.gameService?.closeGameOverDialog();
+	}
+
+	togglePause(): void {
+		if (this.pauseDisabled) return;
+		if (this.isPaused) {
+			this.gameService?.resume?.();
+			return;
+		}
+		this.gameService?.pause?.();
+	}
+
+	resumeFromPause(): void {
+		if (!this.isPaused) return;
+		this.gameService?.resume?.();
+	}
+
+	quitToHome(): void {
+		this.router.navigate(['/']);
+	}
+
+	formatMove(move: Move): string {
+		if (move.castling === 'kingSide') return 'O-O';
+		if (move.castling === 'queenSide') return 'O-O-O';
+		const from = this.squareToAlgebraic(move.from);
+		const to = this.squareToAlgebraic(move.to);
+		const promotion = move.promotion ? `=${this.promotionToLetter(move.promotion)}` : '';
+		return `${from}→${to}${promotion}`;
+	}
+
+	private squareToAlgebraic(square: number): string {
+		const { rank, file } = fromIndex(square);
+		return `${'abcdefgh'[file]}${rank + 1}`;
+	}
+
+	private promotionToLetter(promotion: NonNullable<Move['promotion']>): string {
+		switch (promotion) {
+			case 'queen':
+				return 'Q';
+			case 'rook':
+				return 'R';
+			case 'bishop':
+				return 'B';
+			case 'knight':
+				return 'N';
+		}
 	}
 
 	private formatTime(ms: number): string {

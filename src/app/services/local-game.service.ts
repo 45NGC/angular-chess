@@ -23,6 +23,9 @@ export class LocalGameService implements IGameService {
 	showPromotionDialog = false;
 	pendingPromotionMoves: Move[] | null = null;
 
+	isPaused = false;
+	moveHistory: Move[] = [];
+
 	timeControl: TimeControl;
 	clockEnabled = false;
 	whiteTimeMs = 0;
@@ -31,6 +34,7 @@ export class LocalGameService implements IGameService {
 
 	private moveFinder = new LegalMoveFinder();
 	private clock: LocalClock | null = null;
+	private pausedClockColor: 'white' | 'black' | null = null;
 
 	constructor(
 		private soundService: SoundService,
@@ -56,6 +60,9 @@ export class LocalGameService implements IGameService {
 		this.showGameOverDialog = false;
 		this.showPromotionDialog = false;
 		this.pendingPromotionMoves = null;
+		this.isPaused = false;
+		this.pausedClockColor = null;
+		this.moveHistory = [];
 		this.resetClock();
 	}
 
@@ -85,7 +92,7 @@ export class LocalGameService implements IGameService {
 
 	private canInteractWithBoard(): boolean {
 		// Board interaction is disabled once a result has been reached
-		return this.state.result.type === 'ongoing';
+		return this.state.result.type === 'ongoing' && !this.isPaused;
 	}
 
 	private isCurrentPlayerPiece(piece: ReturnType<Board['get']>): boolean {
@@ -132,6 +139,7 @@ export class LocalGameService implements IGameService {
 	}
 
 	onPromotionSelected(pieceType: 'queen' | 'rook' | 'bishop' | 'knight'): void {
+		if (this.isPaused) return;
 		if (!this.pendingPromotionMoves) return;
 		const move = this.pendingPromotionMoves.find(m => m.promotion === pieceType);
 		if (move) {
@@ -168,6 +176,7 @@ export class LocalGameService implements IGameService {
 		const mover = this.state.turn;
 		const isCapture = Boolean(this.state.board.get(move.to)) || move.enPassant === true;
 
+		this.moveHistory.push(move);
 		this.state.applyMove(move);
 		this.clock?.switchTurn(mover);
 
@@ -201,6 +210,30 @@ export class LocalGameService implements IGameService {
 
 	destroy(): void {
 		this.clock?.stop();
+	}
+
+	pause(): void {
+		if (this.isPaused) return;
+		if (this.showGameOverDialog) return;
+		if (this.pendingPromotionMoves || this.showPromotionDialog) return;
+
+		this.isPaused = true;
+		this.clearSelection();
+
+		this.pausedClockColor = this.activeClockColor;
+		this.clock?.stop();
+	}
+
+	resume(): void {
+		if (!this.isPaused) return;
+
+		this.isPaused = false;
+		const active = this.pausedClockColor;
+		this.pausedClockColor = null;
+
+		if (active && this.state.result.type === 'ongoing') {
+			this.clock?.start(active);
+		}
 	}
 
 	private resetClock(): void {
