@@ -1,0 +1,33 @@
+.pause-float {
+	position: absolute;
+	bottom: 20px;
+	right: -100px;
+	z-index: 10;
+}
+
+.control-btn {
+	background-color: #2e7d32;
+	border-radius: 10px;
+	height: 54px;
+	width: 80px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	cursor: pointer;
+	transition: background-color 0.2s;
+	color: white;
+	font-size: 14px;
+	font-weight: bold;
+	letter-spacing: 1px;
+	border: none;
+	font: inherit;
+}
+
+.control-btn:hover {
+	background-color: #1b5e20;
+}
+
+.control-btn:disabled {
+	opacity: 0.5;
+	cursor: not-allowed;
+}

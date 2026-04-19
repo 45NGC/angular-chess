@@ -1,0 +1,38 @@
+<div class="pause-overlay">
+  <div class="pause-card">
+    <div class="pause-title">Pause</div>
+    <div class="pause-meta">
+      Turno: <strong>{{ turn === 'white' ? 'White' : 'Black' }}</strong> · Movimientos:
+      <strong>{{ moveHistory.length }}</strong>
+    </div>
+
+    @if (clockEnabled) {
+      <div class="pause-clocks">
+        <div class="pause-clock-row">
+          <span class="pause-clock-label">Black</span>
+          <span class="pause-clock-time">{{ formatTimeDisplay('black') }}</span>
+        </div>
+        <div class="pause-clock-row">
+          <span class="pause-clock-label">White</span>
+          <span class="pause-clock-time">{{ formatTimeDisplay('white') }}</span>
+        </div>
+      </div>
+    }
+
+    <div class="pause-actions">
+      <button type="button" class="control-btn primary" (click)="resume.emit()">RESUME</button>
+      <button type="button" class="control-btn danger" (click)="quit.emit()">QUIT</button>
+    </div>
+
+    @if (moveHistory.length > 0) {
+      <div class="pause-moves">
+        @for (move of moveHistory; track $index; let i = $index) {
+          <div class="move-row">
+            <span class="move-num">{{ i + 1 }}.</span>
+            <span class="move-text">{{ formatMove(move) }}</span>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>

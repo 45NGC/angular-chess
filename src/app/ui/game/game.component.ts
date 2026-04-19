@@ -5,18 +5,27 @@ import { combineLatest } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
 import { GameOverDialogComponent } from './game-over-dialog/game-over-dialog.component';
 import { PromotionDialogComponent } from './promotion-dialog/promotion-dialog.component';
+import { ClockComponent } from './clock/clock.component';
+import { PauseButtonComponent } from './pause-button/pause-button.component';
+import { PauseOverlayComponent } from './pause-overlay/pause-overlay.component';
 import { BOARD_SIZE } from '../../core/constants/chess.constants';
 import { fromIndex } from '../../core/board/board';
 import { IGameService } from '../../interfaces/game-service.interface';
 import { TimeControl } from '../../interfaces/time-control.interface';
 import { LocalGameService } from '../../services/local-game.service';
 import { SoundService } from '../../services/sound.service';
-import { Move } from '../../core/rules/move';
 
 @Component({
 	selector: 'app-game',
 	standalone: true,
-	imports: [CommonModule, GameOverDialogComponent, PromotionDialogComponent],
+	imports: [
+		CommonModule,
+		GameOverDialogComponent,
+		PromotionDialogComponent,
+		ClockComponent,
+		PauseButtonComponent,
+		PauseOverlayComponent,
+	],
 	templateUrl: './game.component.html',
 	styleUrls: ['./game.component.css']
 })
@@ -25,7 +34,6 @@ export class GameComponent implements OnInit, OnDestroy {
 	files = Array.from({ length: BOARD_SIZE }, (_, i) => i);
 
 	gameService: IGameService | null = null;
-	elementRef: any;
 
 	get state() { return this.gameService?.state; }
 	get selectedSquare() { return this.gameService?.selectedSquare ?? null; }
@@ -49,6 +57,13 @@ export class GameComponent implements OnInit, OnDestroy {
 		return !this.pauseSupported || this.showGameOverDialog || this.showPromotionDialog || !!this.pendingPromotionMoves;
 	}
 
+	get whiteInfinite(): boolean {
+		return (this.timeControl?.white.baseMinutes ?? 0) === 0;
+	}
+	get blackInfinite(): boolean {
+		return (this.timeControl?.black.baseMinutes ?? 0) === 0;
+	}
+
 	private clockUiIntervalId: number | null = null;
 
 	constructor(
@@ -67,11 +82,9 @@ export class GameComponent implements OnInit, OnDestroy {
 				query.get('baseB'),
 				query.get('incB')
 			);
-			console.log('Gamemode : ', mode, 'TimeControl:', timeControl);
 			this.selectService(mode, timeControl);
 		});
 
-		// In zoneless change detection, UI won't update from setInterval in services.
 		this.clockUiIntervalId = window.setInterval(() => {
 			if (!this.clockEnabled || this.isPaused) return;
 			this.cdr.detectChanges();
@@ -81,21 +94,17 @@ export class GameComponent implements OnInit, OnDestroy {
 	@HostListener('document:click', ['$event'])
 	onDocumentClick(event: MouseEvent): void {
 		if (!this.gameService) return;
-
 		if (!this.isClickInsideGameArea(event.target)) {
 			this.handleClickOutside();
 		}
 	}
 
 	private isClickInsideGameArea(target: EventTarget | null): boolean {
-		if (!target || !(target instanceof HTMLElement)) {
-			return false;
-		}
-		return !!target.closest('.board, .clocks, .promotion-side-panel, app-game-over-dialog, .game-controls, .pause-overlay');
+		if (!target || !(target instanceof HTMLElement)) return false;
+		return !!target.closest('.board, app-chess-clock, .promotion-side-panel, app-game-over-dialog, app-pause-overlay');
 	}
 
 	private handleClickOutside(): void {
-
 		if (this.gameService?.selectedSquare !== null) {
 			this.gameService?.clearSelection();
 		}
@@ -114,12 +123,7 @@ export class GameComponent implements OnInit, OnDestroy {
 		};
 	}
 
-	private parseTimeControl(
-		baseW: string | null,
-		incW: string | null,
-		baseB: string | null,
-		incB: string | null
-	): TimeControl {
+	private parseTimeControl(baseW: string | null, incW: string | null, baseB: string | null, incB: string | null): TimeControl {
 		return {
 			white: this.parseSide(baseW, incW),
 			black: this.parseSide(baseB, incB)
@@ -206,61 +210,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
 	quitToHome(): void {
 		this.router.navigate(['/']);
-	}
-
-	formatMove(move: Move): string {
-		if (move.castling === 'kingSide') return 'O-O';
-		if (move.castling === 'queenSide') return 'O-O-O';
-		const from = this.squareToAlgebraic(move.from);
-		const to = this.squareToAlgebraic(move.to);
-		const promotion = move.promotion ? `=${this.promotionToLetter(move.promotion)}` : '';
-		return `${from}→${to}${promotion}`;
-	}
-
-	private squareToAlgebraic(square: number): string {
-		const { rank, file } = fromIndex(square);
-		return `${'abcdefgh'[file]}${rank + 1}`;
-	}
-
-	private promotionToLetter(promotion: NonNullable<Move['promotion']>): string {
-		switch (promotion) {
-			case 'queen':
-				return 'Q';
-			case 'rook':
-				return 'R';
-			case 'bishop':
-				return 'B';
-			case 'knight':
-				return 'N';
-		}
-	}
-
-	private formatTime(ms: number): string {
-		const clamped = Math.max(0, ms);
-		const totalSeconds = Math.floor(clamped / 1000);
-		const minutes = Math.floor(totalSeconds / 60);
-		const seconds = totalSeconds % 60;
-		return `${minutes}:${seconds.toString().padStart(2, '0')}`;
-	}
-
-	private formatTimeFraction(ms: number): string | null {
-		const clamped = Math.max(0, ms);
-		// Show tenths only in the last 15 seconds for readability
-		if (clamped >= 15_000) return null;
-		const tenths = Math.floor((clamped % 1000) / 100);
-		return tenths.toString();
-	}
-
-	formatClockTimeMain(color: 'white' | 'black'): string {
-		const tc = this.timeControl;
-		if (tc && tc[color].baseMinutes === 0) return '∞';
-		return this.formatTime(color === 'white' ? this.whiteTimeMs : this.blackTimeMs);
-	}
-
-	formatClockTimeFraction(color: 'white' | 'black'): string | null {
-		const tc = this.timeControl;
-		if (tc && tc[color].baseMinutes === 0) return null;
-		return this.formatTimeFraction(color === 'white' ? this.whiteTimeMs : this.blackTimeMs);
 	}
 
 	ngOnDestroy(): void {

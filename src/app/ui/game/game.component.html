@@ -24,85 +24,34 @@
       </div>
 
       @if (!isPaused && pauseSupported) {
-        <div class="pause-float">
-          <button
-            type="button"
-            class="control-btn"
-            (click)="togglePause()"
-            [disabled]="pauseDisabled"
-          >
-            PAUSE
-          </button>
-        </div>
+        <app-pause-button [disabled]="pauseDisabled" (togglePause)="togglePause()" />
       }
 
       @if (clockEnabled) {
-        <div class="clocks">
-          <div class="clock clock-black" [class.active]="activeClockColor === 'black'">
-            <span class="clock-label">BLACK</span>
-            <span class="clock-time">
-              <span class="clock-time-main">{{ formatClockTimeMain('black') }}</span>
-              @if (formatClockTimeFraction('black'); as frac) {
-                <span class="clock-time-frac">.{{ frac }}</span>
-              }
-            </span>
-            <span class="clock-inc">+{{ blackIncrementSeconds }}s</span>
-          </div>
-
-          <div class="clock clock-white" [class.active]="activeClockColor === 'white'">
-            <span class="clock-label">WHITE</span>
-            <span class="clock-time">
-              <span class="clock-time-main">{{ formatClockTimeMain('white') }}</span>
-              @if (formatClockTimeFraction('white'); as frac) {
-                <span class="clock-time-frac">.{{ frac }}</span>
-              }
-            </span>
-            <span class="clock-inc">+{{ whiteIncrementSeconds }}s</span>
-          </div>
-        </div>
+        <app-clock
+          [whiteTimeMs]="whiteTimeMs"
+          [blackTimeMs]="blackTimeMs"
+          [whiteIncrementSec]="whiteIncrementSeconds"
+          [blackIncrementSec]="blackIncrementSeconds"
+          [activeColor]="activeClockColor"
+          [clockEnabled]="clockEnabled"
+          [whiteInfinite]="whiteInfinite"
+          [blackInfinite]="blackInfinite"
+        />
       }
 
       @if (isPaused && pauseSupported) {
-        <div class="pause-overlay">
-          <div class="pause-card">
-            <div class="pause-title">Pause</div>
-            <div class="pause-meta">
-              Turno: <strong>{{ state?.turn === 'white' ? 'White' : 'Black' }}</strong> ·
-              Movimientos: <strong>{{ moveHistory.length }}</strong>
-            </div>
-
-            @if (clockEnabled) {
-              <div class="pause-clocks">
-                <div class="pause-clock-row">
-                  <span class="pause-clock-label">Black</span>
-                  <span class="pause-clock-time">{{ formatClockTimeMain('black') }}</span>
-                </div>
-                <div class="pause-clock-row">
-                  <span class="pause-clock-label">White</span>
-                  <span class="pause-clock-time">{{ formatClockTimeMain('white') }}</span>
-                </div>
-              </div>
-            }
-
-            <div class="pause-actions">
-              <button type="button" class="control-btn primary" (click)="resumeFromPause()">
-                RESUME
-              </button>
-              <button type="button" class="control-btn danger" (click)="quitToHome()">QUIT</button>
-            </div>
-
-            @if (moveHistory.length > 0) {
-              <div class="pause-moves">
-                @for (move of moveHistory; track $index; let i = $index) {
-                  <div class="move-row">
-                    <span class="move-num">{{ i + 1 }}.</span>
-                    <span class="move-text">{{ formatMove(move) }}</span>
-                  </div>
-                }
-              </div>
-            }
-          </div>
-        </div>
+        <app-pause-overlay
+          [turn]="state!.turn"
+          [moveHistory]="moveHistory"
+          [clockEnabled]="clockEnabled"
+          [whiteTimeMs]="whiteTimeMs"
+          [blackTimeMs]="blackTimeMs"
+          [whiteInfinite]="whiteInfinite"
+          [blackInfinite]="blackInfinite"
+          (resume)="resumeFromPause()"
+          (quit)="quitToHome()"
+        />
       }
 
       @if (showGameOverDialog) {
@@ -110,8 +59,7 @@
           [message]="getResultMessage()"
           (restart)="onRestart()"
           (exit)="onExit()"
-        >
-        </app-game-over-dialog>
+        />
       }
     </div>
 
@@ -121,8 +69,7 @@
           [color]="state!.turn"
           (selected)="onPromotionSelected($event)"
           (close)="closePromotionDialog()"
-        >
-        </app-promotion-dialog>
+        />
       </div>
     }
   </div>

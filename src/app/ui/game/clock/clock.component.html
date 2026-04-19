@@ -1,0 +1,23 @@
+<div class="clocks">
+  <div class="clock clock-black" [class.active]="activeColor === 'black'">
+    <span class="clock-label">BLACK</span>
+    <span class="clock-time">
+      <span class="clock-time-main">{{ formatMain('black') }}</span>
+      @if (formatFraction('black'); as frac) {
+        <span class="clock-time-frac">.{{ frac }}</span>
+      }
+    </span>
+    <span class="clock-inc">+{{ blackIncrementSec }}s</span>
+  </div>
+
+  <div class="clock clock-white" [class.active]="activeColor === 'white'">
+    <span class="clock-label">WHITE</span>
+    <span class="clock-time">
+      <span class="clock-time-main">{{ formatMain('white') }}</span>
+      @if (formatFraction('white'); as frac) {
+        <span class="clock-time-frac">.{{ frac }}</span>
+      }
+    </span>
+    <span class="clock-inc">+{{ whiteIncrementSec }}s</span>
+  </div>
+</div>
