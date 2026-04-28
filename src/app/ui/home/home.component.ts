@@ -59,6 +59,12 @@ export class HomeComponent {
 	onAiModeConfirm(settings: AiModeSettings): void {
 		this.lastAiMode = settings;
 		this.showAiModeDialog = false;
+		this.router.navigate(['/game', 'ai'], {
+			queryParams: {
+				difficulty: settings.difficulty,
+				color: settings.playerColor
+			}
+		});
 	}
 
 	onAiModeCancel(): void {

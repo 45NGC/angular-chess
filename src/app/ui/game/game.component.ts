@@ -9,11 +9,12 @@ import { ClockComponent } from './clock/clock.component';
 import { PauseButtonComponent } from './pause-button/pause-button.component';
 import { PauseOverlayComponent } from './pause-overlay/pause-overlay.component';
 import { BOARD_SIZE } from '../../core/constants/chess.constants';
-import { fromIndex } from '../../core/board/board';
 import { IGameService } from '../../interfaces/game-service.interface';
 import { TimeControl } from '../../interfaces/time-control.interface';
 import { LocalGameService } from '../../services/local-game.service';
 import { SoundService } from '../../services/sound.service';
+import { AiGameService } from '../../services/ai-game.service';
+import { AiModeSettings } from '../../interfaces/ai-mode.interface';
 
 @Component({
 	selector: 'app-game',
@@ -82,7 +83,8 @@ export class GameComponent implements OnInit, OnDestroy {
 				query.get('baseB'),
 				query.get('incB')
 			);
-			this.selectService(mode, timeControl);
+			const aiMode = this.parseAiMode(query.get('difficulty'), query.get('color'));
+			this.selectService(mode, timeControl, aiMode);
 		});
 
 		this.clockUiIntervalId = window.setInterval(() => {
@@ -130,16 +132,33 @@ export class GameComponent implements OnInit, OnDestroy {
 		};
 	}
 
-	private selectService(mode: string | null, timeControl: TimeControl): void {
+	private selectService(mode: string | null, timeControl: TimeControl, aiMode: AiModeSettings): void {
 		this.gameService?.destroy?.();
 		switch (mode) {
 			case 'local':
 				this.gameService = new LocalGameService(this.soundService, timeControl);
 				break;
+			case 'ai':
+				this.gameService = new AiGameService(this.soundService, aiMode, () => this.cdr.detectChanges());
+				break;
 			default:
 				console.error('Modo de juego no soportado:', mode);
 				this.gameService = null;
 		}
+	}
+
+	private parseAiMode(difficultyRaw: string | null, colorRaw: string | null): AiModeSettings {
+		const difficulty: AiModeSettings['difficulty'] =
+			difficultyRaw === 'beginner' || difficultyRaw === 'intermediate' || difficultyRaw === 'advanced' || difficultyRaw === 'expert'
+				? difficultyRaw
+				: 'beginner';
+
+		const playerColor: AiModeSettings['playerColor'] =
+			colorRaw === 'white' || colorRaw === 'black' || colorRaw === 'random'
+				? colorRaw
+				: 'random';
+
+		return { difficulty, playerColor };
 	}
 
 	pieceToImage(piece: any): string | null {

@@ -100,6 +100,33 @@ export function boardToFEN(board: Board): string {
 	return ranks.join('/');
 }
 
+function indexToAlgebraic(index: number): string {
+	const file = index % 8;
+	const rank = Math.floor(index / 8);
+	return `${String.fromCharCode('a'.charCodeAt(0) + file)}${rank + 1}`;
+}
+
+function castlingToFEN(board: Board): string {
+	let rights = '';
+	if (board.castlingRights.white.short) rights += 'K';
+	if (board.castlingRights.white.long) rights += 'Q';
+	if (board.castlingRights.black.short) rights += 'k';
+	if (board.castlingRights.black.long) rights += 'q';
+	return rights || '-';
+}
+
+/**
+ * Build a full FEN from the board + side to move.
+ * Halfmove/fullmove are set to 0/1 for now (we don't track them).
+ */
+export function toFEN(board: Board, turn: PieceColor): string {
+	const placement = boardToFEN(board);
+	const active = turn === 'white' ? 'w' : 'b';
+	const castling = castlingToFEN(board);
+	const enPassant = board.enPassantTarget != null ? indexToAlgebraic(board.enPassantTarget) : '-';
+	return `${placement} ${active} ${castling} ${enPassant} 0 1`;
+}
+
 // Helper
 function isDigit(char: string): boolean {
 	return char >= '0' && char <= '9';
