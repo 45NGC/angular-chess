@@ -123,7 +123,7 @@ export class LocalGameService implements IGameService {
 
 		if (movesToSquare.length === 1) {
 			// Single legal move: execute immediately.
-			this.applyMoveAndCheckGameOver(movesToSquare[0]);
+			this.applyMove(movesToSquare[0]);
 			this.clearSelection();
 			return;
 		}
@@ -143,7 +143,7 @@ export class LocalGameService implements IGameService {
 		if (!this.pendingPromotionMoves) return;
 		const move = this.pendingPromotionMoves.find(m => m.promotion === pieceType);
 		if (move) {
-			this.applyMoveAndCheckGameOver(move);
+			this.applyMove(move);
 		}
 		this.closePromotionDialog();
 	}
@@ -172,7 +172,7 @@ export class LocalGameService implements IGameService {
 		}
 	}
 
-	private applyMoveAndCheckGameOver(move: Move): void {
+	private applyMove(move: Move): void {
 		const mover = this.state.turn;
 		const isCapture = Boolean(this.state.board.get(move.to)) || move.enPassant === true;
 

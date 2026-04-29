@@ -116,7 +116,7 @@ export class AiGameService implements IGameService {
 		}
 
 		if (movesToSquare.length === 1) {
-			this.applyMoveAndCheckGameOver(movesToSquare[0]);
+			this.applyMove(movesToSquare[0]);
 			this.clearSelection();
 			this.requestRender?.();
 			this.maybeQueueAiMove();
@@ -139,7 +139,7 @@ export class AiGameService implements IGameService {
 
 		const move = this.pendingPromotionMoves.find(m => m.promotion === pieceType);
 		if (move) {
-			this.applyMoveAndCheckGameOver(move);
+			this.applyMove(move);
 		}
 		this.closePromotionDialog();
 		this.requestRender?.();
@@ -172,7 +172,7 @@ export class AiGameService implements IGameService {
 		}
 	}
 
-	private applyMoveAndCheckGameOver(move: Move): void {
+	private applyMove(move: Move): void {
 		this.clearPendingAiMove();
 		this.aiRequestId++;
 
@@ -254,7 +254,7 @@ export class AiGameService implements IGameService {
 
 		const move = this.uciToMove(bestmove);
 		if (!move) return;
-		this.applyMoveAndCheckGameOver(move);
+		this.applyMove(move);
 	}
 
 	private clearPendingAiMove(): void {
