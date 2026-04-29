@@ -21,6 +21,7 @@ export class AiGameService implements IGameService {
 	showPromotionDialog = false;
 	pendingPromotionMoves: Move[] | null = null;
 	moveHistory: Move[] = [];
+	isPaused = false;
 
 	private moveFinder = new LegalMoveFinder();
 	private stockfish = new StockfishService();
@@ -54,6 +55,7 @@ export class AiGameService implements IGameService {
 		this.showPromotionDialog = false;
 		this.pendingPromotionMoves = null;
 		this.moveHistory = [];
+		this.isPaused = false;
 
 		this.maybeQueueAiMove();
 		this.requestRender?.();
@@ -86,7 +88,7 @@ export class AiGameService implements IGameService {
 	}
 
 	private canInteractWithBoard(): boolean {
-		return this.state.result.type === 'ongoing';
+		return this.state.result.type === 'ongoing' && !this.isPaused;
 	}
 
 	private isCurrentPlayerPiece(piece: ReturnType<Board['get']>): boolean {
@@ -217,6 +219,7 @@ export class AiGameService implements IGameService {
 	}
 
 	private maybeQueueAiMove(): void {
+		if (this.isPaused) return;
 		if (this.state.result.type !== 'ongoing') return;
 		if (this.state.turn !== this.aiColor) return;
 		if (this.showPromotionDialog || this.pendingPromotionMoves) return;
@@ -231,6 +234,7 @@ export class AiGameService implements IGameService {
 	}
 
 	private async makeAiMove(): Promise<void> {
+		if (this.isPaused) return;
 		if (this.state.result.type !== 'ongoing') return;
 		if (this.state.turn !== this.aiColor) return;
 		const requestId = ++this.aiRequestId;
@@ -257,6 +261,27 @@ export class AiGameService implements IGameService {
 		if (this.aiMoveTimeoutId === null) return;
 		clearTimeout(this.aiMoveTimeoutId);
 		this.aiMoveTimeoutId = null;
+	}
+
+	pause(): void {
+		if (this.isPaused) return;
+		if (this.state.result.type !== 'ongoing') return;
+		if (this.pendingPromotionMoves || this.showPromotionDialog) return;
+
+		this.isPaused = true;
+		this.clearSelection();
+		this.clearPendingAiMove();
+		// Invalidate any in-flight Stockfish request and request the engine to stop ASAP.
+		this.aiRequestId++;
+		this.stockfish.stop();
+		this.requestRender?.();
+	}
+
+	resume(): void {
+		if (!this.isPaused) return;
+		this.isPaused = false;
+		this.requestRender?.();
+		this.maybeQueueAiMove();
 	}
 
 	destroy(): void {

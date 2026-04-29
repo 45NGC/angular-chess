@@ -62,6 +62,11 @@ export class StockfishService {
 		return this.queue as Promise<string | null>;
 	}
 
+	stop(): void {
+		if (!this.worker) return;
+		this.worker.postMessage('stop');
+	}
+
 	destroy(): void {
 		this.listeners.clear();
 		this.worker?.terminate();
