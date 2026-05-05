@@ -27,7 +27,7 @@ export class AiGameService implements IGameService {
 	private stockfish = new StockfishService();
 
 	private difficulty: AiModeSettings['difficulty'];
-	private playerColor: Side;
+	readonly playerColor: Side;
 	private aiColor: Side;
 	private aiMoveTimeoutId: number | null = null;
 	private aiRequestId = 0;
@@ -191,7 +191,7 @@ export class AiGameService implements IGameService {
 			attackerColor
 		);
 
-		// Only play sounds on human moves + AI moves (same mapping as local)
+		// Sounds
 		if (isCheck) {
 			this.soundService.playCheck();
 		} else if (isCapture) {

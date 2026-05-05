@@ -1,0 +1,12 @@
+<button type="button" class="control-btn" (click)="rotate.emit()">ROTATE</button>
+
+@if (autoRotateVisible) {
+  <button
+    type="button"
+    class="control-btn auto"
+    [class.enabled]="autoRotateEnabled"
+    (click)="toggleAutoRotate.emit()"
+  >
+    AUTO: {{ autoRotateEnabled ? 'ON' : 'OFF' }}
+  </button>
+}

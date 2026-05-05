@@ -23,6 +23,14 @@
         }
       </div>
 
+      <app-rotation-button
+        [orientation]="boardOrientation"
+        [autoRotateVisible]="mode === 'local'"
+        [autoRotateEnabled]="autoRotateBoardLocal"
+        (rotate)="toggleBoardOrientation()"
+        (toggleAutoRotate)="toggleAutoRotateBoardLocal()"
+      />
+
       @if (!isPaused && pauseSupported) {
         <app-pause-button [disabled]="pauseDisabled" (togglePause)="togglePause()" />
       }

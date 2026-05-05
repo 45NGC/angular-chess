@@ -8,6 +8,7 @@ import { PromotionDialogComponent } from './promotion-dialog/promotion-dialog.co
 import { ClockComponent } from './clock/clock.component';
 import { PauseButtonComponent } from './pause-button/pause-button.component';
 import { PauseOverlayComponent } from './pause-overlay/pause-overlay.component';
+import { RotationButtonComponent } from './rotation-button/rotation-button.component';
 import { BOARD_SIZE } from '../../core/constants/chess.constants';
 import { IGameService } from '../../interfaces/game-service.interface';
 import { TimeControl } from '../../interfaces/time-control.interface';
@@ -26,13 +27,35 @@ import { AiModeSettings } from '../../interfaces/ai-mode.interface';
 		ClockComponent,
 		PauseButtonComponent,
 		PauseOverlayComponent,
+		RotationButtonComponent,
 	],
 	templateUrl: './game.component.html',
 	styleUrls: ['./game.component.css']
 })
 export class GameComponent implements OnInit, OnDestroy {
-	ranks = Array.from({ length: BOARD_SIZE }, (_, i) => 7 - i);
-	files = Array.from({ length: BOARD_SIZE }, (_, i) => i);
+	private readonly ranksWhite = Array.from({ length: BOARD_SIZE }, (_, i) => 7 - i);
+	private readonly filesWhite = Array.from({ length: BOARD_SIZE }, (_, i) => i);
+	private readonly ranksBlack = Array.from({ length: BOARD_SIZE }, (_, i) => i);
+	private readonly filesBlack = Array.from({ length: BOARD_SIZE }, (_, i) => 7 - i);
+
+	mode: 'local' | 'ai' | null = null;
+	private manualBoardOrientation: 'white' | 'black' = 'white';
+	autoRotateBoardLocal = false;
+
+	get boardOrientation(): 'white' | 'black' {
+		if (this.mode === 'local' && this.autoRotateBoardLocal) {
+			return this.state?.turn ?? this.manualBoardOrientation;
+		}
+		return this.manualBoardOrientation;
+	}
+
+	get ranks(): number[] {
+		return this.boardOrientation === 'white' ? this.ranksWhite : this.ranksBlack;
+	}
+
+	get files(): number[] {
+		return this.boardOrientation === 'white' ? this.filesWhite : this.filesBlack;
+	}
 
 	gameService: IGameService | null = null;
 
@@ -136,15 +159,42 @@ export class GameComponent implements OnInit, OnDestroy {
 		this.gameService?.destroy?.();
 		switch (mode) {
 			case 'local':
+				this.mode = 'local';
+				this.autoRotateBoardLocal = false;
+				this.manualBoardOrientation = 'white';
 				this.gameService = new LocalGameService(this.soundService, timeControl);
 				break;
 			case 'ai':
-				this.gameService = new AiGameService(this.soundService, aiMode, () => this.cdr.detectChanges());
+				this.mode = 'ai';
+				this.autoRotateBoardLocal = false;
+				{
+					const service = new AiGameService(this.soundService, aiMode, () => this.cdr.detectChanges());
+					this.gameService = service;
+					this.manualBoardOrientation = service.playerColor;
+				}
 				break;
 			default:
 				console.error('Modo de juego no soportado:', mode);
+				this.mode = null;
 				this.gameService = null;
 		}
+	}
+
+	toggleBoardOrientation(): void {
+		// Manual rotation should override auto-rotation.
+		if (this.mode === 'local' && this.autoRotateBoardLocal) {
+			this.autoRotateBoardLocal = false;
+			// Preserve current orientation when turning auto off.
+			if (this.state) this.manualBoardOrientation = this.state.turn;
+		}
+		this.manualBoardOrientation = this.boardOrientation === 'white' ? 'black' : 'white';
+	}
+
+	toggleAutoRotateBoardLocal(): void {
+		if (this.mode !== 'local') return;
+		this.autoRotateBoardLocal = !this.autoRotateBoardLocal;
+		// Keep board stable when toggling auto-rotation.
+		if (this.state) this.manualBoardOrientation = this.state.turn;
 	}
 
 	private parseAiMode(difficultyRaw: string | null, colorRaw: string | null): AiModeSettings {
