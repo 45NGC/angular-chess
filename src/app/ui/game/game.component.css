@@ -111,3 +111,25 @@
 	position: relative;
 	z-index: 1;
 }
+
+.piece.draggable {
+	pointer-events: auto;
+	cursor: grab;
+}
+
+.piece.draggable:active {
+	cursor: grabbing;
+}
+
+.piece.drag-source {
+	opacity: 0;
+}
+
+.drag-preview {
+	position: absolute;
+	transform: translate(-50%, -50%);
+	pointer-events: none;
+	user-select: none;
+	z-index: 20;
+	filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.35));
+}

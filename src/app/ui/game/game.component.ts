@@ -1,4 +1,4 @@
-import { Component, HostListener, OnDestroy, OnInit } from '@angular/core';
+import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
 import { combineLatest } from 'rxjs';
@@ -41,6 +41,14 @@ export class GameComponent implements OnInit, OnDestroy {
 	mode: 'local' | 'ai' | null = null;
 	private manualBoardOrientation: 'white' | 'black' = 'white';
 	autoRotateBoardLocal = false;
+	@ViewChild('boardEl') private boardEl?: ElementRef<HTMLElement>;
+
+	dragSourceSquare: number | null = null;
+	dragPreview: { src: string; x: number; y: number; size: number } | null = null;
+	private dragCandidate: { fromRank: number; fromFile: number; pointerId: number; startX: number; startY: number } | null = null;
+	private draggingPointerId: number | null = null;
+	private suppressClickTimeoutId: number | null = null;
+	private suppressClick = false;
 
 	get boardOrientation(): 'white' | 'black' {
 		if (this.mode === 'local' && this.autoRotateBoardLocal) {
@@ -136,7 +144,176 @@ export class GameComponent implements OnInit, OnDestroy {
 	}
 
 	onSquareClick(rank: number, file: number): void {
+		if (this.suppressClick) {
+			this.suppressClick = false;
+			return;
+		}
 		this.gameService?.handleSquareClick(rank, file);
+	}
+
+	onPiecePointerDown(event: PointerEvent, rank: number, file: number): void {
+		if (!this.gameService) return;
+		if (!this.canDragSquare(rank, file)) return;
+
+		// Prevent browser default image dragging/selection.
+		event.preventDefault();
+
+		this.dragCandidate = {
+			fromRank: rank,
+			fromFile: file,
+			pointerId: event.pointerId,
+			startX: event.clientX,
+			startY: event.clientY
+		};
+
+		// Select the piece so legal targets are highlighted (same behaviour as click).
+		this.gameService.handleSquareClick(rank, file);
+
+		const target = event.target;
+		if (target instanceof HTMLElement && typeof target.setPointerCapture === 'function') {
+			try {
+				target.setPointerCapture(event.pointerId);
+			} catch {
+				// Ignore capture failures (e.g. if pointer already captured).
+			}
+		}
+	}
+
+	@HostListener('document:pointermove', ['$event'])
+	onDocumentPointerMove(event: PointerEvent): void {
+		const candidate = this.dragCandidate;
+		if (!candidate) return;
+		if (event.pointerId !== candidate.pointerId) return;
+
+		const dx = event.clientX - candidate.startX;
+		const dy = event.clientY - candidate.startY;
+		const distance = Math.hypot(dx, dy);
+
+		// Start dragging after a small threshold to allow normal clicks.
+		if (this.draggingPointerId === null) {
+			if (distance < 5) return;
+			const preview = this.createDragPreview(candidate.fromRank, candidate.fromFile, event.clientX, event.clientY);
+			if (!preview) return;
+
+			this.draggingPointerId = candidate.pointerId;
+			this.dragPreview = preview;
+			this.dragSourceSquare = candidate.fromRank * 8 + candidate.fromFile;
+			return;
+		}
+
+		if (event.pointerId !== this.draggingPointerId) return;
+		this.updateDragPreview(event.clientX, event.clientY);
+	}
+
+	@HostListener('document:pointerup', ['$event'])
+	onDocumentPointerUp(event: PointerEvent): void {
+		const candidate = this.dragCandidate;
+		if (!candidate) return;
+		if (event.pointerId !== candidate.pointerId) return;
+
+		const wasDragging = this.draggingPointerId !== null;
+		const fromRank = candidate.fromRank;
+		const fromFile = candidate.fromFile;
+
+		this.dragCandidate = null;
+		this.draggingPointerId = null;
+		this.dragPreview = null;
+		this.dragSourceSquare = null;
+
+		if (!wasDragging) {
+			// No drag happened: keep normal selection behaviour (already selected on pointerdown).
+			return;
+		}
+
+		this.suppressClick = true;
+		if (this.suppressClickTimeoutId !== null) {
+			clearTimeout(this.suppressClickTimeoutId);
+		}
+		this.suppressClickTimeoutId = window.setTimeout(() => {
+			this.suppressClick = false;
+			this.suppressClickTimeoutId = null;
+		}, 0);
+
+		if (!this.gameService) return;
+		const target = this.squareAtClientPoint(event.clientX, event.clientY);
+		if (!target) return;
+		if (target.rank === fromRank && target.file === fromFile) return;
+
+		const toSquare = target.rank * 8 + target.file;
+		const isLegal = this.legalMoves.some(m => m.to === toSquare);
+		if (!isLegal) return;
+
+		// Origin is already selected; dropping on a legal square executes the move.
+		this.gameService.handleSquareClick(target.rank, target.file);
+	}
+
+	@HostListener('document:pointercancel', ['$event'])
+	onDocumentPointerCancel(event: PointerEvent): void {
+		const candidate = this.dragCandidate;
+		if (!candidate) return;
+		if (event.pointerId !== candidate.pointerId) return;
+		this.dragCandidate = null;
+		this.draggingPointerId = null;
+		this.dragPreview = null;
+		this.dragSourceSquare = null;
+	}
+
+	private createDragPreview(fromRank: number, fromFile: number, clientX: number, clientY: number): { src: string; x: number; y: number; size: number } | null {
+		const rect = this.boardEl?.nativeElement.getBoundingClientRect();
+		if (!rect) return null;
+		const size = rect.width / 8;
+
+		const piece = this.state?.board.get(fromRank * 8 + fromFile);
+		const src = this.pieceToImage(piece);
+		if (!src) return null;
+
+		return {
+			src,
+			x: clientX - rect.left,
+			y: clientY - rect.top,
+			size
+		};
+	}
+
+	private updateDragPreview(clientX: number, clientY: number): void {
+		const rect = this.boardEl?.nativeElement.getBoundingClientRect();
+		if (!rect || !this.dragPreview) return;
+		this.dragPreview = {
+			...this.dragPreview,
+			x: clientX - rect.left,
+			y: clientY - rect.top
+		};
+	}
+
+	private squareAtClientPoint(clientX: number, clientY: number): { rank: number; file: number } | null {
+		const rect = this.boardEl?.nativeElement.getBoundingClientRect();
+		if (!rect) return null;
+		if (clientX < rect.left || clientX >= rect.right || clientY < rect.top || clientY >= rect.bottom) return null;
+
+		const squareSize = rect.width / 8;
+		const col = Math.floor((clientX - rect.left) / squareSize);
+		const row = Math.floor((clientY - rect.top) / squareSize);
+		if (row < 0 || row > 7 || col < 0 || col > 7) return null;
+
+		const rank = this.ranks[row];
+		const file = this.files[col];
+		return { rank, file };
+	}
+
+	canDragSquare(rank: number, file: number): boolean {
+		const service = this.gameService;
+		const state = this.state;
+		if (!service || !state) return false;
+		if (this.showGameOverDialog) return false;
+		if (this.showPromotionDialog || this.pendingPromotionMoves) return false;
+		if (this.isPaused) return false;
+
+		const piece = state.board.get(rank * 8 + file);
+		if (!piece) return false;
+		if (piece.color !== state.turn) return false;
+		// In AI mode, only allow dragging the human side.
+		if (service instanceof AiGameService && state.turn !== service.playerColor) return false;
+		return true;
 	}
 
 	private parseSide(baseMinutesRaw: string | null, incrementSecondsRaw: string | null): { baseMinutes: number; incrementSeconds: number } {
@@ -157,6 +334,16 @@ export class GameComponent implements OnInit, OnDestroy {
 
 	private selectService(mode: string | null, timeControl: TimeControl, aiMode: AiModeSettings): void {
 		this.gameService?.destroy?.();
+		this.dragCandidate = null;
+		this.draggingPointerId = null;
+		this.dragPreview = null;
+		this.dragSourceSquare = null;
+		this.suppressClick = false;
+		if (this.suppressClickTimeoutId !== null) {
+			clearTimeout(this.suppressClickTimeoutId);
+			this.suppressClickTimeoutId = null;
+		}
+		this.gameService?.clearSelection();
 		switch (mode) {
 			case 'local':
 				this.mode = 'local';
@@ -286,6 +473,10 @@ export class GameComponent implements OnInit, OnDestroy {
 		if (this.clockUiIntervalId !== null) {
 			clearInterval(this.clockUiIntervalId);
 			this.clockUiIntervalId = null;
+		}
+		if (this.suppressClickTimeoutId !== null) {
+			clearTimeout(this.suppressClickTimeoutId);
+			this.suppressClickTimeoutId = null;
 		}
 	}
 }

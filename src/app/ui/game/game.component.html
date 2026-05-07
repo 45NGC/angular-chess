@@ -1,7 +1,7 @@
 @if (gameService) {
   <div class="game-container">
     <div class="board-area">
-      <div class="board">
+      <div class="board" #boardEl>
         @for (rank of ranks; track rank) {
           <div class="rank">
             @for (file of files; track file) {
@@ -15,13 +15,31 @@
                 (click)="onSquareClick(rank, file)"
               >
                 @if (state?.board?.get(rank * 8 + file); as piece) {
-                  <img [src]="pieceToImage(piece)" class="piece" />
+                  <img
+                    [src]="pieceToImage(piece)"
+                    class="piece"
+                    [class.draggable]="canDragSquare(rank, file)"
+                    [class.drag-source]="dragSourceSquare === rank * 8 + file"
+                    draggable="false"
+                    (pointerdown)="onPiecePointerDown($event, rank, file)"
+                  />
                 }
               </div>
             }
           </div>
         }
       </div>
+
+      @if (dragPreview; as preview) {
+        <img
+          class="drag-preview"
+          [src]="preview.src"
+          [style.left.px]="preview.x"
+          [style.top.px]="preview.y"
+          [style.width.px]="preview.size"
+          [style.height.px]="preview.size"
+        />
+      }
 
       <app-rotation-button
         [orientation]="boardOrientation"
