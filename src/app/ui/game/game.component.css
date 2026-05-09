@@ -5,6 +5,8 @@
 	width: 100%;
 	height: 100vh;
 	--hint-color: rgba(0, 0, 0, 0.4);
+	--last-move-from-color: rgba(255, 235, 59, 0.28);
+	--last-move-to-color: rgba(255, 235, 59, 0.46);
 	--board-size: 648px;
 }
 
@@ -68,6 +70,14 @@
 
 .square.dark {
 	background-color: #b58863;
+}
+
+.square.last-move-from {
+	background-image: linear-gradient(var(--last-move-from-color), var(--last-move-from-color));
+}
+
+.square.last-move-to {
+	background-image: linear-gradient(var(--last-move-to-color), var(--last-move-to-color));
 }
 
 .square.legal-move,

@@ -10,6 +10,7 @@ import { PauseButtonComponent } from './pause-button/pause-button.component';
 import { PauseOverlayComponent } from './pause-overlay/pause-overlay.component';
 import { RotationButtonComponent } from './rotation-button/rotation-button.component';
 import { BOARD_SIZE } from '../../core/constants/chess.constants';
+import { Move } from '../../core/rules/move';
 import { IGameService } from '../../interfaces/game-service.interface';
 import { TimeControl } from '../../interfaces/time-control.interface';
 import { LocalGameService } from '../../services/local-game.service';
@@ -82,6 +83,10 @@ export class GameComponent implements OnInit, OnDestroy {
 	get blackIncrementSeconds() { return this.timeControl?.black.incrementSeconds ?? 0; }
 	get isPaused() { return this.gameService?.isPaused ?? false; }
 	get moveHistory() { return this.gameService?.moveHistory ?? []; }
+	get lastMove(): Move | null {
+		const history = this.moveHistory;
+		return history.length > 0 ? history[history.length - 1] : null;
+	}
 	get pauseSupported() {
 		return typeof this.gameService?.pause === 'function' && typeof this.gameService?.resume === 'function';
 	}
