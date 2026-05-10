@@ -1,10 +1,14 @@
 .gameover-overlay {
 	position: fixed;
 	inset: 0;
-	background-color: rgba(0, 0, 0, 0.7);
+	background-color: transparent;
 	display: flex;
-	justify-content: center;
+	justify-content: flex-start;
 	align-items: center;
+	--panel-gap: 16px;
+	padding: 24px;
+	padding-left: calc(50% + var(--board-size) / 2 + var(--panel-gap));
+	box-sizing: border-box;
 	z-index: 1000;
 }
 
@@ -81,4 +85,19 @@
 
 .exit-option:hover {
 	background-color: #a83232;
+}
+
+@media (max-width: 1400px) {
+	.gameover-overlay {
+		justify-content: center;
+		padding-left: 24px;
+	}
+}
+
+@media (max-width: 550px) {
+	.gameover-overlay {
+		justify-content: center;
+		padding: 16px;
+		padding-left: 16px;
+	}
 }
