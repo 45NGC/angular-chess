@@ -1,9 +1,9 @@
 <div class="home">
   <h1>Chess</h1>
 
-  <button (click)="play('local')">Local</button>
-  <button (click)="play('online')">Online</button>
-  <button (click)="play('ai')">AI</button>
+  <button type="button" class="btn btn--success btn--wide" (click)="play('local')">Local</button>
+  <button type="button" class="btn btn--success btn--wide" (click)="play('online')">Online</button>
+  <button type="button" class="btn btn--success btn--wide" (click)="play('ai')">AI</button>
 </div>
 
 @if (showTimeControlDialog) {

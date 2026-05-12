@@ -1,5 +1,11 @@
 <div class="overlay" (click)="onCancel()">
-  <div class="container" role="dialog" aria-modal="true" aria-labelledby="ai-mode-dialog-title" (click)="$event.stopPropagation()">
+  <div
+    class="container"
+    role="dialog"
+    aria-modal="true"
+    aria-labelledby="ai-mode-dialog-title"
+    (click)="$event.stopPropagation()"
+  >
     <div class="title" id="ai-mode-dialog-title">AI GAME</div>
     <div class="subtitle">Select difficulty and your color</div>
 
@@ -42,8 +48,8 @@
     <div class="summary">{{ summary }}</div>
 
     <div class="actions">
-      <button type="button" class="action primary" (click)="onConfirm()">START</button>
-      <button type="button" class="action" (click)="onCancel()">CANCEL</button>
+      <button type="button" class="btn btn--success" (click)="onConfirm()">START</button>
+      <button type="button" class="btn btn--danger" (click)="onCancel()">CANCEL</button>
     </div>
   </div>
 </div>

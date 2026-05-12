@@ -1,5 +1,10 @@
 <div class="pause-float">
-  <button type="button" class="control-btn" (click)="togglePause.emit()" [disabled]="disabled">
+  <button
+    type="button"
+    class="btn btn--success btn--square"
+    (click)="togglePause.emit()"
+    [disabled]="disabled"
+  >
     PAUSE
   </button>
 </div>

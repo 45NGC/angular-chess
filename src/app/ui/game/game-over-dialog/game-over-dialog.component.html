@@ -7,15 +7,13 @@
     </div>
 
     <div class="actions-container">
-      <div class="action-option" (click)="onRestart()">
-        ↻
-        <span>RESTART</span>
-      </div>
+      <button type="button" class="btn btn--success action-option" (click)="onRestart()">
+        RESTART
+      </button>
 
-      <div class="action-option exit-option" (click)="onExit()">
-        ✕
-        <span>EXIT</span>
-      </div>
+      <button type="button" class="btn btn--danger action-option exit-option" (click)="onExit()">
+        EXIT
+      </button>
     </div>
   </div>
 </div>

@@ -10,29 +10,29 @@
 
 .clock {
 	width: 280px;
-	background-color: #222;
+	background-color: var(--panel-bg);
 	border-radius: 10px;
 	padding: 14px 18px;
 	display: grid;
 	grid-template-columns: 1fr auto 1fr;
 	align-items: center;
-	color: white;
+	color: var(--text);
 	font-weight: 700;
 	letter-spacing: 0.5px;
 }
 
 .clock.active {
-	outline: 2px solid #4caf50;
+	outline: 2px solid var(--accent);
 }
 
 .clock-label {
-	color: #bbb;
+	color: var(--text-muted);
 	font-size: 13px;
 	font-weight: 800;
 }
 
 .clock-time {
-	font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+	font-family: var(--font-mono);
 	font-size: 40px;
 	justify-self: center;
 	display: inline-flex;
@@ -46,7 +46,7 @@
 }
 
 .clock-inc {
-	color: #bbb;
+	color: var(--text-muted);
 	font-size: 13px;
 	justify-self: end;
 }

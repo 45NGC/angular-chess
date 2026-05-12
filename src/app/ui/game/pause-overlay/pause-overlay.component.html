@@ -20,8 +20,8 @@
     }
 
     <div class="pause-actions">
-      <button type="button" class="control-btn primary" (click)="resume.emit()">RESUME</button>
-      <button type="button" class="control-btn danger" (click)="quit.emit()">QUIT</button>
+      <button type="button" class="btn btn--success" (click)="resume.emit()">RESUME</button>
+      <button type="button" class="btn btn--danger" (click)="quit.emit()">QUIT</button>
     </div>
 
     @if (moveHistory.length > 0) {

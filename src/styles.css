@@ -1,13 +1,118 @@
-html, body {
+:root {
+  --app-bg: #2e2e2e;
+  --panel-bg: #222;
+  --surface-1: #1d1d1d;
+  --surface-2: #2f2f2f;
+  --surface-3: #333;
+  --surface-4: #444;
+
+  --text: #fff;
+  --text-muted: #bbb;
+  --text-subtle: #ccc;
+  --text-soft: #ddd;
+
+  --accent: #4caf50;
+  --success: #2e7d32;
+  --danger: #c62828;
+
+  --radius-sm: 6px;
+  --radius-md: 10px;
+
+  --font-sans: system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New",
+    monospace;
+}
+
+html,
+body {
   margin: 0;
   padding: 0;
   width: 100%;
   height: 100%;
-  background-color: #2e2e2e;
+  background-color: var(--app-bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+}
+
+* {
+  box-sizing: border-box;
 }
 
 app-root {
   display: block;
   width: 100%;
   height: 100%;
+}
+
+/* App buttons (uniform look + colored variants) */
+.btn {
+  --btn-bg: var(--surface-3);
+  --btn-fg: var(--text);
+  --btn-radius: var(--radius-sm);
+  --btn-height: 54px;
+  --btn-padding-x: 18px;
+  --btn-font-size: 14px;
+
+  appearance: none;
+  border: 0;
+  border-radius: var(--btn-radius);
+  background-color: var(--btn-bg);
+  color: var(--btn-fg);
+  height: var(--btn-height);
+  padding: 0 var(--btn-padding-x);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  cursor: pointer;
+  user-select: none;
+
+  font: inherit;
+  font-size: var(--btn-font-size);
+  font-weight: 800;
+  letter-spacing: 1px;
+  line-height: 1;
+
+  transition: filter 0.15s ease, opacity 0.15s ease, transform 0.05s ease;
+}
+
+.btn:hover {
+  filter: brightness(0.9);
+}
+
+.btn:active {
+  transform: translateY(1px);
+}
+
+.btn:disabled,
+.btn[aria-disabled="true"] {
+  opacity: 0.55;
+  cursor: not-allowed;
+  filter: none;
+}
+
+.btn:focus-visible {
+  outline: 2px solid #90caf9;
+  outline-offset: 2px;
+}
+
+.btn--success {
+  --btn-bg: var(--success);
+}
+
+.btn--danger {
+  --btn-bg: var(--danger);
+}
+
+.btn--neutral {
+  --btn-bg: var(--surface-3);
+}
+
+.btn--wide {
+  width: 200px;
+}
+
+.btn--square {
+  width: 80px;
+  padding: 0;
 }

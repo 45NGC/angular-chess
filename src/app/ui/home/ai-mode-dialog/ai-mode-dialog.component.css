@@ -9,7 +9,7 @@
 }
 
 .container {
-	background-color: #222;
+	background-color: var(--panel-bg);
 	border-radius: 10px;
 	padding: 20px;
 	display: flex;
@@ -27,6 +27,7 @@
 		opacity: 0;
 		transform: translateY(-10px);
 	}
+
 	to {
 		opacity: 1;
 		transform: translateY(0);
@@ -40,7 +41,7 @@
 }
 
 .title {
-	color: white;
+	color: var(--text);
 	font-size: 22px;
 	font-weight: bold;
 	letter-spacing: 1px;
@@ -48,7 +49,7 @@
 }
 
 .subtitle {
-	color: #bbb;
+	color: var(--text-muted);
 	font-size: 14px;
 	text-align: center;
 }
@@ -60,7 +61,7 @@
 }
 
 .section-title {
-	color: #ddd;
+	color: var(--text-soft);
 	font-size: 13px;
 	letter-spacing: 0.5px;
 }
@@ -72,12 +73,12 @@
 }
 
 .option {
-	background-color: #333;
+	background-color: var(--surface-3);
 	border-radius: 6px;
 	padding: 12px 10px;
 	text-align: center;
 	cursor: pointer;
-	color: white;
+	color: var(--text);
 	font-weight: 600;
 	transition: background-color 0.2s, outline-color 0.2s;
 	user-select: none;
@@ -87,12 +88,12 @@
 }
 
 .option:hover {
-	background-color: #444;
+	background-color: var(--surface-4);
 }
 
 .option.selected {
-	outline: 2px solid #4caf50;
-	background-color: #2f2f2f;
+	outline: 2px solid var(--accent);
+	background-color: var(--surface-2);
 }
 
 .option:focus-visible {
@@ -101,15 +102,15 @@
 }
 
 .option.selected:focus-visible {
-	outline-color: #4caf50;
+	outline-color: var(--accent);
 }
 
 .summary {
-	color: #ccc;
+	color: var(--text-subtle);
 	font-size: 14px;
 	text-align: center;
 	padding: 10px 12px;
-	background-color: #2f2f2f;
+	background-color: var(--surface-2);
 	border-radius: 6px;
 }
 
@@ -119,36 +120,8 @@
 	gap: 10px;
 }
 
-.action {
-	height: 54px;
-	background-color: #333;
-	border-radius: 6px;
-	display: flex;
-	align-items: center;
-	justify-content: center;
-	cursor: pointer;
-	transition: background-color 0.2s;
-	color: white;
-	font-size: 14px;
-	font-weight: bold;
-	letter-spacing: 1px;
-	user-select: none;
-	border: 0;
-	font: inherit;
-	appearance: none;
-}
-
-.action:hover {
-	background-color: #444;
-}
-
-.action.primary:hover {
-	background-color: #2e7d32;
-}
-
-.action:focus-visible {
-	outline: 2px solid #90caf9;
-	outline-offset: 2px;
+.actions .btn {
+	width: 100%;
 }
 
 .color-grid .option:last-child {
