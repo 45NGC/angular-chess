@@ -13,9 +13,12 @@
 	--btn-height: 56px;
 	width: 56px;
 	padding: 0;
-	box-shadow:
-		0 0 0 1px rgba(255, 255, 255, 0.18) inset,
-		0 10px 20px rgba(0, 0, 0, 0.35);
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18) inset;
+}
+
+.btn--square.btn--nav:disabled {
+	opacity: 1;
+	cursor: not-allowed;
 }
 
 .nav-icon {
