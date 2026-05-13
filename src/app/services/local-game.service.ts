@@ -11,11 +11,12 @@ import { IGameService } from '../interfaces/game-service.interface';
 import { SoundService } from './sound.service';
 import { TimeControl } from '../interfaces/time-control.interface';
 import { LocalClock, LocalClockState } from '../core/time/local-clock';
+import { MoveNavigableGame } from '../core/game/move-navigation';
 
 export const LOCAL_TIME_CONTROL = new InjectionToken<TimeControl>('LOCAL_TIME_CONTROL');
 
 @Injectable()
-export class LocalGameService implements IGameService {
+export class LocalGameService extends MoveNavigableGame implements IGameService {
 	state!: GameState;
 	selectedSquare: number | null = null;
 	legalMoves: Move[] = [];
@@ -23,8 +24,8 @@ export class LocalGameService implements IGameService {
 	showPromotionDialog = false;
 	pendingPromotionMoves: Move[] | null = null;
 
-	isPaused = false;
-	moveHistory: Move[] = [];
+	override isPaused = false;
+	private clockFrozenByHistoryNavigation = false;
 
 	timeControl: TimeControl;
 	clockEnabled = false;
@@ -40,6 +41,7 @@ export class LocalGameService implements IGameService {
 		private soundService: SoundService,
 		@Optional() @Inject(LOCAL_TIME_CONTROL) timeControl?: TimeControl
 	) {
+		super();
 		this.timeControl = timeControl ?? {
 			white: { baseMinutes: 0, incrementSeconds: 0 },
 			black: { baseMinutes: 0, incrementSeconds: 0 }
@@ -63,6 +65,8 @@ export class LocalGameService implements IGameService {
 		this.isPaused = false;
 		this.pausedClockColor = null;
 		this.moveHistory = [];
+		this.redoHistory = [];
+		this.clockFrozenByHistoryNavigation = false;
 		this.resetClock();
 	}
 
@@ -176,6 +180,10 @@ export class LocalGameService implements IGameService {
 		const mover = this.state.turn;
 		const isCapture = Boolean(this.state.board.get(move.to)) || move.enPassant === true;
 
+		// A new move invalidates any "future" moves.
+		if (this.redoHistory.length > 0) this.redoHistory = [];
+		this.clockFrozenByHistoryNavigation = false;
+
 		this.moveHistory.push(move);
 		this.state.applyMove(move);
 		this.clock?.switchTurn(mover);
@@ -200,6 +208,18 @@ export class LocalGameService implements IGameService {
 		this.checkGameOver();
 	}
 
+	protected override onHistoryNavigationStep(): void {
+		this.clockFrozenByHistoryNavigation = true;
+		this.clock?.stop();
+	}
+
+	protected override afterHistoryRebuild(): void {
+		this.showGameOverDialog = this.state.result.type !== 'ongoing';
+		if (this.showGameOverDialog) {
+			this.clock?.stop();
+		}
+	}
+
 	private checkGameOver(): void {
 		if (this.state.result.type !== 'ongoing') {
 			this.soundService.playEnd();
@@ -208,7 +228,7 @@ export class LocalGameService implements IGameService {
 		}
 	}
 
-	destroy(): void {
+	override destroy(): void {
 		this.clock?.stop();
 	}
 
@@ -220,7 +240,8 @@ export class LocalGameService implements IGameService {
 		this.isPaused = true;
 		this.clearSelection();
 
-		this.pausedClockColor = this.activeClockColor;
+		// If the clock is already frozen due to history navigation, don't capture an "active" color.
+		this.pausedClockColor = this.clockFrozenByHistoryNavigation ? null : this.activeClockColor;
 		this.clock?.stop();
 	}
 

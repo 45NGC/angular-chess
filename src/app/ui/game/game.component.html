@@ -51,6 +51,16 @@
         (toggleAutoRotate)="toggleAutoRotateBoardLocal()"
       />
 
+      @if (moveNavigationSupported) {
+        <app-move-navigation-buttons
+          [canUndo]="canUndoMove"
+          [canRedo]="canRedoMove"
+          [disabled]="moveNavigationDisabled"
+          (undo)="undoMove()"
+          (redo)="redoMove()"
+        />
+      }
+
       @if (!isPaused && pauseSupported) {
         <app-pause-button [disabled]="pauseDisabled" (togglePause)="togglePause()" />
       }

@@ -1,0 +1,21 @@
+@if (canRedo) {
+  <button
+    type="button"
+    class="btn btn--square btn--nav"
+    (click)="redo.emit()"
+    [disabled]="disabled"
+    aria-label="Go forward one move"
+  >
+    <img class="nav-icon" src="assets/icons/forward-button.png" alt="" aria-hidden="true" />
+  </button>
+}
+
+<button
+  type="button"
+  class="btn btn--square btn--nav"
+  (click)="undo.emit()"
+  [disabled]="disabled || !canUndo"
+  aria-label="Go back one move"
+>
+  <img class="nav-icon" src="assets/icons/backward-button.png" alt="" aria-hidden="true" />
+</button>

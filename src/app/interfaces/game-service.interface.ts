@@ -17,6 +17,11 @@ export interface IGameService {
 
   // Optional move history data (local games, etc.)
   moveHistory?: Move[];
+  // Optional undo/redo navigation (local + AI games)
+  canUndoMove?(): boolean;
+  canRedoMove?(): boolean;
+  undoMove?(): void;
+  redoMove?(): void;
 
   // Optional clock data (local games, etc.)
   timeControl?: TimeControl;

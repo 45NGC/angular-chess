@@ -9,6 +9,7 @@ import { ClockComponent } from './clock/clock.component';
 import { PauseButtonComponent } from './pause-button/pause-button.component';
 import { PauseOverlayComponent } from './pause-overlay/pause-overlay.component';
 import { RotationButtonComponent } from './rotation-button/rotation-button.component';
+import { MoveNavigationButtonsComponent } from './move-navigation-buttons/move-navigation-buttons.component';
 import { BOARD_SIZE } from '../../core/constants/chess.constants';
 import { Move } from '../../core/rules/move';
 import { IGameService } from '../../interfaces/game-service.interface';
@@ -29,6 +30,7 @@ import { AiModeSettings } from '../../interfaces/ai-mode.interface';
 		PauseButtonComponent,
 		PauseOverlayComponent,
 		RotationButtonComponent,
+		MoveNavigationButtonsComponent,
 	],
 	templateUrl: './game.component.html',
 	styleUrls: ['./game.component.css']
@@ -92,6 +94,23 @@ export class GameComponent implements OnInit, OnDestroy {
 	}
 	get pauseDisabled() {
 		return !this.pauseSupported || this.showGameOverDialog || this.showPromotionDialog || !!this.pendingPromotionMoves;
+	}
+
+	get moveNavigationSupported(): boolean {
+		return typeof this.gameService?.undoMove === 'function' && typeof this.gameService?.redoMove === 'function';
+	}
+
+	get canUndoMove(): boolean {
+		return this.gameService?.canUndoMove?.() ?? false;
+	}
+
+	get canRedoMove(): boolean {
+		return this.gameService?.canRedoMove?.() ?? false;
+	}
+
+	get moveNavigationDisabled(): boolean {
+		// Do not allow history navigation while modal interactions are active.
+		return this.isPaused || this.showPromotionDialog || !!this.pendingPromotionMoves;
 	}
 
 	get whiteInfinite(): boolean {
@@ -433,6 +452,16 @@ export class GameComponent implements OnInit, OnDestroy {
 
 	resetGame(): void {
 		this.gameService?.resetGame();
+	}
+
+	undoMove(): void {
+		if (this.moveNavigationDisabled) return;
+		this.gameService?.undoMove?.();
+	}
+
+	redoMove(): void {
+		if (this.moveNavigationDisabled) return;
+		this.gameService?.redoMove?.();
 	}
 
 	getResultMessage(): string {

@@ -10,18 +10,18 @@ import { SoundService } from './sound.service';
 import { AiModeSettings } from '../interfaces/ai-mode.interface';
 import { toFEN } from '../core/board/fen';
 import { StockfishService } from './stockfish.service';
+import { MoveNavigableGame } from '../core/game/move-navigation';
 
 type Side = 'white' | 'black';
 
-export class AiGameService implements IGameService {
+export class AiGameService extends MoveNavigableGame implements IGameService {
 	state!: GameState;
 	selectedSquare: number | null = null;
 	legalMoves: Move[] = [];
 	showGameOverDialog = false;
 	showPromotionDialog = false;
 	pendingPromotionMoves: Move[] | null = null;
-	moveHistory: Move[] = [];
-	isPaused = false;
+	override isPaused = false;
 
 	private moveFinder = new LegalMoveFinder();
 	private stockfish = new StockfishService();
@@ -31,15 +31,18 @@ export class AiGameService implements IGameService {
 	private aiColor: Side;
 	private aiMoveTimeoutId: number | null = null;
 	private aiRequestId = 0;
+	private render: (() => void) | null = null;
 
 	constructor(
 		private soundService: SoundService,
 		settings: AiModeSettings,
-		private requestRender: (() => void) | null = null
+		requestRender: (() => void) | null = null
 	) {
+		super();
 		this.difficulty = settings.difficulty;
 		this.playerColor = this.resolvePlayerColor(settings.playerColor);
 		this.aiColor = this.playerColor === 'white' ? 'black' : 'white';
+		this.render = requestRender;
 		this.resetGame();
 	}
 
@@ -55,10 +58,11 @@ export class AiGameService implements IGameService {
 		this.showPromotionDialog = false;
 		this.pendingPromotionMoves = null;
 		this.moveHistory = [];
+		this.redoHistory = [];
 		this.isPaused = false;
 
 		this.maybeQueueAiMove();
-		this.requestRender?.();
+		this.requestRender();
 	}
 
 	handleSquareClick(rank: number, file: number): void {
@@ -111,21 +115,21 @@ export class AiGameService implements IGameService {
 		const movesToSquare = this.legalMoves.filter(m => m.to === square);
 		if (movesToSquare.length === 0) {
 			this.clearSelection();
-			this.requestRender?.();
+			this.requestRender();
 			return;
 		}
 
 		if (movesToSquare.length === 1) {
 			this.applyMove(movesToSquare[0]);
 			this.clearSelection();
-			this.requestRender?.();
+			this.requestRender();
 			this.maybeQueueAiMove();
 			return;
 		}
 
 		this.pendingPromotionMoves = movesToSquare;
 		this.showPromotionDialog = true;
-		this.requestRender?.();
+		this.requestRender();
 	}
 
 	private showLegalMoves(square: number): void {
@@ -142,7 +146,7 @@ export class AiGameService implements IGameService {
 			this.applyMove(move);
 		}
 		this.closePromotionDialog();
-		this.requestRender?.();
+		this.requestRender();
 		this.maybeQueueAiMove();
 	}
 
@@ -150,12 +154,12 @@ export class AiGameService implements IGameService {
 		this.pendingPromotionMoves = null;
 		this.showPromotionDialog = false;
 		this.clearSelection();
-		this.requestRender?.();
+		this.requestRender();
 	}
 
 	closeGameOverDialog(): void {
 		this.showGameOverDialog = false;
-		this.requestRender?.();
+		this.requestRender();
 	}
 
 	getResultMessage(): string {
@@ -178,6 +182,9 @@ export class AiGameService implements IGameService {
 
 		const mover = this.state.turn;
 		const isCapture = Boolean(this.state.board.get(move.to)) || move.enPassant === true;
+
+		// A new move invalidates any "future" moves.
+		if (this.redoHistory.length > 0) this.redoHistory = [];
 
 		this.moveHistory.push(move);
 		this.state.applyMove(move);
@@ -208,7 +215,20 @@ export class AiGameService implements IGameService {
 			this.closePromotionDialog();
 		}
 
-		this.requestRender?.();
+		this.requestRender();
+	}
+
+	protected override beforeHistoryNavigation(): void {
+		this.clearPendingAiMove();
+		this.aiRequestId++;
+		this.stockfish.stop();
+	}
+
+	protected override afterRedoMove(): void {
+		// If we've returned to the latest position, allow the AI to move if it's its turn.
+		if (this.redoHistory.length === 0) {
+			this.maybeQueueAiMove();
+		}
 	}
 
 	private checkGameOver(): void {
@@ -274,20 +294,24 @@ export class AiGameService implements IGameService {
 		// Invalidate any in-flight Stockfish request and request the engine to stop ASAP.
 		this.aiRequestId++;
 		this.stockfish.stop();
-		this.requestRender?.();
+		this.requestRender();
 	}
 
 	resume(): void {
 		if (!this.isPaused) return;
 		this.isPaused = false;
-		this.requestRender?.();
+		this.requestRender();
 		this.maybeQueueAiMove();
 	}
 
-	destroy(): void {
+	override destroy(): void {
 		this.clearPendingAiMove();
 		this.aiRequestId++;
 		this.stockfish.destroy();
+	}
+
+	protected override requestRender(): void {
+		this.render?.();
 	}
 
 	private skillForDifficulty(difficulty: AiModeSettings['difficulty']): number {
