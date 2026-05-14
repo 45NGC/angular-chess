@@ -328,6 +328,7 @@ export class GameComponent implements OnInit, OnDestroy {
 		const service = this.gameService;
 		const state = this.state;
 		if (!service || !state) return false;
+		if (service.isReviewOnly?.()) return false;
 		if (this.showGameOverDialog) return false;
 		if (this.showPromotionDialog || this.pendingPromotionMoves) return false;
 		if (this.isPaused) return false;
@@ -481,6 +482,11 @@ export class GameComponent implements OnInit, OnDestroy {
 	}
 
 	onExit(): void {
+		this.gameService?.closeGameOverDialog();
+		this.quitToHome();
+	}
+
+	onCloseGameOverDialog(): void {
 		this.gameService?.closeGameOverDialog();
 	}
 

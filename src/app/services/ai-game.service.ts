@@ -60,6 +60,8 @@ export class AiGameService extends MoveNavigableGame implements IGameService {
 		this.moveHistory = [];
 		this.redoHistory = [];
 		this.isPaused = false;
+		this.reviewOnly = false;
+		this.gameOverDialogDismissed = false;
 
 		this.maybeQueueAiMove();
 		this.requestRender();
@@ -92,7 +94,7 @@ export class AiGameService extends MoveNavigableGame implements IGameService {
 	}
 
 	private canInteractWithBoard(): boolean {
-		return this.state.result.type === 'ongoing' && !this.isPaused;
+		return this.state.result.type === 'ongoing' && !this.isPaused && !this.reviewOnly;
 	}
 
 	private isCurrentPlayerPiece(piece: ReturnType<Board['get']>): boolean {
@@ -158,7 +160,7 @@ export class AiGameService extends MoveNavigableGame implements IGameService {
 	}
 
 	closeGameOverDialog(): void {
-		this.showGameOverDialog = false;
+		this.dismissGameOverDialog();
 		this.requestRender();
 	}
 
@@ -234,12 +236,13 @@ export class AiGameService extends MoveNavigableGame implements IGameService {
 	private checkGameOver(): void {
 		if (this.state.result.type !== 'ongoing') {
 			this.soundService.playEnd();
-			this.showGameOverDialog = true;
+			this.markGameOverReached();
 		}
 	}
 
 	private maybeQueueAiMove(): void {
 		if (this.isPaused) return;
+		if (this.reviewOnly) return;
 		if (this.state.result.type !== 'ongoing') return;
 		if (this.state.turn !== this.aiColor) return;
 		if (this.showPromotionDialog || this.pendingPromotionMoves) return;

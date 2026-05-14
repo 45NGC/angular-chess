@@ -1,6 +1,5 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Router } from '@angular/router';
 
 @Component({
 	selector: 'app-game-over-dialog',
@@ -10,19 +9,20 @@ import { Router } from '@angular/router';
 	styleUrls: ['./game-over-dialog.component.css']
 })
 export class GameOverDialogComponent {
-
-	constructor(private router: Router) { }
-
 	@Input() message = '';
 	@Output() restart = new EventEmitter<void>();
+	@Output() close = new EventEmitter<void>();
 	@Output() exit = new EventEmitter<void>();
 
 	onRestart() {
 		this.restart.emit();
 	}
 
+	onClose() {
+		this.close.emit();
+	}
+
 	onExit() {
 		this.exit.emit();
-		this.router.navigate(['/']);
 	}
 }

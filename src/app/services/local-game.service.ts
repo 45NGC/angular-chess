@@ -66,6 +66,8 @@ export class LocalGameService extends MoveNavigableGame implements IGameService 
 		this.pausedClockColor = null;
 		this.moveHistory = [];
 		this.redoHistory = [];
+		this.reviewOnly = false;
+		this.gameOverDialogDismissed = false;
 		this.clockFrozenByHistoryNavigation = false;
 		this.resetClock();
 	}
@@ -96,7 +98,7 @@ export class LocalGameService extends MoveNavigableGame implements IGameService 
 
 	private canInteractWithBoard(): boolean {
 		// Board interaction is disabled once a result has been reached
-		return this.state.result.type === 'ongoing' && !this.isPaused;
+		return this.state.result.type === 'ongoing' && !this.isPaused && !this.reviewOnly;
 	}
 
 	private isCurrentPlayerPiece(piece: ReturnType<Board['get']>): boolean {
@@ -159,7 +161,7 @@ export class LocalGameService extends MoveNavigableGame implements IGameService 
 	}
 
 	closeGameOverDialog(): void {
-		this.showGameOverDialog = false;
+		this.dismissGameOverDialog();
 	}
 
 	getResultMessage(): string {
@@ -214,17 +216,15 @@ export class LocalGameService extends MoveNavigableGame implements IGameService 
 	}
 
 	protected override afterHistoryRebuild(): void {
-		this.showGameOverDialog = this.state.result.type !== 'ongoing';
-		if (this.showGameOverDialog) {
-			this.clock?.stop();
-		}
+		super.afterHistoryRebuild();
+		if (this.state.result.type !== 'ongoing') this.clock?.stop();
 	}
 
 	private checkGameOver(): void {
 		if (this.state.result.type !== 'ongoing') {
 			this.soundService.playEnd();
 			this.clock?.stop();
-			this.showGameOverDialog = true;
+			this.markGameOverReached();
 		}
 	}
 
@@ -296,6 +296,7 @@ export class LocalGameService extends MoveNavigableGame implements IGameService 
 		if (this.state.result.type !== 'ongoing') return;
 		this.state.result = { type: 'timeout', winner };
 		this.soundService.playEnd();
-		this.showGameOverDialog = true;
+		this.clock?.stop();
+		this.markGameOverReached();
 	}
 }

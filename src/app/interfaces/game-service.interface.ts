@@ -17,6 +17,8 @@ export interface IGameService {
 
   // Optional move history data (local games, etc.)
   moveHistory?: Move[];
+  // Optional "review mode" (post-game history navigation only)
+  isReviewOnly?(): boolean;
   // Optional undo/redo navigation (local + AI games)
   canUndoMove?(): boolean;
   canRedoMove?(): boolean;

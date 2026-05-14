@@ -96,6 +96,7 @@
         <app-game-over-dialog
           [message]="getResultMessage()"
           (restart)="onRestart()"
+          (close)="onCloseGameOverDialog()"
           (exit)="onExit()"
         />
       }

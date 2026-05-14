@@ -14,6 +14,12 @@ export abstract class MoveNavigableGame implements IGameService {
 	isPaused?: boolean;
 	moveHistory: Move[] = [];
 	protected redoHistory: Move[] = [];
+	/**
+	 * Once a game reaches a terminal result, we lock the game into "review mode":
+	 * users may navigate the history (undo/redo), but cannot create new moves.
+	 */
+	protected reviewOnly = false;
+	protected gameOverDialogDismissed = false;
 
 	abstract handleSquareClick(rank: number, file: number): void;
 	abstract resetGame(): void;
@@ -24,6 +30,10 @@ export abstract class MoveNavigableGame implements IGameService {
 	abstract clearSelection(): void;
 
 	destroy?(): void;
+
+	isReviewOnly(): boolean {
+		return this.reviewOnly;
+	}
 
 	canUndoMove(): boolean {
 		return this.moveHistory.length > 0;
@@ -90,7 +100,18 @@ export abstract class MoveNavigableGame implements IGameService {
 	}
 
 	protected afterHistoryRebuild(): void {
-		this.showGameOverDialog = this.state.result.type !== 'ongoing';
+		this.showGameOverDialog = this.state.result.type !== 'ongoing' && !this.gameOverDialogDismissed;
+	}
+
+	protected markGameOverReached(): void {
+		this.reviewOnly = true;
+		this.gameOverDialogDismissed = false;
+		this.showGameOverDialog = true;
+	}
+
+	protected dismissGameOverDialog(): void {
+		this.gameOverDialogDismissed = true;
+		this.showGameOverDialog = false;
 	}
 
 	// Hooks for concrete services
@@ -99,4 +120,3 @@ export abstract class MoveNavigableGame implements IGameService {
 	protected afterRedoMove(): void { }
 	protected requestRender(): void { }
 }
-
