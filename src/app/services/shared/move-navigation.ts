@@ -1,7 +1,7 @@
 import { IGameService } from '../../interfaces/game-service.interface';
-import { Move } from '../rules/move';
-import { buildGameStateFromMoves } from '../rules/move-history';
-import { GameState } from '../rules/game-state';
+import { Move } from '../../core/rules/move';
+import { buildGameStateFromMoves } from '../../core/rules/move-history';
+import { GameState } from '../../core/rules/game-state';
 
 export abstract class MoveNavigableGame implements IGameService {
 	abstract state: GameState;
@@ -99,3 +99,4 @@ export abstract class MoveNavigableGame implements IGameService {
 	protected afterRedoMove(): void { }
 	protected requestRender(): void { }
 }
+

@@ -11,7 +11,7 @@ import { IGameService } from '../interfaces/game-service.interface';
 import { SoundService } from './sound.service';
 import { TimeControl } from '../interfaces/time-control.interface';
 import { LocalClock, LocalClockState } from '../core/time/local-clock';
-import { MoveNavigableGame } from '../core/game/move-navigation';
+import { MoveNavigableGame } from './shared/move-navigation';
 
 export const LOCAL_TIME_CONTROL = new InjectionToken<TimeControl>('LOCAL_TIME_CONTROL');
 

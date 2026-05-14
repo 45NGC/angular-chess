@@ -10,7 +10,7 @@ import { SoundService } from './sound.service';
 import { AiModeSettings } from '../interfaces/ai-mode.interface';
 import { toFEN } from '../core/board/fen';
 import { StockfishService } from './stockfish.service';
-import { MoveNavigableGame } from '../core/game/move-navigation';
+import { MoveNavigableGame } from './shared/move-navigation';
 
 type Side = 'white' | 'black';
 
