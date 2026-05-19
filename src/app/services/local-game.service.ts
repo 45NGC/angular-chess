@@ -123,6 +123,7 @@ export class LocalGameService extends MoveNavigableGame implements IGameService 
 		const movesToSquare = this.legalMoves.filter(m => m.to === square);
 		if (movesToSquare.length === 0) {
 			// Clicking an unrelated square cancels the current selection
+			this.soundService.playError();
 			this.clearSelection();
 			return;
 		}

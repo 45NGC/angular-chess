@@ -116,6 +116,7 @@ export class AiGameService extends MoveNavigableGame implements IGameService {
 	private tryMoveToSquare(square: number): void {
 		const movesToSquare = this.legalMoves.filter(m => m.to === square);
 		if (movesToSquare.length === 0) {
+			this.soundService.playError();
 			this.clearSelection();
 			this.requestRender();
 			return;

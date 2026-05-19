@@ -9,6 +9,7 @@ export class SoundService {
   private checkAudio = new Audio('assets/sounds/check.mp3');
   private endAudio = new Audio('assets/sounds/end.mp3');
   private lowTimeAudio = new Audio('assets/sounds/lowTime.mp3');
+  private errorAudio = new Audio('assets/sounds/error.mp3');
 
   constructor() {
     this.moveAudio.load();
@@ -16,6 +17,7 @@ export class SoundService {
     this.checkAudio.load();
     this.endAudio.load();
     this.lowTimeAudio.load();
+    this.errorAudio.load();
   }
 
   playMove(): void {
@@ -38,6 +40,10 @@ export class SoundService {
 
   playLowTime(): void {
     this.play(this.lowTimeAudio);
+  }
+
+  playError(): void {
+    this.play(this.errorAudio);
   }
 
   private play(audio: HTMLAudioElement): void {

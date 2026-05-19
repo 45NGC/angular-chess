@@ -265,7 +265,10 @@ export class GameComponent implements OnInit, OnDestroy {
 
 		const toSquare = target.rank * 8 + target.file;
 		const isLegal = this.legalMoves.some(m => m.to === toSquare);
-		if (!isLegal) return;
+		if (!isLegal) {
+			this.soundService.playError();
+			return;
+		}
 
 		// Origin is already selected; dropping on a legal square executes the move.
 		this.gameService.handleSquareClick(target.rank, target.file);
