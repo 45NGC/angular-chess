@@ -289,7 +289,8 @@ export class AiGameService extends MoveNavigableGame implements IGameService {
 
 	pause(): void {
 		if (this.isPaused) return;
-		if (this.state.result.type !== 'ongoing') return;
+		// Allow pausing while in "review mode"
+		if (this.state.result.type !== 'ongoing' && !this.reviewOnly) return;
 		if (this.pendingPromotionMoves || this.showPromotionDialog) return;
 
 		this.isPaused = true;

@@ -85,6 +85,7 @@ export class GameComponent implements OnInit, OnDestroy {
 	get blackIncrementSeconds() { return this.timeControl?.black.incrementSeconds ?? 0; }
 	get isPaused() { return this.gameService?.isPaused ?? false; }
 	get moveHistory() { return this.gameService?.moveHistory ?? []; }
+	get isReviewOnly(): boolean { return this.gameService?.isReviewOnly?.() ?? false; }
 	get lastMove(): Move | null {
 		const history = this.moveHistory;
 		return history.length > 0 ? history[history.length - 1] : null;
@@ -93,7 +94,7 @@ export class GameComponent implements OnInit, OnDestroy {
 		return typeof this.gameService?.pause === 'function' && typeof this.gameService?.resume === 'function';
 	}
 	get pauseDisabled() {
-		return !this.pauseSupported || this.showGameOverDialog || this.showPromotionDialog || !!this.pendingPromotionMoves;
+		return !this.pauseSupported || this.showPromotionDialog || !!this.pendingPromotionMoves || (this.showGameOverDialog && !this.isReviewOnly);
 	}
 
 	get moveNavigationSupported(): boolean {
