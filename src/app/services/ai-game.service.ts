@@ -192,14 +192,7 @@ export class AiGameService extends MoveNavigableGame implements IGameService {
 		this.moveHistory.push(move);
 		this.state.applyMove(move);
 
-		const kingSquare = this.state.board.findKing(this.state.turn);
-		const attackerColor = this.state.turn === 'white' ? 'black' : 'white';
-
-		const isCheck = AttackedSquares.isSquareAttacked(
-			this.state.board,
-			kingSquare,
-			attackerColor
-		);
+		const isCheck = AttackedSquares.isKingInCheck(this.state.board, this.state.turn);
 
 		// Sounds
 		if (isCheck) {

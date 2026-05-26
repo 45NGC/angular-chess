@@ -191,14 +191,7 @@ export class LocalGameService extends MoveNavigableGame implements IGameService 
 		this.state.applyMove(move);
 		this.clock?.switchTurn(mover);
 
-		const kingSquare = this.state.board.findKing(this.state.turn);
-		const attackerColor = this.state.turn === 'white' ? 'black' : 'white';
-
-		const isCheck = AttackedSquares.isSquareAttacked(
-			this.state.board,
-			kingSquare,
-			attackerColor
-		);
+		const isCheck = AttackedSquares.isKingInCheck(this.state.board, this.state.turn);
 
 		if (isCheck) {
 			this.soundService.playCheck();

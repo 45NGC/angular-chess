@@ -44,12 +44,7 @@ export class GameState {
 			return;
 		}
 
-		const kingSquare = this.board.findKing(color);
-		const isInCheck = AttackedSquares.isSquareAttacked(
-			this.board,
-			kingSquare,
-			color === 'white' ? 'black' : 'white'
-		);
+		const isInCheck = AttackedSquares.isKingInCheck(this.board, color);
 
 		if (isInCheck) {
 			this.result = {

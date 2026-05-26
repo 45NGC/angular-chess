@@ -26,8 +26,7 @@ export class LegalMoveFinder {
 
 		for (const move of pseudoLegalMoves) {
 			const nextBoard = MoveSimulator.simulate(board, move);
-			const kingSquare = nextBoard.findKing(piece.color);
-			const isKingInCheck = AttackedSquares.isSquareAttacked(nextBoard, kingSquare, this.opponent(piece.color));
+			const isKingInCheck = AttackedSquares.isKingInCheck(nextBoard, piece.color);
 
 			if (!isKingInCheck) {
 				legalMoves.push(move);
@@ -113,7 +112,7 @@ export class LegalMoveFinder {
 
 	private addCastlingMoves(board: Board, kingSquare: number, color: PieceColor, moves: Move[]): void {
 		// King cannot castle if currently in check
-		const isKingInCheck = AttackedSquares.isSquareAttacked(board, kingSquare, this.opponent(color));
+		const isKingInCheck = AttackedSquares.isKingInCheck(board, color);
 		if (isKingInCheck) return;
 
 		const rights = color === 'white' ? board.castlingRights.white : board.castlingRights.black;

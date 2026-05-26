@@ -12,6 +12,8 @@ import { RotationButtonComponent } from './rotation-button/rotation-button.compo
 import { MoveNavigationButtonsComponent } from './move-navigation-buttons/move-navigation-buttons.component';
 import { BOARD_SIZE } from '../../core/constants/chess.constants';
 import { Move } from '../../core/rules/move';
+import { AttackedSquares } from '../../core/rules/attacked-squares';
+import { Board } from '../../core/board/board';
 import { IGameService } from '../../interfaces/game-service.interface';
 import { TimeControl } from '../../interfaces/time-control.interface';
 import { LocalGameService } from '../../services/local-game.service';
@@ -52,6 +54,10 @@ export class GameComponent implements OnInit, OnDestroy {
 	private draggingPointerId: number | null = null;
 	private suppressClickTimeoutId: number | null = null;
 	private suppressClick = false;
+
+	private cachedCheck:
+		| { board: Board; turn: 'white' | 'black'; kingSquare: number; inCheck: boolean }
+		| null = null;
 
 	get boardOrientation(): 'white' | 'black' {
 		if (this.mode === 'local' && this.autoRotateBoardLocal) {
@@ -174,6 +180,25 @@ export class GameComponent implements OnInit, OnDestroy {
 			return;
 		}
 		this.gameService?.handleSquareClick(rank, file);
+	}
+
+	isKingInCheckSquare(square: number): boolean {
+		const state = this.state;
+		if (!state) return false;
+
+		const board = state.board;
+		const turn = state.turn;
+		const cached = this.cachedCheck;
+
+		if (cached && cached.board === board && cached.turn === turn) {
+			return cached.inCheck && cached.kingSquare === square;
+		}
+
+		const kingSquare = board.findKing(turn);
+		const inCheck = AttackedSquares.isKingInCheck(board, turn);
+
+		this.cachedCheck = { board, turn, kingSquare, inCheck };
+		return inCheck && kingSquare === square;
 	}
 
 	onPiecePointerDown(event: PointerEvent, rank: number, file: number): void {

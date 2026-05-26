@@ -17,6 +17,12 @@ export class AttackedSquares {
 		return attackedSquares.has(squareIndex);
 	}
 
+	static isKingInCheck(board: Board, kingColor: PieceColor): boolean {
+		const kingSquare = board.findKing(kingColor);
+		const attackerColor: PieceColor = kingColor === 'white' ? 'black' : 'white';
+		return AttackedSquares.isSquareAttacked(board, kingSquare, attackerColor);
+	}
+
 	static getAttackedSquares(board: Board, attackerColor: PieceColor): Set<number> {
 		const attackedSquares = new Set<number>();
 
