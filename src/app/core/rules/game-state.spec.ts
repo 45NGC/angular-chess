@@ -292,4 +292,325 @@ describe('GameState', () => {
 			type: 'stalemate'
 		});
 	});
+
+	it('should detect draw by insufficient material (K vs K)', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . k . . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . . . . K . . .
+		 *  -----------------
+		 * Draw: insufficient material
+		 */
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+
+		const state = new GameState(board);
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({
+			type: 'draw',
+			reason: 'insufficientMaterial'
+		});
+	});
+
+	it('should detect draw by insufficient material (K+B vs K)', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . k . . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . . B . K . . .
+		 *  -----------------
+		 * Draw: insufficient material
+		 */
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+		board.set(toIndex(0, 2), { type: 'bishop', color: 'white' }); // c1
+
+		const state = new GameState(board);
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({
+			type: 'draw',
+			reason: 'insufficientMaterial'
+		});
+	});
+
+	it('should detect draw by insufficient material (K+N vs K)', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . k . . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . N . . K . . .
+		 *  -----------------
+		 * Draw: insufficient material
+		 */
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+		board.set(toIndex(0, 1), { type: 'knight', color: 'white' }); // b1
+
+		const state = new GameState(board);
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({
+			type: 'draw',
+			reason: 'insufficientMaterial'
+		});
+	});
+
+	it('should detect draw by insufficient material (K+B vs K+B)', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . k b . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . . B . K . . .
+		 *  -----------------
+		 * Draw: insufficient material
+		 */
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+		board.set(toIndex(0, 2), { type: 'bishop', color: 'white' }); // c1
+		board.set(toIndex(7, 5), { type: 'bishop', color: 'black' }); // f8
+
+		const state = new GameState(board);
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({
+			type: 'draw',
+			reason: 'insufficientMaterial'
+		});
+	});
+
+	it('should not mark insufficient material when a mate is possible (K+B+N vs K)', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . k . . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . N B . K . . .
+		 *  -----------------
+		 * Not a draw (mate possible with B+N)
+		 */
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+		board.set(toIndex(0, 2), { type: 'bishop', color: 'white' }); // c1
+		board.set(toIndex(0, 1), { type: 'knight', color: 'white' }); // b1
+
+		const state = new GameState(board);
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({
+			type: 'ongoing'
+		});
+	});
+
+	it('should detect draw by insufficient material (K+B vs K+N)', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . n . . k . . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . . B . K . . .
+		 *  -----------------
+		 * Draw: insufficient material
+		 */
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+		board.set(toIndex(0, 2), { type: 'bishop', color: 'white' }); // c1
+		board.set(toIndex(7, 1), { type: 'knight', color: 'black' }); // b8
+
+		const state = new GameState(board);
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({
+			type: 'draw',
+			reason: 'insufficientMaterial'
+		});
+	});
+
+	it('should detect draw by insufficient material (K+N vs K+N)', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . n . . k . . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . N . . K . . .
+		 *  -----------------
+		 * Draw: insufficient material
+		 */
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+		board.set(toIndex(0, 1), { type: 'knight', color: 'white' }); // b1
+		board.set(toIndex(7, 1), { type: 'knight', color: 'black' }); // b8
+
+		const state = new GameState(board);
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({
+			type: 'draw',
+			reason: 'insufficientMaterial'
+		});
+	});
+
+	it('should not detect insufficient material (K+2N vs K)', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . k . . .
+		 * 7| . . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . N . . N . .
+		 * 2| . . . . . . . .
+		 * 1| . . . . K . . .
+		 *  -----------------
+		 * Not a draw (K+2N vs K)
+		 */
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+		board.set(toIndex(2, 2), { type: 'knight', color: 'white' }); // c3
+		board.set(toIndex(2, 5), { type: 'knight', color: 'white' }); // f3
+
+		const state = new GameState(board);
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({ type: 'ongoing' });
+	});
+
+	it('should not detect insufficient material (K+B vs K+P)', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . k . . .
+		 * 7| p . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . . B . K . . .
+		 *  -----------------
+		 * Not a draw (pawn exists)
+		 */
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+		board.set(toIndex(0, 2), { type: 'bishop', color: 'white' }); // c1
+		board.set(toIndex(6, 0), { type: 'pawn', color: 'black' }); // a7
+
+		const state = new GameState(board);
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({ type: 'ongoing' });
+	});
+
+	it('should not detect insufficient material (K+N vs K+P)', () => {
+		/*
+		 *    a b c d e f g h
+		 *  -----------------
+		 * 8| . . . . k . . .
+		 * 7| p . . . . . . .
+		 * 6| . . . . . . . .
+		 * 5| . . . . . . . .
+		 * 4| . . . . . . . .
+		 * 3| . . . . . . . .
+		 * 2| . . . . . . . .
+		 * 1| . N . . K . . .
+		 *  -----------------
+		 * Not a draw (pawn exists)
+		 */
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+		board.set(toIndex(0, 1), { type: 'knight', color: 'white' }); // b1
+		board.set(toIndex(6, 0), { type: 'pawn', color: 'black' }); // a7
+
+		const state = new GameState(board);
+		(state as any).updateGameResult();
+
+		expect(state.result).toEqual({ type: 'ongoing' });
+	});
+
+	it('should detect draw by threefold repetition', () => {
+		const board = new Board();
+		board.set(toIndex(0, 4), { type: 'king', color: 'white' }); // e1
+		board.set(toIndex(7, 4), { type: 'king', color: 'black' }); // e8
+		board.set(toIndex(1, 0), { type: 'rook', color: 'white' }); // a2
+		board.set(toIndex(6, 0), { type: 'rook', color: 'black' }); // a7
+
+		// Keep castling rights stable (repetition depends on them).
+		board.castlingRights = {
+			white: { short: false, long: false },
+			black: { short: false, long: false }
+		};
+
+		const state = new GameState(board);
+
+		// Cycle 1 (position repeats once)
+		state.applyMove({ from: toIndex(1, 0), to: toIndex(2, 0) }); // Ra2-a3
+		state.applyMove({ from: toIndex(6, 0), to: toIndex(5, 0) }); // ra7-a6
+		state.applyMove({ from: toIndex(2, 0), to: toIndex(1, 0) }); // Ra3-a2
+		state.applyMove({ from: toIndex(5, 0), to: toIndex(6, 0) }); // ra6-a7
+
+		expect(state.result).toEqual({ type: 'ongoing' });
+
+		// Cycle 2 (position repeats for the 3rd time)
+		state.applyMove({ from: toIndex(1, 0), to: toIndex(2, 0) }); // Ra2-a3
+		state.applyMove({ from: toIndex(6, 0), to: toIndex(5, 0) }); // ra7-a6
+		state.applyMove({ from: toIndex(2, 0), to: toIndex(1, 0) }); // Ra3-a2
+		state.applyMove({ from: toIndex(5, 0), to: toIndex(6, 0) }); // ra6-a7
+
+		expect(state.result).toEqual({
+			type: 'draw',
+			reason: 'threefoldRepetition'
+		});
+	});
 });

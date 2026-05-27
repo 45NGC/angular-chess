@@ -170,6 +170,10 @@ export class AiGameService extends MoveNavigableGame implements IGameService {
 		switch (result.type) {
 			case 'checkmate':
 				return `${result.winner === 'white' ? 'WHITE' : 'BLACK'} WON`;
+			case 'draw':
+				return result.reason === 'insufficientMaterial'
+					? 'DRAW (INSUFFICIENT MATERIAL)'
+					: 'DRAW (THREEFOLD REPETITION)';
 			case 'stalemate':
 				return 'STALEMATE';
 			case 'timeout':

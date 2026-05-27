@@ -1,15 +1,18 @@
 import { Board } from '../board/board';
 import { SQUARE_COUNT } from '../constants/chess.constants';
 import { AttackedSquares } from './attacked-squares';
+import { isInsufficientMaterial } from './draw-rules';
 import { LegalMoveFinder } from './legal-move-finder';
 import { Move } from './move';
 import { MoveSimulator } from './move-simulator';
+import { toFEN } from '../board/fen';
 
 export type GameResult =
 	| { type: 'ongoing' }
 	| { type: 'checkmate', winner: 'white' | 'black' }
 	| { type: 'stalemate' }
-	| { type: 'timeout', winner: 'white' | 'black' };
+	| { type: 'timeout', winner: 'white' | 'black' }
+	| { type: 'draw', reason: 'insufficientMaterial' | 'threefoldRepetition' };
 
 
 export class GameState {
@@ -18,8 +21,13 @@ export class GameState {
 	board: Board;
 	turn: 'white' | 'black' = 'white';
 
+	private positionCounts = new Map<string, number>();
+	private currentPositionKey: string;
+
 	constructor(board?: Board) {
 		this.board = board ?? new Board();
+		this.currentPositionKey = this.getPositionKey();
+		this.recordCurrentPosition();
 	}
 
 	applyMove(move: Move): void {
@@ -31,11 +39,26 @@ export class GameState {
 		this.board = nextBoard;
 
 		this.turn = this.turn === 'white' ? 'black' : 'white';
+		this.recordCurrentPosition();
 		this.updateGameResult();
 
 	}
 
 	private updateGameResult(): void {
+		// Draw rules that don't depend on "no legal moves"
+		if (isInsufficientMaterial(this.board)) {
+			this.result = { type: 'draw', reason: 'insufficientMaterial' };
+			return;
+		}
+
+		// Threefold repetition :
+		const positionKey = this.getPositionKey();
+		const repetitionCount = this.positionCounts.get(positionKey) ?? 1;
+		if (repetitionCount >= 3) {
+			this.result = { type: 'draw', reason: 'threefoldRepetition' };
+			return;
+		}
+
 		const color = this.turn;
 		const legalMoves = this.getAllLegalMoves(color);
 
@@ -54,6 +77,18 @@ export class GameState {
 		} else {
 			this.result = { type: 'stalemate' };
 		}
+	}
+
+	private getPositionKey(): string {
+		// Use the first 4 FEN fields: placement, active color, castling rights, en passant.
+		const fen = toFEN(this.board, this.turn);
+		return fen.split(' ').slice(0, 4).join(' ');
+	}
+
+	private recordCurrentPosition(): void {
+		this.currentPositionKey = this.getPositionKey();
+		const next = (this.positionCounts.get(this.currentPositionKey) ?? 0) + 1;
+		this.positionCounts.set(this.currentPositionKey, next);
 	}
 
 	private getAllLegalMoves(color: 'white' | 'black'): Move[] {
