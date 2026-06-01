@@ -52,16 +52,23 @@
 }
 
 .actions-container {
-	display: flex;
-	flex-direction: column;
+	display: grid;
+	grid-template-columns: 1fr 1fr;
 	gap: 10px;
 	width: 100%;
 }
 
-.action-option {
+.gameover-action {
+	--btn-height: 44px;
+	--btn-padding-x: 14px;
+	--btn-font-size: 13px;
 	width: 100%;
-	height: 72px;
-	font-size: 20px;
+
+	/* Apply same sizing to <app-restart-button> internal <button> */
+	--restart-width: 100%;
+	--restart-height: 44px;
+	--restart-font-size: 13px;
+	--restart-padding: 0 14px;
 }
 
 @media (max-width: 1400px) {

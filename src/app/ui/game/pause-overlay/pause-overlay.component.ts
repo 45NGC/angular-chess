@@ -2,11 +2,12 @@ import { Component, Input, Output, EventEmitter, ChangeDetectionStrategy } from 
 import { CommonModule } from '@angular/common';
 import { Move } from '../../../core/rules/move';
 import { formatTime } from '../../../core/time/time.utils';
+import { RestartButtonComponent } from '../restart-button/restart-button.component';
 
 @Component({
 	selector: 'app-pause-overlay',
 	standalone: true,
-	imports: [CommonModule],
+	imports: [CommonModule, RestartButtonComponent],
 	templateUrl: './pause-overlay.component.html',
 	styleUrls: ['./pause-overlay.component.css'],
 	changeDetection: ChangeDetectionStrategy.OnPush,
@@ -21,6 +22,7 @@ export class PauseOverlayComponent {
 	@Input() blackInfinite = false;
 
 	@Output() resume = new EventEmitter<void>();
+	@Output() restart = new EventEmitter<void>();
 	@Output() quit = new EventEmitter<void>();
 
 	formatTimeDisplay(color: 'white' | 'black'): string {

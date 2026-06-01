@@ -7,12 +7,10 @@
     </div>
 
     <div class="actions-container">
-      <button type="button" class="btn btn--success action-option" (click)="onRestart()">
-        RESTART
-      </button>
+      <app-restart-button class="gameover-action" (restart)="restart.emit()" />
 
-      <button type="button" class="btn btn--danger action-option exit-option" (click)="onExit()">
-        EXIT
+      <button type="button" class="btn btn--danger gameover-action" (click)="onExit()">
+        QUIT
       </button>
     </div>
   </div>

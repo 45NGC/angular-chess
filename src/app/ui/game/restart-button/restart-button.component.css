@@ -1,0 +1,11 @@
+:host {
+	display: inline-block;
+}
+
+button {
+	width: var(--restart-width, auto);
+	height: var(--restart-height, var(--btn-height));
+	font-size: var(--restart-font-size, var(--btn-font-size));
+	padding: var(--restart-padding, 0 var(--btn-padding-x));
+	border-radius: var(--restart-radius, var(--btn-radius));
+}

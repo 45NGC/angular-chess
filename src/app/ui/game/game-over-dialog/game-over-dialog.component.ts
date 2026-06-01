@@ -1,10 +1,11 @@
 import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { RestartButtonComponent } from '../restart-button/restart-button.component';
 
 @Component({
 	selector: 'app-game-over-dialog',
 	standalone: true,
-	imports: [CommonModule],
+	imports: [CommonModule, RestartButtonComponent],
 	templateUrl: './game-over-dialog.component.html',
 	styleUrls: ['./game-over-dialog.component.css']
 })
@@ -13,10 +14,6 @@ export class GameOverDialogComponent {
 	@Output() restart = new EventEmitter<void>();
 	@Output() close = new EventEmitter<void>();
 	@Output() exit = new EventEmitter<void>();
-
-	onRestart() {
-		this.restart.emit();
-	}
 
 	onClose() {
 		this.close.emit();
