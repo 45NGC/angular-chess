@@ -1,7 +1,6 @@
-import { A1, A8, BOARD_SIZE, H1, H8, SQUARE_COUNT } from '../constants/chess.constants';
 import { Piece, PieceColor } from './piece';
-
-export type Square = number;
+import { A1, A8, H1, H8, SQUARE_COUNT } from './square';
+import type { Square } from './square';
 
 export type CastlingRights = {
 	short: boolean;
@@ -120,28 +119,5 @@ export class Board {
 	}
 }
 
-/**
- * Converts (rank, file) → index 0..63
- * rank: 0..7  → rows (0 = rank 1)
- * file: 0..7  → columns (0 = column a)
- */
-export function toIndex(rank: number, file: number): number {
-	return rank * BOARD_SIZE + file;
-}
-
-/**
- * Converts index 0..63 → { rank, file }
- */
-export function fromIndex(index: number): { rank: number; file: number } {
-	return {
-		rank: Math.floor(index / BOARD_SIZE),
-		file: index % BOARD_SIZE
-	};
-}
-
-/**
- * Checks if given rank and file are within board limits
- */
-export function isValidSquare(rank: number, file: number): boolean {
-	return rank >= 0 && rank < BOARD_SIZE && file >= 0 && file < BOARD_SIZE;
-}
+export { fromIndex, isValidSquare, toIndex } from './square';
+export type { Square } from './square';

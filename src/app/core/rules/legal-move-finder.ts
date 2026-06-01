@@ -4,10 +4,9 @@ import { Move } from './move';
 import { AttackedSquares } from './attacked-squares';
 import { MoveSimulator } from './move-simulator';
 import {
-	BLACK_BACK_RANK,
-	BLACK_PAWN_INITIAL_RANK,
-	WHITE_BACK_RANK,
-	WHITE_PAWN_INITIAL_RANK,
+	BACK_RANK_BY_COLOR,
+	PAWN_INITIAL_RANK_BY_COLOR,
+	PAWN_PROMOTION_RANK_BY_COLOR,
 	KNIGHT_OFFSETS,
 	KING_OFFSETS,
 	BISHOP_DIRECTIONS,
@@ -116,7 +115,7 @@ export class LegalMoveFinder {
 		if (isKingInCheck) return;
 
 		const rights = color === 'white' ? board.castlingRights.white : board.castlingRights.black;
-		const homeRank = color === 'white' ? WHITE_BACK_RANK : BLACK_BACK_RANK;
+		const homeRank = BACK_RANK_BY_COLOR[color];
 
 		// King-side castling
 		if (rights.short) {
@@ -170,8 +169,7 @@ export class LegalMoveFinder {
 		if (!isValidSquare(nextRank, file)) return moves;
 
 		const oneStepSquare = toIndex(nextRank, file);
-		const isPromotionRank = (color === 'white' && nextRank === BLACK_BACK_RANK) ||
-			(color === 'black' && nextRank === WHITE_BACK_RANK);
+		const isPromotionRank = nextRank === PAWN_PROMOTION_RANK_BY_COLOR[color];
 
 		// One-step push
 		if (!board.get(oneStepSquare)) {
@@ -183,8 +181,7 @@ export class LegalMoveFinder {
 		}
 
 		// Two-step initial push
-		const isInitialRank = (color === 'white' && rank === WHITE_PAWN_INITIAL_RANK) ||
-			(color === 'black' && rank === BLACK_PAWN_INITIAL_RANK);
+		const isInitialRank = rank === PAWN_INITIAL_RANK_BY_COLOR[color];
 		if (isInitialRank && !board.get(oneStepSquare)) {
 			const twoStepRank = rank + 2 * forward;
 			const twoStepSquare = toIndex(twoStepRank, file);

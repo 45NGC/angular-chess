@@ -1,4 +1,5 @@
 import { Board, fromIndex, toIndex } from "../board/board";
+import type { Piece } from "../board/piece";
 import { BOARD_SIZE, A1, A8, D1, D8, F1, F8, H1, H8 } from "../constants/chess.constants";
 import { Move } from "./move";
 
@@ -40,7 +41,7 @@ export class MoveSimulator {
         return boardClone;
     }
 
-    private static handlePawnMoves(boardClone: Board, move: Move, piece: any): void {
+    private static handlePawnMoves(boardClone: Board, move: Move, piece: Piece): void {
         // En passant capture
         if (move.enPassant) {
             const offsetToCapturedPawn = piece.color === 'white' ? -BOARD_SIZE : BOARD_SIZE;
@@ -59,7 +60,7 @@ export class MoveSimulator {
         }
     }
 
-    private static handleCastling(boardClone: Board, move: Move, piece: any): void {
+    private static handleCastling(boardClone: Board, move: Move, piece: Piece): void {
         const isWhite = piece.color === 'white';
 
         if (move.castling === "kingSide") {

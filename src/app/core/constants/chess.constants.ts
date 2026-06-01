@@ -21,14 +21,26 @@ export const F8 = 61;
 export const A8 = 56;
 export const D8 = 59;
 
+export const BACK_RANK_BY_COLOR = {
+	white: WHITE_BACK_RANK,
+	black: BLACK_BACK_RANK,
+} as const;
+
+export const PAWN_INITIAL_RANK_BY_COLOR = {
+	white: WHITE_PAWN_INITIAL_RANK,
+	black: BLACK_PAWN_INITIAL_RANK,
+} as const;
+
+export const PAWN_PROMOTION_RANK_BY_COLOR = {
+	white: BLACK_BACK_RANK,
+	black: WHITE_BACK_RANK,
+} as const;
+
 export const INITIAL_POSITION_FEN = 'rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR';
-
-
 
 // ----------------------------------------------------------------
 // Movement patterns (offsets for pieces)
 // ----------------------------------------------------------------
-
 export const KNIGHT_OFFSETS: [number, number][] = [
 	[2, 1], [2, -1], [-2, 1], [-2, -1],
 	[1, 2], [1, -2], [-1, 2], [-1, -2]
