@@ -64,9 +64,9 @@
 </div>
 
 @if (showTimeControlDialog) {
-  <app-time-control-dialog
+  <app-time-control-settings-dialog
     [initial]="initialTimeControl"
     (confirm)="onTimeControlConfirm($event)"
     (cancel)="onTimeControlCancel()"
-  ></app-time-control-dialog>
+  ></app-time-control-settings-dialog>
 }

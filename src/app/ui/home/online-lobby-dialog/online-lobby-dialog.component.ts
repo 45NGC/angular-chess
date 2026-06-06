@@ -3,17 +3,17 @@ import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { OnlineGameDraft } from '../../../interfaces/online-game-draft.interface';
 import { TimeControl } from '../../../interfaces/time-control.interface';
 import { OnlineRoomCodeService } from '../../../services/online-room-code.service';
-import { TimeControlDialogComponent } from '../time-control-dialog/time-control-dialog.component';
+import { TimeControlSettingsDialogComponent } from '../time-control-settings-dialog/time-control-settings-dialog.component';
 
 @Component({
 	selector: 'app-online-lobby-dialog',
 	standalone: true,
-	imports: [CommonModule, TimeControlDialogComponent],
+	imports: [CommonModule, TimeControlSettingsDialogComponent],
 	templateUrl: './online-lobby-dialog.component.html',
 	styleUrls: ['./online-lobby-dialog.component.css']
 })
 export class OnlineLobbyDialogComponent {
-	@Input() initialTimeControl: TimeControl = {
+	@Input({ required: true }) initialTimeControl: TimeControl = {
 		white: { baseMinutes: 5, incrementSeconds: 0 },
 		black: { baseMinutes: 5, incrementSeconds: 0 }
 	};
@@ -32,11 +32,11 @@ export class OnlineLobbyDialogComponent {
 		this.showTimeControlDialog = true;
 	}
 
-	onTimeControlConfirm(control: TimeControl): void {
-		this.timeControlChange.emit(control);
+	onTimeControlConfirm(settings: TimeControl): void {
+		this.timeControlChange.emit(settings);
 		this.createdGame = {
 			code: this.roomCodeService.generateCode(),
-			timeControl: control,
+			timeControlSettings: settings,
 			createdAt: Date.now()
 		};
 		this.showTimeControlDialog = false;
@@ -67,7 +67,7 @@ export class OnlineLobbyDialogComponent {
 	}
 
 	get createdSummary(): string {
-		return this.formatTimeControl(this.createdGame?.timeControl ?? this.initialTimeControl);
+		return this.formatTimeControl(this.createdGame?.timeControlSettings ?? this.initialTimeControl);
 	}
 
 	private formatTimeControl(control: TimeControl): string {

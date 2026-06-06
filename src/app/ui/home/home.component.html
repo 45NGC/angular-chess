@@ -7,19 +7,19 @@
 </div>
 
 @if (showTimeControlDialog) {
-  <app-time-control-dialog
+  <app-time-control-settings-dialog
     [initial]="lastTimeControl"
     (confirm)="onTimeControlConfirm($event)"
     (cancel)="onTimeControlCancel()"
-  ></app-time-control-dialog>
+  ></app-time-control-settings-dialog>
 }
 
 @if (showAiModeDialog) {
-  <app-ai-mode-dialog
+  <app-ai-mode-settings-dialog
     [initial]="lastAiMode"
     (confirm)="onAiModeConfirm($event)"
     (cancel)="onAiModeCancel()"
-  ></app-ai-mode-dialog>
+  ></app-ai-mode-settings-dialog>
 }
 
 @if (showOnlineLobbyDialog) {

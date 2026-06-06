@@ -6,13 +6,13 @@ type BaseTimeOption = { minutes: number; label: string };
 type IncrementOption = { seconds: number; label: string };
 
 @Component({
-	selector: 'app-time-control-dialog',
+	selector: 'app-time-control-settings-dialog',
 	standalone: true,
 	imports: [CommonModule],
-	templateUrl: './time-control-dialog.component.html',
-	styleUrls: ['./time-control-dialog.component.css']
+	templateUrl: './time-control-settings-dialog.component.html',
+	styleUrls: ['./time-control-settings-dialog.component.css']
 })
-export class TimeControlDialogComponent {
+export class TimeControlSettingsDialogComponent {
 	@Output() confirm = new EventEmitter<TimeControl>();
 	@Output() cancel = new EventEmitter<void>();
 
@@ -20,8 +20,7 @@ export class TimeControlDialogComponent {
 		white: { baseMinutes: 5, incrementSeconds: 0 },
 		black: { baseMinutes: 5, incrementSeconds: 0 }
 	};
-	@Input() set initial(value: TimeControl | null | undefined) {
-		if (!value) return;
+	@Input({ required: true }) set initial(value: TimeControl) {
 		this._initial = value;
 		this.white = { ...value.white };
 		this.black = { ...value.black };
@@ -71,10 +70,11 @@ export class TimeControlDialogComponent {
 	}
 
 	onConfirm(): void {
-		this.confirm.emit({
+		const settings: TimeControl = {
 			white: { ...this.white },
 			black: { ...this.black }
-		});
+		};
+		this.confirm.emit(settings);
 	}
 
 	onCancel(): void {

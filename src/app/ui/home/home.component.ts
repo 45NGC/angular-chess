@@ -1,16 +1,16 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { TimeControlDialogComponent } from './time-control-dialog/time-control-dialog.component';
+import { TimeControlSettingsDialogComponent } from './time-control-settings-dialog/time-control-settings-dialog.component';
 import { TimeControl } from '../../interfaces/time-control.interface';
-import { AiModeDialogComponent } from './ai-mode-dialog/ai-mode-dialog.component';
+import { AiModeSettingsDialogComponent } from './ai-mode-settings-dialog/ai-mode-settings-dialog.component';
 import { AiModeSettings } from '../../interfaces/ai-mode.interface';
 import { OnlineLobbyDialogComponent } from './online-lobby-dialog/online-lobby-dialog.component';
 
 @Component({
 	selector: 'app-home',
 	standalone: true,
-	imports: [CommonModule, TimeControlDialogComponent, AiModeDialogComponent, OnlineLobbyDialogComponent],
+	imports: [CommonModule, TimeControlSettingsDialogComponent, AiModeSettingsDialogComponent, OnlineLobbyDialogComponent],
 	templateUrl: './home.component.html',
 	styleUrls: ['./home.component.css'],
 })
@@ -45,15 +45,15 @@ export class HomeComponent {
 		this.router.navigate(['/game', mode]);
 	}
 
-	onTimeControlConfirm(control: TimeControl): void {
-		this.lastTimeControl = control;
+	onTimeControlConfirm(settings: TimeControl): void {
+		this.lastTimeControl = settings;
 		this.showTimeControlDialog = false;
 		this.router.navigate(['/game', 'local'], {
 			queryParams: {
-				baseW: control.white.baseMinutes,
-				incW: control.white.incrementSeconds,
-				baseB: control.black.baseMinutes,
-				incB: control.black.incrementSeconds
+				baseW: settings.white.baseMinutes,
+				incW: settings.white.incrementSeconds,
+				baseB: settings.black.baseMinutes,
+				incB: settings.black.incrementSeconds
 			}
 		});
 	}
@@ -66,8 +66,8 @@ export class HomeComponent {
 		this.showOnlineLobbyDialog = false;
 	}
 
-	onOnlineTimeControlChange(control: TimeControl): void {
-		this.lastTimeControl = control;
+	onOnlineTimeControlChange(settings: TimeControl): void {
+		this.lastTimeControl = settings;
 	}
 
 	onAiModeConfirm(settings: AiModeSettings): void {

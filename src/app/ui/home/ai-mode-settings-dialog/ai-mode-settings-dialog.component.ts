@@ -6,20 +6,19 @@ type DifficultyOption = { key: AiDifficulty; label: string };
 type ColorOption = { key: PlayerColor; label: string };
 
 @Component({
-	selector: 'app-ai-mode-dialog',
+	selector: 'app-ai-mode-settings-dialog',
 	standalone: true,
 	imports: [CommonModule],
-	templateUrl: './ai-mode-dialog.component.html',
-	styleUrls: ['./ai-mode-dialog.component.css'],
+	templateUrl: './ai-mode-settings-dialog.component.html',
+	styleUrls: ['./ai-mode-settings-dialog.component.css'],
 	changeDetection: ChangeDetectionStrategy.OnPush
 })
-export class AiModeDialogComponent {
+export class AiModeSettingsDialogComponent {
 	@Output() confirm = new EventEmitter<AiModeSettings>();
 	@Output() cancel = new EventEmitter<void>();
 
 	private _initial: AiModeSettings = { difficulty: 'beginner', playerColor: 'random' };
-	@Input() set initial(value: AiModeSettings | null | undefined) {
-		if (!value) return;
+	@Input({ required: true }) set initial(value: AiModeSettings) {
 		this._initial = value;
 		this.selectedDifficulty = value.difficulty;
 		this.selectedPlayerColor = value.playerColor;
