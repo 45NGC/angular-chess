@@ -1,0 +1,149 @@
+.overlay {
+	position: fixed;
+	inset: 0;
+	background-color: rgba(0, 0, 0, 0.7);
+	display: flex;
+	justify-content: center;
+	align-items: center;
+	z-index: 1000;
+	padding: 16px;
+}
+
+.container {
+	background-color: var(--panel-bg);
+	border-radius: 12px;
+	padding: 24px;
+	width: min(980px, calc(100vw - 32px));
+	max-height: calc(100vh - 32px);
+	overflow: auto;
+	display: flex;
+	flex-direction: column;
+	gap: 18px;
+	animation: fadeIn 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+	from {
+		opacity: 0;
+		transform: translateY(-10px);
+	}
+
+	to {
+		opacity: 1;
+		transform: translateY(0);
+	}
+}
+
+.header {
+	display: flex;
+	justify-content: space-between;
+	align-items: flex-start;
+	gap: 16px;
+}
+
+.title {
+	color: var(--text);
+	font-size: 22px;
+	font-weight: 800;
+	letter-spacing: 1px;
+}
+
+.subtitle,
+.panel-copy,
+.result-summary,
+.result-note {
+	margin: 0;
+	color: var(--text-muted);
+}
+
+.grid {
+	display: grid;
+	grid-template-columns: repeat(2, minmax(0, 1fr));
+	gap: 18px;
+}
+
+.panel {
+	background-color: var(--surface-1);
+	border-radius: 10px;
+	padding: 20px;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+}
+
+.eyebrow {
+	color: var(--text-subtle);
+	font-size: 0.82rem;
+	font-weight: 800;
+	letter-spacing: 1px;
+	text-transform: uppercase;
+}
+
+h2 {
+	margin: 0;
+	font-size: 1.4rem;
+}
+
+.result-card {
+	background-color: var(--surface-2);
+	border: 1px solid var(--surface-4);
+	border-radius: 10px;
+	padding: 18px;
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.result-label,
+.input-label {
+	font-size: 0.9rem;
+	font-weight: 700;
+	color: var(--text-soft);
+}
+
+.result-code {
+	font-family: var(--font-mono);
+	font-size: clamp(1.8rem, 5vw, 2.4rem);
+	font-weight: 800;
+	letter-spacing: 4px;
+	color: var(--text);
+}
+
+.code-input {
+	width: 100%;
+	height: 54px;
+	border: 1px solid var(--surface-4);
+	border-radius: var(--radius-sm);
+	background-color: var(--surface-2);
+	color: var(--text);
+	padding: 0 14px;
+	font: inherit;
+	font-size: 1.25rem;
+	font-weight: 700;
+	letter-spacing: 3px;
+	text-transform: uppercase;
+}
+
+.code-input:focus-visible {
+	outline: 2px solid #90caf9;
+	outline-offset: 2px;
+}
+
+.error-text {
+	color: #ff8a80;
+	font-size: 0.9rem;
+}
+
+@media (max-width: 760px) {
+	.container {
+		padding: 20px;
+	}
+
+	.header {
+		flex-direction: column;
+	}
+
+	.grid {
+		grid-template-columns: 1fr;
+	}
+}

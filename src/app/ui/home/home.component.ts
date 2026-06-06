@@ -5,11 +5,12 @@ import { TimeControlDialogComponent } from './time-control-dialog/time-control-d
 import { TimeControl } from '../../interfaces/time-control.interface';
 import { AiModeDialogComponent } from './ai-mode-dialog/ai-mode-dialog.component';
 import { AiModeSettings } from '../../interfaces/ai-mode.interface';
+import { OnlineLobbyDialogComponent } from './online-lobby-dialog/online-lobby-dialog.component';
 
 @Component({
 	selector: 'app-home',
 	standalone: true,
-	imports: [CommonModule, TimeControlDialogComponent, AiModeDialogComponent],
+	imports: [CommonModule, TimeControlDialogComponent, AiModeDialogComponent, OnlineLobbyDialogComponent],
 	templateUrl: './home.component.html',
 	styleUrls: ['./home.component.css'],
 })
@@ -18,6 +19,7 @@ export class HomeComponent {
 
 	showTimeControlDialog = false;
 	showAiModeDialog = false;
+	showOnlineLobbyDialog = false;
 	lastTimeControl: TimeControl = {
 		white: { baseMinutes: 5, incrementSeconds: 0 },
 		black: { baseMinutes: 5, incrementSeconds: 0 }
@@ -30,6 +32,10 @@ export class HomeComponent {
 	play(mode: string): void {
 		if (mode === 'local') {
 			this.showTimeControlDialog = true;
+			return;
+		}
+		if (mode === 'online') {
+			this.showOnlineLobbyDialog = true;
 			return;
 		}
 		if (mode === 'ai') {
@@ -54,6 +60,14 @@ export class HomeComponent {
 
 	onTimeControlCancel(): void {
 		this.showTimeControlDialog = false;
+	}
+
+	onOnlineLobbyClose(): void {
+		this.showOnlineLobbyDialog = false;
+	}
+
+	onOnlineTimeControlChange(control: TimeControl): void {
+		this.lastTimeControl = control;
 	}
 
 	onAiModeConfirm(settings: AiModeSettings): void {

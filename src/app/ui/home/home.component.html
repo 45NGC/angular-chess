@@ -21,3 +21,11 @@
     (cancel)="onAiModeCancel()"
   ></app-ai-mode-dialog>
 }
+
+@if (showOnlineLobbyDialog) {
+  <app-online-lobby-dialog
+    [initialTimeControl]="lastTimeControl"
+    (close)="onOnlineLobbyClose()"
+    (timeControlChange)="onOnlineTimeControlChange($event)"
+  ></app-online-lobby-dialog>
+}
