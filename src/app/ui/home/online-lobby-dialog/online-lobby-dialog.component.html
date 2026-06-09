@@ -20,11 +20,15 @@
           SET UP AND GENERATE CODE
         </button>
 
-        @if (createdGame) {
+        @if (hasCreatedRoom) {
           <div class="result-card">
             <div class="result-label">Generated code</div>
-            <div class="result-code">{{ createdGame.code }}</div>
-            <div class="result-summary">{{ createdSummary }}</div>
+            <div class="result-code">{{ activeRoom?.code }}</div>
+            <div class="result-summary">{{ activeRoomSummary }}</div>
+            <div class="status-line">
+              <span class="status-badge">{{ activeStatusLabel }}</span>
+              <span class="status-side">You are {{ activeSideLabel }}</span>
+            </div>
           </div>
         }
       </section>
@@ -52,10 +56,15 @@
 
         <button type="button" class="btn btn--neutral" (click)="onJoinGame()">CONTINUE</button>
 
-        @if (joinReadyCode) {
+        @if (hasJoinedRoom) {
           <div class="result-card">
-            <div class="result-label">Entered code</div>
-            <div class="result-code">{{ joinReadyCode }}</div>
+            <div class="result-label">Joined room</div>
+            <div class="result-code">{{ activeRoom?.code }}</div>
+            <div class="result-summary">{{ activeRoomSummary }}</div>
+            <div class="status-line">
+              <span class="status-badge">{{ activeStatusLabel }}</span>
+              <span class="status-side">You are {{ activeSideLabel }}</span>
+            </div>
           </div>
         }
       </section>
