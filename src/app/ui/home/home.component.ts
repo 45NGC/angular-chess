@@ -1,16 +1,17 @@
 import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router } from '@angular/router';
-import { TimeControlSettingsDialogComponent } from './time-control-settings-dialog/time-control-settings-dialog.component';
+import { LocalGameSettingsDialogComponent } from './local-game-settings-dialog/local-game-settings-dialog.component';
 import { TimeControl } from '../../interfaces/time-control.interface';
 import { AiModeSettingsDialogComponent } from './ai-mode-settings-dialog/ai-mode-settings-dialog.component';
 import { AiModeSettings } from '../../interfaces/ai-mode.interface';
+import { OnlineGameSettings } from '../../interfaces/online-game-settings.interface';
 import { OnlineLobbyDialogComponent } from './online-lobby-dialog/online-lobby-dialog.component';
 
 @Component({
 	selector: 'app-home',
 	standalone: true,
-	imports: [CommonModule, TimeControlSettingsDialogComponent, AiModeSettingsDialogComponent, OnlineLobbyDialogComponent],
+	imports: [CommonModule, LocalGameSettingsDialogComponent, AiModeSettingsDialogComponent, OnlineLobbyDialogComponent],
 	templateUrl: './home.component.html',
 	styleUrls: ['./home.component.css'],
 })
@@ -27,6 +28,13 @@ export class HomeComponent {
 	lastAiMode: AiModeSettings = {
 		difficulty: 'beginner',
 		playerColor: 'random'
+	};
+	lastOnlineGameSettings: OnlineGameSettings = {
+		timeControlSettings: {
+			white: { baseMinutes: 5, incrementSeconds: 0 },
+			black: { baseMinutes: 5, incrementSeconds: 0 }
+		},
+		hostSidePreference: 'random'
 	};
 
 	play(mode: string): void {
@@ -66,8 +74,9 @@ export class HomeComponent {
 		this.showOnlineLobbyDialog = false;
 	}
 
-	onOnlineTimeControlChange(settings: TimeControl): void {
-		this.lastTimeControl = settings;
+	onOnlineSettingsChange(settings: OnlineGameSettings): void {
+		this.lastOnlineGameSettings = settings;
+		this.lastTimeControl = settings.timeControlSettings;
 	}
 
 	onAiModeConfirm(settings: AiModeSettings): void {

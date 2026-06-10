@@ -7,7 +7,7 @@ import {
 	OnlineRoomSession,
 	OnlineRoomSide
 } from '../interfaces/online-room.interface';
-import { TimeControl } from '../interfaces/time-control.interface';
+import { OnlineGameSettings } from '../interfaces/online-game-settings.interface';
 import { OnlineRoomCodeService } from './online-room-code.service';
 
 @Injectable({
@@ -18,16 +18,16 @@ export class OnlineRoomService {
 
 	constructor(private roomCodeService: OnlineRoomCodeService) { }
 
-	createRoom(timeControlSettings: TimeControl): { room: OnlineRoom; session: OnlineRoomSession } {
+	createRoom(settings: OnlineGameSettings): { room: OnlineRoom; session: OnlineRoomSession } {
 		const code = this.generateUniqueRoomCode();
-		const playerSide = this.resolveCreatorSide();
+		const playerSide = this.resolveCreatorSide(settings.hostSidePreference);
 		const player = this.createPlayer(playerSide);
 		const room: OnlineRoom = {
 			code,
 			status: 'waiting',
 			whitePlayer: playerSide === 'white' ? player : null,
 			blackPlayer: playerSide === 'black' ? player : null,
-			timeControlSettings,
+			timeControlSettings: settings.timeControlSettings,
 			moves: [],
 			createdAt: Date.now(),
 			startedAt: null,
@@ -92,7 +92,8 @@ export class OnlineRoomService {
 		throw new Error('Could not generate a unique online room code.');
 	}
 
-	private resolveCreatorSide(): OnlineRoomSide {
+	private resolveCreatorSide(hostSidePreference: OnlineGameSettings['hostSidePreference']): OnlineRoomSide {
+		if (hostSidePreference === 'white' || hostSidePreference === 'black') return hostSidePreference;
 		return Math.random() < 0.5 ? 'white' : 'black';
 	}
 

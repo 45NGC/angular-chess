@@ -1,0 +1,35 @@
+<div class="overlay" (click)="onCancel()">
+  <div class="container" (click)="$event.stopPropagation()">
+    <div class="title">ONLINE GAME SETTINGS</div>
+    <div class="subtitle">Select time control and your preferred side</div>
+
+    <div class="section">
+      <div class="section-title">Host side</div>
+      <div class="options-grid color-grid">
+        @for (option of colorOptions; track option.key) {
+          <button
+            type="button"
+            class="option"
+            [class.selected]="option.key === hostSidePreference"
+            [attr.aria-pressed]="option.key === hostSidePreference"
+            (click)="selectHostSidePreference(option.key)"
+          >
+            {{ option.label }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <app-time-control-settings-form
+      [initial]="initial.timeControlSettings"
+      (settingsChange)="onTimeControlSettingsChange($event)"
+    ></app-time-control-settings-form>
+
+    <div class="summary">{{ hostSideSummary }}</div>
+
+    <div class="actions">
+      <button type="button" class="btn btn--success" (click)="onConfirm()">START</button>
+      <button type="button" class="btn btn--danger" (click)="onCancel()">CANCEL</button>
+    </div>
+  </div>
+</div>

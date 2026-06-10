@@ -60,47 +60,19 @@
 	letter-spacing: 0.5px;
 }
 
-.sides {
-	display: grid;
-	grid-template-columns: 1fr 1fr;
-	gap: 14px;
-}
-
-.side {
-	background-color: var(--surface-1);
-	border-radius: 8px;
-	padding: 12px;
-	display: flex;
-	flex-direction: column;
-	gap: 12px;
-}
-
-.side-title {
-	color: var(--text);
-	font-size: 14px;
-	font-weight: 800;
-	letter-spacing: 1px;
-	text-align: center;
-}
-
 .options-grid {
 	display: grid;
 	grid-template-columns: repeat(3, minmax(0, 1fr));
 	gap: 8px;
 }
 
-.options-grid.increments {
-	grid-template-columns: repeat(4, minmax(0, 1fr));
-}
-
-@media (max-width: 900px) {
-	.sides {
-		grid-template-columns: 1fr;
-	}
+.color-grid {
+	grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
 .option {
 	background-color: var(--surface-3);
+	border: 0;
 	border-radius: 6px;
 	padding: 12px 10px;
 	text-align: center;
@@ -109,6 +81,7 @@
 	font-weight: 600;
 	transition: background-color 0.2s, outline-color 0.2s;
 	user-select: none;
+	font: inherit;
 }
 
 .option:hover {

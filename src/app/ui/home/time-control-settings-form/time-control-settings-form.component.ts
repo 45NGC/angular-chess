@@ -1,25 +1,25 @@
-import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Component, EventEmitter, Input, Output } from '@angular/core';
 import { SideTimeControl, TimeControl } from '../../../interfaces/time-control.interface';
 
 type BaseTimeOption = { minutes: number; label: string };
 type IncrementOption = { seconds: number; label: string };
 
 @Component({
-	selector: 'app-time-control-settings-dialog',
+	selector: 'app-time-control-settings-form',
 	standalone: true,
 	imports: [CommonModule],
-	templateUrl: './time-control-settings-dialog.component.html',
-	styleUrls: ['./time-control-settings-dialog.component.css']
+	templateUrl: './time-control-settings-form.component.html',
+	styleUrls: ['./time-control-settings-form.component.css']
 })
-export class TimeControlSettingsDialogComponent {
-	@Output() confirm = new EventEmitter<TimeControl>();
-	@Output() cancel = new EventEmitter<void>();
+export class TimeControlSettingsFormComponent {
+	@Output() settingsChange = new EventEmitter<TimeControl>();
 
 	private _initial: TimeControl = {
 		white: { baseMinutes: 5, incrementSeconds: 0 },
 		black: { baseMinutes: 5, incrementSeconds: 0 }
 	};
+
 	@Input({ required: true }) set initial(value: TimeControl) {
 		this._initial = value;
 		this.white = { ...value.white };
@@ -56,11 +56,13 @@ export class TimeControlSettingsDialogComponent {
 	selectBase(side: 'white' | 'black', minutes: number): void {
 		if (side === 'white') this.white.baseMinutes = minutes;
 		else this.black.baseMinutes = minutes;
+		this.emitSettingsChange();
 	}
 
 	selectIncrement(side: 'white' | 'black', seconds: number): void {
 		if (side === 'white') this.white.incrementSeconds = seconds;
 		else this.black.incrementSeconds = seconds;
+		this.emitSettingsChange();
 	}
 
 	get summary(): string {
@@ -69,15 +71,14 @@ export class TimeControlSettingsDialogComponent {
 		return `White: ${whiteBase} +${this.white.incrementSeconds}s • Black: ${blackBase} +${this.black.incrementSeconds}s`;
 	}
 
-	onConfirm(): void {
-		const settings: TimeControl = {
+	private emitSettingsChange(): void {
+		this.settingsChange.emit(this.settings);
+	}
+
+	get settings(): TimeControl {
+		return {
 			white: { ...this.white },
 			black: { ...this.black }
 		};
-		this.confirm.emit(settings);
-	}
-
-	onCancel(): void {
-		this.cancel.emit();
 	}
 }

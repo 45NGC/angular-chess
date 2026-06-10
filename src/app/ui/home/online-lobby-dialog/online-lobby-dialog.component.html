@@ -25,6 +25,7 @@
             <div class="result-label">Generated code</div>
             <div class="result-code">{{ activeRoom?.code }}</div>
             <div class="result-summary">{{ activeRoomSummary }}</div>
+            <div class="result-summary">Preferred host side: {{ preferredHostSideLabel }}</div>
             <div class="status-line">
               <span class="status-badge">{{ activeStatusLabel }}</span>
               <span class="status-side">You are {{ activeSideLabel }}</span>
@@ -72,10 +73,10 @@
   </div>
 </div>
 
-@if (showTimeControlDialog) {
-  <app-time-control-settings-dialog
-    [initial]="initialTimeControl"
-    (confirm)="onTimeControlConfirm($event)"
-    (cancel)="onTimeControlCancel()"
-  ></app-time-control-settings-dialog>
+@if (showOnlineGameSettingsDialog) {
+  <app-online-game-settings-dialog
+    [initial]="initialSettings"
+    (confirm)="onOnlineGameSettingsConfirm($event)"
+    (cancel)="onOnlineGameSettingsCancel()"
+  ></app-online-game-settings-dialog>
 }

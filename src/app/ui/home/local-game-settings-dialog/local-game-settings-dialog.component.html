@@ -1,0 +1,16 @@
+<div class="overlay" (click)="onCancel()">
+  <div class="container" (click)="$event.stopPropagation()">
+    <div class="title">TIME CONTROL SETTINGS</div>
+    <div class="subtitle">Select time control</div>
+
+    <app-time-control-settings-form
+      [initial]="initial"
+      (settingsChange)="onSettingsChange($event)"
+    ></app-time-control-settings-form>
+
+    <div class="actions">
+      <button type="button" class="btn btn--success" (click)="onConfirm()">START</button>
+      <button type="button" class="btn btn--danger" (click)="onCancel()">CANCEL</button>
+    </div>
+  </div>
+</div>

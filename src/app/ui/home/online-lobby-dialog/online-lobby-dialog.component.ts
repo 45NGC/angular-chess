@@ -1,28 +1,32 @@
 import { CommonModule } from '@angular/common';
 import { Component, EventEmitter, Input, OnDestroy, Output } from '@angular/core';
 import { Subscription } from 'rxjs';
+import { OnlineGameSettings } from '../../../interfaces/online-game-settings.interface';
 import { JoinOnlineRoomError, OnlineRoom, OnlineRoomSession } from '../../../interfaces/online-room.interface';
 import { TimeControl } from '../../../interfaces/time-control.interface';
 import { OnlineRoomCodeService } from '../../../services/online-room-code.service';
 import { OnlineRoomService } from '../../../services/online-room.service';
-import { TimeControlSettingsDialogComponent } from '../time-control-settings-dialog/time-control-settings-dialog.component';
+import { OnlineGameSettingsDialogComponent } from '../online-game-settings-dialog/online-game-settings-dialog.component';
 
 @Component({
 	selector: 'app-online-lobby-dialog',
 	standalone: true,
-	imports: [CommonModule, TimeControlSettingsDialogComponent],
+	imports: [CommonModule, OnlineGameSettingsDialogComponent],
 	templateUrl: './online-lobby-dialog.component.html',
 	styleUrls: ['./online-lobby-dialog.component.css']
 })
 export class OnlineLobbyDialogComponent implements OnDestroy {
-	@Input({ required: true }) initialTimeControl: TimeControl = {
-		white: { baseMinutes: 5, incrementSeconds: 0 },
-		black: { baseMinutes: 5, incrementSeconds: 0 }
+	@Input({ required: true }) initialSettings: OnlineGameSettings = {
+		timeControlSettings: {
+			white: { baseMinutes: 5, incrementSeconds: 0 },
+			black: { baseMinutes: 5, incrementSeconds: 0 }
+		},
+		hostSidePreference: 'random'
 	};
 	@Output() close = new EventEmitter<void>();
-	@Output() timeControlChange = new EventEmitter<TimeControl>();
+	@Output() settingsChange = new EventEmitter<OnlineGameSettings>();
 
-	showTimeControlDialog = false;
+	showOnlineGameSettingsDialog = false;
 	joinCode = '';
 	joinError = '';
 	activeRoom: OnlineRoom | null = null;
@@ -40,11 +44,11 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 	}
 
 	openCreateDialog(): void {
-		this.showTimeControlDialog = true;
+		this.showOnlineGameSettingsDialog = true;
 	}
 
-	onTimeControlConfirm(settings: TimeControl): void {
-		this.timeControlChange.emit(settings);
+	onOnlineGameSettingsConfirm(settings: OnlineGameSettings): void {
+		this.settingsChange.emit(settings);
 		const { room, session } = this.onlineRoomService.createRoom(settings);
 		this.activeSession = session;
 		this.activeFlow = 'created';
@@ -52,11 +56,11 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 		this.watchRoom(room.code);
 		this.joinError = '';
 		this.joinCode = '';
-		this.showTimeControlDialog = false;
+		this.showOnlineGameSettingsDialog = false;
 	}
 
-	onTimeControlCancel(): void {
-		this.showTimeControlDialog = false;
+	onOnlineGameSettingsCancel(): void {
+		this.showOnlineGameSettingsDialog = false;
 	}
 
 	onJoinCodeInput(event: Event): void {
@@ -89,7 +93,7 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 	}
 
 	get activeRoomSummary(): string {
-		return this.formatTimeControl(this.activeRoom?.timeControlSettings ?? this.initialTimeControl);
+		return this.formatTimeControl(this.activeRoom?.timeControlSettings ?? this.initialSettings.timeControlSettings);
 	}
 
 	get activeStatusLabel(): string {
@@ -109,6 +113,17 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 
 	get activeSideLabel(): string {
 		return this.activeSession?.playerSide === 'white' ? 'White' : this.activeSession?.playerSide === 'black' ? 'Black' : '';
+	}
+
+	get preferredHostSideLabel(): string {
+		switch (this.initialSettings.hostSidePreference) {
+			case 'white':
+				return 'White';
+			case 'black':
+				return 'Black';
+			default:
+				return 'Random';
+		}
 	}
 
 	get hasCreatedRoom(): boolean {

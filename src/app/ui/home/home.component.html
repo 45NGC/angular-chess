@@ -7,11 +7,11 @@
 </div>
 
 @if (showTimeControlDialog) {
-  <app-time-control-settings-dialog
+  <app-local-game-settings-dialog
     [initial]="lastTimeControl"
     (confirm)="onTimeControlConfirm($event)"
     (cancel)="onTimeControlCancel()"
-  ></app-time-control-settings-dialog>
+  ></app-local-game-settings-dialog>
 }
 
 @if (showAiModeDialog) {
@@ -24,8 +24,8 @@
 
 @if (showOnlineLobbyDialog) {
   <app-online-lobby-dialog
-    [initialTimeControl]="lastTimeControl"
+    [initialSettings]="lastOnlineGameSettings"
     (close)="onOnlineLobbyClose()"
-    (timeControlChange)="onOnlineTimeControlChange($event)"
+    (settingsChange)="onOnlineSettingsChange($event)"
   ></app-online-lobby-dialog>
 }
