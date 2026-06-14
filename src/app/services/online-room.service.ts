@@ -5,10 +5,13 @@ import {
 	OnlineRoom,
 	OnlineRoomPlayer,
 	OnlineRoomSession,
-	OnlineRoomSide
+	OnlineRoomSide,
+	SubmitOnlineMoveResult
 } from '../interfaces/online-room.interface';
 import { OnlineGameSettings } from '../interfaces/online-game-settings.interface';
 import { OnlineRoomCodeService } from './online-room-code.service';
+import { buildGameStateFromMoves } from '../core/rules/move-history';
+import { Move } from '../core/rules/move';
 
 @Injectable({
 	providedIn: 'root'
@@ -82,6 +85,49 @@ export class OnlineRoomService {
 		const code = this.roomCodeService.normalizeCode(rawCode);
 		const room$ = this.rooms.get(code);
 		return room$?.asObservable() ?? of(null);
+	}
+
+	getRoom(rawCode: string): OnlineRoom | null {
+		const code = this.roomCodeService.normalizeCode(rawCode);
+		return this.rooms.get(code)?.value ?? null;
+	}
+
+	submitMove(rawCode: string, playerId: string, move: Move): SubmitOnlineMoveResult {
+		const code = this.roomCodeService.normalizeCode(rawCode);
+		const room$ = this.rooms.get(code);
+		if (!room$) return { ok: false, error: 'notFound' };
+
+		const room = room$.value;
+		if (room.status === 'finished') return { ok: false, error: 'finished' };
+
+		const player = room.whitePlayer?.id === playerId
+			? room.whitePlayer
+			: room.blackPlayer?.id === playerId
+				? room.blackPlayer
+				: null;
+		if (!player) return { ok: false, error: 'notParticipant' };
+
+		const state = buildGameStateFromMoves(room.moves.map(entry => entry.move));
+		if (state.turn !== player.side) return { ok: false, error: 'notYourTurn' };
+
+		const updatedMoves = [...room.moves, {
+			move,
+			playedBy: player.side,
+			playedAt: Date.now()
+		}];
+		const nextState = buildGameStateFromMoves(updatedMoves.map(entry => entry.move));
+		const updatedRoom: OnlineRoom = {
+			...room,
+			status: nextState.result.type === 'ongoing'
+				? room.startedAt === null ? 'playing' : room.status === 'ready' ? 'playing' : room.status
+				: 'finished',
+			moves: updatedMoves,
+			startedAt: room.startedAt ?? Date.now(),
+			finishedAt: nextState.result.type === 'ongoing' ? null : Date.now()
+		};
+
+		room$.next(updatedRoom);
+		return { ok: true, room: updatedRoom };
 	}
 
 	private generateUniqueRoomCode(): string {

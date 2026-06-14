@@ -7,6 +7,7 @@ import { TimeControl } from '../../../interfaces/time-control.interface';
 import { OnlineRoomCodeService } from '../../../services/online-room-code.service';
 import { OnlineRoomService } from '../../../services/online-room.service';
 import { OnlineGameSettingsDialogComponent } from '../online-game-settings-dialog/online-game-settings-dialog.component';
+import { Router } from '@angular/router';
 
 @Component({
 	selector: 'app-online-lobby-dialog',
@@ -36,7 +37,8 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 
 	constructor(
 		private roomCodeService: OnlineRoomCodeService,
-		private onlineRoomService: OnlineRoomService
+		private onlineRoomService: OnlineRoomService,
+		private router: Router
 	) { }
 
 	ngOnDestroy(): void {
@@ -145,6 +147,15 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 		this.roomSubscription = this.onlineRoomService.watchRoom(code).subscribe(room => {
 			if (!room) return;
 			this.setActiveRoom(room);
+			if ((room.status === 'ready' || room.status === 'playing') && this.activeSession) {
+				void this.router.navigate(['/game', 'online'], {
+					queryParams: {
+						code: this.activeSession.roomCode,
+						playerId: this.activeSession.playerId,
+						side: this.activeSession.playerSide
+					}
+				});
+			}
 		});
 	}
 

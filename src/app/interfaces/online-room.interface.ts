@@ -43,3 +43,9 @@ export type JoinOnlineRoomError = 'notFound' | 'full' | 'finished';
 export type JoinOnlineRoomResult =
 	| { ok: true; room: OnlineRoom; session: OnlineRoomSession }
 	| { ok: false; error: JoinOnlineRoomError };
+
+export type SubmitOnlineMoveError = 'notFound' | 'notParticipant' | 'notYourTurn' | 'finished';
+
+export type SubmitOnlineMoveResult =
+	| { ok: true; room: OnlineRoom }
+	| { ok: false; error: SubmitOnlineMoveError };

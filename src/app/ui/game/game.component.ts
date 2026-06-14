@@ -20,6 +20,8 @@ import { LocalGameService } from '../../services/local-game.service';
 import { SoundService } from '../../services/sound.service';
 import { AiGameService } from '../../services/ai-game.service';
 import { AiModeSettings } from '../../interfaces/ai-mode.interface';
+import { OnlineGameService } from '../../services/online-game.service';
+import { OnlineRoomService } from '../../services/online-room.service';
 
 @Component({
 	selector: 'app-game',
@@ -43,7 +45,7 @@ export class GameComponent implements OnInit, OnDestroy {
 	private readonly ranksBlack = Array.from({ length: BOARD_SIZE }, (_, i) => i);
 	private readonly filesBlack = Array.from({ length: BOARD_SIZE }, (_, i) => 7 - i);
 
-	mode: 'local' | 'ai' | null = null;
+	mode: 'local' | 'ai' | 'online' | null = null;
 	private manualBoardOrientation: 'white' | 'black' = 'white';
 	autoRotateBoardLocal = false;
 	@ViewChild('boardEl') private boardEl?: ElementRef<HTMLElement>;
@@ -133,7 +135,8 @@ export class GameComponent implements OnInit, OnDestroy {
 		private route: ActivatedRoute,
 		private router: Router,
 		private soundService: SoundService,
-		private cdr: ChangeDetectorRef
+		private cdr: ChangeDetectorRef,
+		private onlineRoomService: OnlineRoomService
 	) { }
 
 	ngOnInit(): void {
@@ -146,7 +149,7 @@ export class GameComponent implements OnInit, OnDestroy {
 				query.get('incB')
 			);
 			const aiMode = this.parseAiMode(query.get('difficulty'), query.get('color'));
-			this.selectService(mode, timeControl, aiMode);
+			this.selectService(mode, timeControl, aiMode, query.get('code'), query.get('playerId'), query.get('side'));
 		});
 
 		this.clockUiIntervalId = window.setInterval(() => {
@@ -367,6 +370,7 @@ export class GameComponent implements OnInit, OnDestroy {
 		if (piece.color !== state.turn) return false;
 		// In AI mode, only allow dragging the human side.
 		if (service instanceof AiGameService && state.turn !== service.playerColor) return false;
+		if (service instanceof OnlineGameService && state.turn !== service.playerSide) return false;
 		return true;
 	}
 
@@ -386,7 +390,14 @@ export class GameComponent implements OnInit, OnDestroy {
 		};
 	}
 
-	private selectService(mode: string | null, timeControl: TimeControl, aiMode: AiModeSettings): void {
+	private selectService(
+		mode: string | null,
+		timeControl: TimeControl,
+		aiMode: AiModeSettings,
+		roomCode: string | null,
+		playerId: string | null,
+		playerSide: string | null
+	): void {
 		this.gameService?.destroy?.();
 		this.dragCandidate = null;
 		this.draggingPointerId = null;
@@ -412,6 +423,26 @@ export class GameComponent implements OnInit, OnDestroy {
 					const service = new AiGameService(this.soundService, aiMode, () => this.cdr.detectChanges());
 					this.gameService = service;
 					this.manualBoardOrientation = service.playerColor;
+				}
+				break;
+			case 'online':
+				if (!roomCode || !playerId || (playerSide !== 'white' && playerSide !== 'black')) {
+					console.error('Missing online game params.');
+					this.mode = null;
+					this.gameService = null;
+					break;
+				}
+				this.mode = 'online';
+				this.autoRotateBoardLocal = false;
+				{
+					const service = new OnlineGameService(
+						this.soundService,
+						this.onlineRoomService,
+						{ roomCode, playerId, playerSide },
+						() => this.cdr.detectChanges()
+					);
+					this.gameService = service;
+					this.manualBoardOrientation = service.playerSide;
 				}
 				break;
 			default:
