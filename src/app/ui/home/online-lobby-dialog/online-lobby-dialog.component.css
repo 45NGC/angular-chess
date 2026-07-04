@@ -62,6 +62,25 @@
 	gap: 18px;
 }
 
+.notice {
+	border-radius: 10px;
+	padding: 12px 14px;
+	font-size: 0.95rem;
+	font-weight: 700;
+}
+
+.notice--success {
+	background-color: rgba(56, 142, 60, 0.16);
+	border: 1px solid rgba(76, 175, 80, 0.3);
+	color: #c8e6c9;
+}
+
+.notice--warning {
+	background-color: rgba(251, 192, 45, 0.14);
+	border: 1px solid rgba(251, 192, 45, 0.3);
+	color: #ffe082;
+}
+
 .panel {
 	background-color: var(--surface-1);
 	border-radius: 10px;

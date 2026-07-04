@@ -10,6 +10,7 @@
           <button
             type="button"
             class="option"
+            [disabled]="disabled"
             [class.selected]="option.key === hostSidePreference"
             [attr.aria-pressed]="option.key === hostSidePreference"
             (click)="selectHostSidePreference(option.key)"
@@ -28,8 +29,12 @@
     <div class="summary">{{ hostSideSummary }}</div>
 
     <div class="actions">
-      <button type="button" class="btn btn--success" (click)="onConfirm()">START</button>
-      <button type="button" class="btn btn--danger" (click)="onCancel()">CANCEL</button>
+      <button type="button" class="btn btn--success" [disabled]="disabled" (click)="onConfirm()">
+        START
+      </button>
+      <button type="button" class="btn btn--danger" [disabled]="disabled" (click)="onCancel()">
+        CANCEL
+      </button>
     </div>
   </div>
 </div>

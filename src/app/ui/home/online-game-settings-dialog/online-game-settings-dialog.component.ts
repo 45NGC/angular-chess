@@ -15,6 +15,7 @@ type ColorOption = { key: PlayerColor; label: string };
 	styleUrls: ['./online-game-settings-dialog.component.css']
 })
 export class OnlineGameSettingsDialogComponent {
+	@Input() disabled = false;
 	@Output() confirm = new EventEmitter<OnlineGameSettings>();
 	@Output() cancel = new EventEmitter<void>();
 
@@ -62,6 +63,8 @@ export class OnlineGameSettingsDialogComponent {
 	}
 
 	onConfirm(): void {
+		if (this.disabled) return;
+
 		const settings: OnlineGameSettings = {
 			timeControlSettings: this.currentTimeControlSettings,
 			hostSidePreference: this.hostSidePreference
@@ -70,6 +73,7 @@ export class OnlineGameSettingsDialogComponent {
 	}
 
 	onCancel(): void {
+		if (this.disabled) return;
 		this.cancel.emit();
 	}
 }

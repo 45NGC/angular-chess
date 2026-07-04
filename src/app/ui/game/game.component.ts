@@ -1,7 +1,7 @@
 import { Component, ElementRef, HostListener, OnDestroy, OnInit, ViewChild } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { ActivatedRoute, Router } from '@angular/router';
-import { combineLatest } from 'rxjs';
+import { combineLatest, Subscription } from 'rxjs';
 import { ChangeDetectorRef } from '@angular/core';
 import { GameOverDialogComponent } from './game-over-dialog/game-over-dialog.component';
 import { PromotionDialogComponent } from './promotion-dialog/promotion-dialog.component';
@@ -21,7 +21,8 @@ import { SoundService } from '../../services/sound.service';
 import { AiGameService } from '../../services/ai-game.service';
 import { AiModeSettings } from '../../interfaces/ai-mode.interface';
 import { OnlineGameService } from '../../services/online-game.service';
-import { OnlineRoomService } from '../../services/online-room.service';
+import { OnlineConnectionState, OnlineRoomService } from '../../services/online-room.service';
+import { OnlineRoomSession } from '../../interfaces/online-room.interface';
 
 @Component({
 	selector: 'app-game',
@@ -105,6 +106,18 @@ export class GameComponent implements OnInit, OnDestroy {
 		return !this.pauseSupported || this.showPromotionDialog || !!this.pendingPromotionMoves || (this.showGameOverDialog && !this.isReviewOnly);
 	}
 
+	get onlineGameService(): OnlineGameService | null {
+		return this.gameService instanceof OnlineGameService ? this.gameService : null;
+	}
+
+	get showOnlineConnectionBanner(): boolean {
+		return this.mode === 'online' && this.onlineConnectionState !== 'idle' && !!this.onlineConnectionMessage;
+	}
+
+	get showOnlineErrorBanner(): boolean {
+		return this.mode === 'online' && !!this.onlineGameService?.lastSubmissionError;
+	}
+
 	get moveNavigationSupported(): boolean {
 		return typeof this.gameService?.undoMove === 'function' && typeof this.gameService?.redoMove === 'function';
 	}
@@ -130,6 +143,9 @@ export class GameComponent implements OnInit, OnDestroy {
 	}
 
 	private clockUiIntervalId: number | null = null;
+	private readonly subscriptions = new Subscription();
+	onlineConnectionState: OnlineConnectionState = 'idle';
+	onlineConnectionMessage = '';
 
 	constructor(
 		private route: ActivatedRoute,
@@ -140,7 +156,7 @@ export class GameComponent implements OnInit, OnDestroy {
 	) { }
 
 	ngOnInit(): void {
-		combineLatest([this.route.paramMap, this.route.queryParamMap]).subscribe(([params, query]) => {
+		this.subscriptions.add(combineLatest([this.route.paramMap, this.route.queryParamMap]).subscribe(([params, query]) => {
 			const mode = params.get('mode');
 			const timeControl = this.parseTimeControl(
 				query.get('baseW'),
@@ -150,7 +166,17 @@ export class GameComponent implements OnInit, OnDestroy {
 			);
 			const aiMode = this.parseAiMode(query.get('difficulty'), query.get('color'));
 			this.selectService(mode, timeControl, aiMode, query.get('code'), query.get('playerId'), query.get('side'));
-		});
+		}));
+
+		this.subscriptions.add(this.onlineRoomService.watchConnectionState().subscribe(state => {
+			this.onlineConnectionState = state;
+			this.cdr.detectChanges();
+		}));
+
+		this.subscriptions.add(this.onlineRoomService.watchConnectionMessage().subscribe(message => {
+			this.onlineConnectionMessage = message ?? '';
+			this.cdr.detectChanges();
+		}));
 
 		this.clockUiIntervalId = window.setInterval(() => {
 			if (!this.clockEnabled || this.isPaused) return;
@@ -426,19 +452,21 @@ export class GameComponent implements OnInit, OnDestroy {
 				}
 				break;
 			case 'online':
-				if (!roomCode || !playerId || (playerSide !== 'white' && playerSide !== 'black')) {
-					console.error('Missing online game params.');
-					this.mode = null;
-					this.gameService = null;
-					break;
-				}
-				this.mode = 'online';
-				this.autoRotateBoardLocal = false;
 				{
+					const restoredSession = roomCode ? this.onlineRoomService.getStoredSession(roomCode) : null;
+					const effectiveSession = this.resolveOnlineSession(roomCode, playerId, playerSide, restoredSession);
+					if (!effectiveSession) {
+						console.error('Missing online game params.');
+						this.mode = null;
+						this.gameService = null;
+						break;
+					}
+					this.mode = 'online';
+					this.autoRotateBoardLocal = false;
 					const service = new OnlineGameService(
 						this.soundService,
 						this.onlineRoomService,
-						{ roomCode, playerId, playerSide },
+						effectiveSession,
 						() => this.cdr.detectChanges()
 					);
 					this.gameService = service;
@@ -481,6 +509,23 @@ export class GameComponent implements OnInit, OnDestroy {
 				: 'random';
 
 		return { difficulty, playerColor };
+	}
+
+	private resolveOnlineSession(
+		roomCode: string | null,
+		playerId: string | null,
+		playerSide: string | null,
+		storedSession: OnlineRoomSession | null
+	): OnlineRoomSession | null {
+		if (roomCode && playerId && (playerSide === 'white' || playerSide === 'black')) {
+			return { roomCode, playerId, playerSide };
+		}
+
+		if (!roomCode || !storedSession) {
+			return null;
+		}
+
+		return storedSession;
 	}
 
 	pieceToImage(piece: any): string | null {
@@ -569,6 +614,7 @@ export class GameComponent implements OnInit, OnDestroy {
 	}
 
 	ngOnDestroy(): void {
+		this.subscriptions.unsubscribe();
 		this.gameService?.destroy?.();
 		if (this.clockUiIntervalId !== null) {
 			clearInterval(this.clockUiIntervalId);

@@ -1,6 +1,16 @@
 @if (gameService) {
   <div class="game-container">
     <div class="board-area">
+      @if (showOnlineConnectionBanner) {
+        <div class="online-banner online-banner--warning">{{ onlineConnectionMessage }}</div>
+      }
+
+      @if (showOnlineErrorBanner) {
+        <div class="online-banner online-banner--error">
+          {{ onlineGameService?.lastSubmissionError }}
+        </div>
+      }
+
       <div class="board" #boardEl>
         @for (rank of ranks; track rank) {
           <div class="rank">

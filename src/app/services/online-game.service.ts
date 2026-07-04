@@ -4,7 +4,7 @@ import { Move } from '../core/rules/move';
 import { AttackedSquares } from '../core/rules/attacked-squares';
 import { LegalMoveFinder } from '../core/rules/legal-move-finder';
 import { IGameService } from '../interfaces/game-service.interface';
-import { OnlineRoom, OnlineRoomSession } from '../interfaces/online-room.interface';
+import { OnlineRoom, OnlineRoomSession, SubmitOnlineMoveError } from '../interfaces/online-room.interface';
 import { TimeControl } from '../interfaces/time-control.interface';
 import { OnlineRoomService } from './online-room.service';
 import { SoundService } from './sound.service';
@@ -22,14 +22,15 @@ export class OnlineGameService implements IGameService {
 	readonly playerSide: 'white' | 'black';
 
 	timeControl: TimeControl;
-	clockEnabled = false;
-	whiteTimeMs = 0;
-	blackTimeMs = 0;
-	activeClockColor: 'white' | 'black' | null = null;
+	lastSubmissionError: string | null = null;
 
 	private readonly moveFinder = new LegalMoveFinder();
 	private readonly roomSubscription: Subscription;
 	private room: OnlineRoom | null = null;
+	private baseWhiteTimeMs = 0;
+	private baseBlackTimeMs = 0;
+	private baseActiveClockColor: 'white' | 'black' | null = null;
+	private clockUpdatedAt: number | null = null;
 
 	constructor(
 		private soundService: SoundService,
@@ -48,6 +49,22 @@ export class OnlineGameService implements IGameService {
 			if (!room) return;
 			this.applyRoom(room);
 		});
+	}
+
+	get clockEnabled(): boolean {
+		return this.timeControl.white.baseMinutes > 0 || this.timeControl.black.baseMinutes > 0;
+	}
+
+	get whiteTimeMs(): number {
+		return this.getDisplayedTime('white');
+	}
+
+	get blackTimeMs(): number {
+		return this.getDisplayedTime('black');
+	}
+
+	get activeClockColor(): 'white' | 'black' | null {
+		return this.baseActiveClockColor;
 	}
 
 	handleSquareClick(rank: number, file: number): void {
@@ -93,6 +110,10 @@ export class OnlineGameService implements IGameService {
 	}
 
 	getResultMessage(): string {
+		if (this.room?.timeoutWinner) {
+			return `${this.room.timeoutWinner === 'white' ? 'WHITE' : 'BLACK'} WON ON TIME`;
+		}
+
 		switch (this.state.result.type) {
 			case 'checkmate':
 				return `${this.state.result.winner === 'white' ? 'WHITE' : 'BLACK'} WON`;
@@ -121,6 +142,7 @@ export class OnlineGameService implements IGameService {
 	private canInteractWithBoard(): boolean {
 		if (this.room?.status !== 'ready' && this.room?.status !== 'playing') return false;
 		if (this.state.result.type !== 'ongoing') return false;
+		if (this.baseActiveClockColor === this.playerSide && this.getDisplayedTime(this.playerSide) <= 0) return false;
 		return this.state.turn === this.playerSide;
 	}
 
@@ -161,13 +183,24 @@ export class OnlineGameService implements IGameService {
 	}
 
 	private submitMove(move: Move): void {
-		const result = this.onlineRoomService.submitMove(this.session.roomCode, this.session.playerId, move);
-		if (!result.ok) {
-			this.soundService.playError();
-			return;
-		}
-		this.clearSelection();
-		this.requestRender();
+		this.onlineRoomService.submitMove(this.session.roomCode, this.session.playerId, move).subscribe({
+			next: result => {
+				if (!result.ok) {
+					this.lastSubmissionError = this.getMoveErrorMessage(result.error);
+					this.soundService.playError();
+					this.requestRender();
+					return;
+				}
+				this.lastSubmissionError = null;
+				this.clearSelection();
+				this.requestRender();
+			},
+			error: () => {
+				this.lastSubmissionError = 'Could not send the move to the server.';
+				this.soundService.playError();
+				this.requestRender();
+			}
+		});
 	}
 
 	private applyRoom(room: OnlineRoom): void {
@@ -175,7 +208,12 @@ export class OnlineGameService implements IGameService {
 		const previousMoveCount = this.moveHistory.length;
 
 		this.room = room;
+		this.lastSubmissionError = null;
 		this.timeControl = room.timeControlSettings;
+		this.baseWhiteTimeMs = room.whiteTimeMs;
+		this.baseBlackTimeMs = room.blackTimeMs;
+		this.baseActiveClockColor = room.activeClockColor;
+		this.clockUpdatedAt = room.clockUpdatedAt;
 		this.moveHistory = room.moves.map(entry => entry.move);
 		this.state = buildGameStateFromMoves(this.moveHistory);
 
@@ -216,5 +254,35 @@ export class OnlineGameService implements IGameService {
 
 	private requestRender(): void {
 		this.requestRenderCallback?.();
+	}
+
+	private getMoveErrorMessage(error: SubmitOnlineMoveError): string {
+		switch (error) {
+			case 'notFound':
+				return 'The room no longer exists.';
+			case 'notParticipant':
+				return 'This session is not part of the room.';
+			case 'illegalMove':
+				return 'That move is not legal.';
+			case 'notYourTurn':
+				return 'It is not your turn.';
+			case 'finished':
+				return 'The game has already finished.';
+		}
+
+		return 'The move could not be processed.';
+	}
+
+	private getDisplayedTime(color: 'white' | 'black'): number {
+		const baseTimeMs = color === 'white' ? this.baseWhiteTimeMs : this.baseBlackTimeMs;
+		if (this.baseActiveClockColor !== color || this.clockUpdatedAt == null || this.room?.status !== 'playing') {
+			return baseTimeMs;
+		}
+		if ((color === 'white' ? this.timeControl.white.baseMinutes : this.timeControl.black.baseMinutes) <= 0) {
+			return baseTimeMs;
+		}
+
+		const elapsed = Math.max(0, Date.now() - this.clockUpdatedAt);
+		return Math.max(0, baseTimeMs - elapsed);
 	}
 }

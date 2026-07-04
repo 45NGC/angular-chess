@@ -5,9 +5,10 @@ import { OnlineGameSettings } from '../../../interfaces/online-game-settings.int
 import { JoinOnlineRoomError, OnlineRoom, OnlineRoomSession } from '../../../interfaces/online-room.interface';
 import { TimeControl } from '../../../interfaces/time-control.interface';
 import { OnlineRoomCodeService } from '../../../services/online-room-code.service';
-import { OnlineRoomService } from '../../../services/online-room.service';
+import { OnlineConnectionState, OnlineRoomService } from '../../../services/online-room.service';
 import { OnlineGameSettingsDialogComponent } from '../online-game-settings-dialog/online-game-settings-dialog.component';
 import { Router } from '@angular/router';
+import { ChangeDetectorRef } from '@angular/core';
 
 @Component({
 	selector: 'app-online-lobby-dialog',
@@ -33,16 +34,31 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 	activeRoom: OnlineRoom | null = null;
 	activeSession: OnlineRoomSession | null = null;
 	activeFlow: 'created' | 'joined' | null = null;
+	isSubmitting = false;
+	connectionState: OnlineConnectionState = 'idle';
+	connectionMessage = '';
 	private roomSubscription: Subscription | null = null;
+	private connectionStateSubscription: Subscription;
+	private connectionMessageSubscription: Subscription;
 
 	constructor(
 		private roomCodeService: OnlineRoomCodeService,
 		private onlineRoomService: OnlineRoomService,
-		private router: Router
-	) { }
+		private router: Router,
+		private cdr: ChangeDetectorRef
+	) {
+		this.connectionStateSubscription = this.onlineRoomService.watchConnectionState().subscribe(state => {
+			this.connectionState = state;
+		});
+		this.connectionMessageSubscription = this.onlineRoomService.watchConnectionMessage().subscribe(message => {
+			this.connectionMessage = message ?? '';
+		});
+	}
 
 	ngOnDestroy(): void {
 		this.roomSubscription?.unsubscribe();
+		this.connectionStateSubscription.unsubscribe();
+		this.connectionMessageSubscription.unsubscribe();
 	}
 
 	openCreateDialog(): void {
@@ -50,15 +66,28 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 	}
 
 	onOnlineGameSettingsConfirm(settings: OnlineGameSettings): void {
+		if (this.isSubmitting) return;
+
 		this.settingsChange.emit(settings);
-		const { room, session } = this.onlineRoomService.createRoom(settings);
-		this.activeSession = session;
-		this.activeFlow = 'created';
-		this.setActiveRoom(room);
-		this.watchRoom(room.code);
-		this.joinError = '';
-		this.joinCode = '';
+		this.isSubmitting = true;
 		this.showOnlineGameSettingsDialog = false;
+		this.onlineRoomService.createRoom(settings).subscribe({
+			next: ({ room, session }) => {
+				this.activeSession = session;
+				this.activeFlow = 'created';
+				this.setActiveRoom(room);
+				this.watchRoom(room.code);
+				this.joinError = '';
+				this.joinCode = '';
+				this.isSubmitting = false;
+				this.cdr.detectChanges();
+			},
+			error: () => {
+				this.joinError = 'Could not create the room. Check that the backend is running.';
+				this.isSubmitting = false;
+				this.cdr.detectChanges();
+			}
+		});
 	}
 
 	onOnlineGameSettingsCancel(): void {
@@ -72,22 +101,39 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 	}
 
 	onJoinGame(): void {
+		if (this.isSubmitting) return;
 		if (!this.roomCodeService.isValidCode(this.joinCode)) {
 			this.joinError = 'Enter a valid 6-character code.';
 			return;
 		}
-
-		const result = this.onlineRoomService.joinRoom(this.joinCode);
-		if (!result.ok) {
-			this.joinError = this.getJoinErrorMessage(result.error);
+		if (this.activeSession?.roomCode === this.joinCode) {
+			this.joinError = 'You are already the host of this room.';
 			return;
 		}
 
-		this.activeSession = result.session;
-		this.activeFlow = 'joined';
-		this.setActiveRoom(result.room);
-		this.watchRoom(result.room.code);
-		this.joinError = '';
+		this.isSubmitting = true;
+		this.onlineRoomService.joinRoom(this.joinCode).subscribe({
+			next: result => {
+				if (!result.ok) {
+					this.joinError = this.getJoinErrorMessage(result.error);
+					this.isSubmitting = false;
+					return;
+				}
+
+				this.activeSession = result.session;
+				this.activeFlow = 'joined';
+				this.setActiveRoom(result.room);
+				this.watchRoom(result.room.code);
+				this.joinError = '';
+				this.isSubmitting = false;
+				this.cdr.detectChanges();
+			},
+			error: () => {
+				this.joinError = 'Could not reach the backend. Check that Spring Boot is running.';
+				this.isSubmitting = false;
+				this.cdr.detectChanges();
+			}
+		});
 	}
 
 	onClose(): void {
@@ -134,6 +180,14 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 
 	get hasJoinedRoom(): boolean {
 		return this.activeFlow === 'joined' && !!this.activeRoom && !!this.activeSession;
+	}
+
+	get showConnectionNotice(): boolean {
+		return this.connectionState !== 'idle' && !!this.connectionMessage;
+	}
+
+	get connectionNoticeClass(): string {
+		return this.connectionState === 'connected' ? 'notice notice--success' : 'notice notice--warning';
 	}
 
 	private formatTimeControl(control: TimeControl): string {

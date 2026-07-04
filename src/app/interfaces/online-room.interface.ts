@@ -26,6 +26,11 @@ export interface OnlineRoom {
 	whitePlayer: OnlineRoomPlayer | null;
 	blackPlayer: OnlineRoomPlayer | null;
 	timeControlSettings: TimeControl;
+	whiteTimeMs: number;
+	blackTimeMs: number;
+	activeClockColor: OnlineRoomSide | null;
+	clockUpdatedAt: number | null;
+	timeoutWinner: OnlineRoomSide | null;
 	moves: OnlineMoveRecord[];
 	createdAt: number;
 	startedAt: number | null;
@@ -44,7 +49,7 @@ export type JoinOnlineRoomResult =
 	| { ok: true; room: OnlineRoom; session: OnlineRoomSession }
 	| { ok: false; error: JoinOnlineRoomError };
 
-export type SubmitOnlineMoveError = 'notFound' | 'notParticipant' | 'notYourTurn' | 'finished';
+export type SubmitOnlineMoveError = 'notFound' | 'notParticipant' | 'illegalMove' | 'notYourTurn' | 'finished';
 
 export type SubmitOnlineMoveResult =
 	| { ok: true; room: OnlineRoom }

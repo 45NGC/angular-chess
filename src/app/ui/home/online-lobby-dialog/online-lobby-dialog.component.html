@@ -8,6 +8,10 @@
       <button type="button" class="btn btn--danger" (click)="onClose()">CANCEL</button>
     </div>
 
+    @if (showConnectionNotice) {
+      <div [class]="connectionNoticeClass">{{ connectionMessage }}</div>
+    }
+
     <div class="grid">
       <section class="panel">
         <div class="eyebrow">Create game</div>
@@ -16,8 +20,13 @@
           Use the same time control selector as local mode to define the initial conditions.
         </p>
 
-        <button type="button" class="btn btn--success" (click)="openCreateDialog()">
-          SET UP AND GENERATE CODE
+        <button
+          type="button"
+          class="btn btn--success"
+          [disabled]="isSubmitting"
+          (click)="openCreateDialog()"
+        >
+          {{ isSubmitting ? 'WORKING...' : 'SET UP AND GENERATE CODE' }}
         </button>
 
         @if (hasCreatedRoom) {
@@ -55,7 +64,14 @@
           <div class="error-text">{{ joinError }}</div>
         }
 
-        <button type="button" class="btn btn--neutral" (click)="onJoinGame()">CONTINUE</button>
+        <button
+          type="button"
+          class="btn btn--neutral"
+          [disabled]="isSubmitting"
+          (click)="onJoinGame()"
+        >
+          {{ isSubmitting ? 'CONNECTING...' : 'CONTINUE' }}
+        </button>
 
         @if (hasJoinedRoom) {
           <div class="result-card">
@@ -76,6 +92,7 @@
 @if (showOnlineGameSettingsDialog) {
   <app-online-game-settings-dialog
     [initial]="initialSettings"
+    [disabled]="isSubmitting"
     (confirm)="onOnlineGameSettingsConfirm($event)"
     (cancel)="onOnlineGameSettingsCancel()"
   ></app-online-game-settings-dialog>
