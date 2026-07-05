@@ -82,6 +82,7 @@
           [blackTimeMs]="blackTimeMs"
           [whiteIncrementSec]="whiteIncrementSeconds"
           [blackIncrementSec]="blackIncrementSeconds"
+          [bottomColor]="boardOrientation"
           [activeColor]="activeClockColor"
           [clockEnabled]="clockEnabled"
           [whiteInfinite]="whiteInfinite"
@@ -93,6 +94,7 @@
         <app-pause-overlay
           [turn]="state!.turn"
           [moveHistory]="moveHistory"
+          [bottomColor]="boardOrientation"
           [clockEnabled]="clockEnabled"
           [whiteTimeMs]="whiteTimeMs"
           [blackTimeMs]="blackTimeMs"

@@ -7,7 +7,7 @@
     </div>
 
     <div class="actions-container">
-      <app-restart-button class="gameover-action" (restart)="restart.emit()" />
+      <app-restart-button class="gameover-action" label="REMATCH" (restart)="restart.emit()" />
 
       <button type="button" class="btn btn--danger gameover-action" (click)="onExit()">
         QUIT

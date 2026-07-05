@@ -15,10 +15,23 @@ export class ClockComponent {
 	@Input({ required: true }) blackTimeMs!: number;
 	@Input({ required: true }) whiteIncrementSec!: number;
 	@Input({ required: true }) blackIncrementSec!: number;
+	@Input() bottomColor: 'white' | 'black' = 'white';
 	@Input() activeColor: 'white' | 'black' | null = null;
 	@Input() clockEnabled = true;
 	@Input() whiteInfinite = false;
 	@Input() blackInfinite = false;
+
+	get topColor(): 'white' | 'black' {
+		return this.bottomColor === 'white' ? 'black' : 'white';
+	}
+
+	get topIncrementSec(): number {
+		return this.topColor === 'white' ? this.whiteIncrementSec : this.blackIncrementSec;
+	}
+
+	get bottomIncrementSec(): number {
+		return this.bottomColor === 'white' ? this.whiteIncrementSec : this.blackIncrementSec;
+	}
 
 	formatMain(color: 'white' | 'black'): string {
 		if (color === 'white' && this.whiteInfinite) return '∞';

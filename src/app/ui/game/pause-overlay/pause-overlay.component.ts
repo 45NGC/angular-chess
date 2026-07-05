@@ -15,6 +15,7 @@ import { RestartButtonComponent } from '../restart-button/restart-button.compone
 export class PauseOverlayComponent {
 	@Input({ required: true }) turn!: 'white' | 'black';
 	@Input({ required: true }) moveHistory!: Move[];
+	@Input() bottomColor: 'white' | 'black' = 'white';
 	@Input() clockEnabled = false;
 	@Input() whiteTimeMs = 0;
 	@Input() blackTimeMs = 0;
@@ -24,6 +25,10 @@ export class PauseOverlayComponent {
 	@Output() resume = new EventEmitter<void>();
 	@Output() restart = new EventEmitter<void>();
 	@Output() quit = new EventEmitter<void>();
+
+	get topColor(): 'white' | 'black' {
+		return this.bottomColor === 'white' ? 'black' : 'white';
+	}
 
 	formatTimeDisplay(color: 'white' | 'black'): string {
 		if (color === 'white' && this.whiteInfinite) return '∞';

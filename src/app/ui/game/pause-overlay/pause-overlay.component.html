@@ -9,12 +9,12 @@
     @if (clockEnabled) {
       <div class="pause-clocks">
         <div class="pause-clock-row">
-          <span class="pause-clock-label">Black</span>
-          <span class="pause-clock-time">{{ formatTimeDisplay('black') }}</span>
+          <span class="pause-clock-label">{{ topColor === 'white' ? 'White' : 'Black' }}</span>
+          <span class="pause-clock-time">{{ formatTimeDisplay(topColor) }}</span>
         </div>
         <div class="pause-clock-row">
-          <span class="pause-clock-label">White</span>
-          <span class="pause-clock-time">{{ formatTimeDisplay('white') }}</span>
+          <span class="pause-clock-label">{{ bottomColor === 'white' ? 'White' : 'Black' }}</span>
+          <span class="pause-clock-time">{{ formatTimeDisplay(bottomColor) }}</span>
         </div>
       </div>
     }
