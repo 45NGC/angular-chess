@@ -6,8 +6,19 @@
       {{ message }}
     </div>
 
+    @if (statusMessage) {
+      <div class="status-message">
+        {{ statusMessage }}
+      </div>
+    }
+
     <div class="actions-container">
-      <app-restart-button class="gameover-action" label="REMATCH" (restart)="restart.emit()" />
+      <app-restart-button
+        class="gameover-action"
+        [label]="restartLabel"
+        [disabled]="restartDisabled"
+        (restart)="restart.emit()"
+      />
 
       <button type="button" class="btn btn--danger gameover-action" (click)="onExit()">
         QUIT

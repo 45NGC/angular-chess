@@ -66,6 +66,9 @@ export class GameComponent implements OnInit, OnDestroy {
 		if (this.mode === 'local' && this.autoRotateBoardLocal) {
 			return this.state?.turn ?? this.manualBoardOrientation;
 		}
+		if (this.mode === 'online') {
+			return this.onlineGameService?.playerSide ?? this.manualBoardOrientation;
+		}
 		return this.manualBoardOrientation;
 	}
 
@@ -517,8 +520,14 @@ export class GameComponent implements OnInit, OnDestroy {
 		playerSide: string | null,
 		storedSession: OnlineRoomSession | null
 	): OnlineRoomSession | null {
-		if (roomCode && playerId && (playerSide === 'white' || playerSide === 'black')) {
-			return { roomCode, playerId, playerSide };
+		if (roomCode && playerId) {
+			if (storedSession?.roomCode === roomCode && storedSession.playerId === playerId) {
+				return storedSession;
+			}
+			if (playerSide === 'white' || playerSide === 'black') {
+				return { roomCode, playerId, playerSide };
+			}
+			return null;
 		}
 
 		if (!roomCode || !storedSession) {
@@ -527,7 +536,6 @@ export class GameComponent implements OnInit, OnDestroy {
 
 		return storedSession;
 	}
-
 	pieceToImage(piece: any): string | null {
 		if (!piece) return null;
 		return `../../assets/pieces/${piece.color}-${piece.type}.png`;

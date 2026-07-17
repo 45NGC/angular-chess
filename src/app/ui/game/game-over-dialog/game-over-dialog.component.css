@@ -51,6 +51,12 @@
 	border-radius: 6px;
 }
 
+.status-message {
+	color: var(--text);
+	font-size: 14px;
+	text-align: center;
+}
+
 .actions-container {
 	display: grid;
 	grid-template-columns: 1fr 1fr;

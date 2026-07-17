@@ -3,6 +3,7 @@ import {
 	JoinOnlineRoomError,
 	OnlineRoom,
 	OnlineRoomSession,
+	RequestOnlineRematchError,
 	SubmitOnlineMoveError
 } from './online-room.interface';
 import { OnlineGameSettings } from './online-game-settings.interface';
@@ -48,6 +49,20 @@ export type SubmitOnlineMoveResponse =
 	| {
 		ok: false;
 		error: SubmitOnlineMoveError;
+	};
+
+export interface RequestOnlineRematchRequest {
+	playerId: string;
+}
+
+export type RequestOnlineRematchResponse =
+	| {
+		ok: true;
+		room: OnlineRoom;
+	}
+	| {
+		ok: false;
+		error: RequestOnlineRematchError;
 	};
 
 export type OnlineRoomEventType =

@@ -11,6 +11,9 @@ import { RestartButtonComponent } from '../restart-button/restart-button.compone
 })
 export class GameOverDialogComponent {
 	@Input() message = '';
+	@Input() statusMessage = '';
+	@Input() restartLabel = 'REMATCH';
+	@Input() restartDisabled = false;
 	@Output() restart = new EventEmitter<void>();
 	@Output() close = new EventEmitter<void>();
 	@Output() exit = new EventEmitter<void>();

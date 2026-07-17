@@ -4,7 +4,13 @@ import { Move } from '../core/rules/move';
 import { AttackedSquares } from '../core/rules/attacked-squares';
 import { LegalMoveFinder } from '../core/rules/legal-move-finder';
 import { IGameService } from '../interfaces/game-service.interface';
-import { OnlineRoom, OnlineRoomSession, SubmitOnlineMoveError } from '../interfaces/online-room.interface';
+import {
+	OnlineRoom,
+	OnlineRoomSession,
+	OnlineRoomSide,
+	RequestOnlineRematchError,
+	SubmitOnlineMoveError
+} from '../interfaces/online-room.interface';
 import { TimeControl } from '../interfaces/time-control.interface';
 import { OnlineRoomService } from './online-room.service';
 import { SoundService } from './sound.service';
@@ -19,14 +25,15 @@ export class OnlineGameService implements IGameService {
 	showPromotionDialog = false;
 	pendingPromotionMoves: Move[] | null = null;
 	moveHistory: Move[] = [];
-	readonly playerSide: 'white' | 'black';
 
 	timeControl: TimeControl;
 	lastSubmissionError: string | null = null;
+	isRequestingRematch = false;
 
 	private readonly moveFinder = new LegalMoveFinder();
 	private readonly roomSubscription: Subscription;
 	private room: OnlineRoom | null = null;
+	private currentPlayerSide: OnlineRoomSide;
 	private baseWhiteTimeMs = 0;
 	private baseBlackTimeMs = 0;
 	private baseActiveClockColor: 'white' | 'black' | null = null;
@@ -38,7 +45,7 @@ export class OnlineGameService implements IGameService {
 		private session: OnlineRoomSession,
 		private requestRenderCallback: (() => void) | null = null
 	) {
-		this.playerSide = session.playerSide;
+		this.currentPlayerSide = session.playerSide;
 		const initialRoom = this.onlineRoomService.getRoom(session.roomCode);
 		this.timeControl = initialRoom?.timeControlSettings ?? {
 			white: { baseMinutes: 0, incrementSeconds: 0 },
@@ -67,6 +74,61 @@ export class OnlineGameService implements IGameService {
 		return this.baseActiveClockColor;
 	}
 
+	get playerSide(): OnlineRoomSide {
+		return this.currentPlayerSide;
+	}
+
+	get hasRequestedRematch(): boolean {
+		if (!this.room) {
+			return false;
+		}
+		return this.playerSide === 'white'
+			? this.room.whiteRequestedRematch
+			: this.room.blackRequestedRematch;
+	}
+
+	get opponentRequestedRematch(): boolean {
+		if (!this.room) {
+			return false;
+		}
+		return this.playerSide === 'white'
+			? this.room.blackRequestedRematch
+			: this.room.whiteRequestedRematch;
+	}
+
+	get rematchStatusMessage(): string {
+		if (this.room?.status !== 'finished') {
+			return '';
+		}
+		if (this.isRequestingRematch) {
+			return 'Sending rematch request...';
+		}
+		if (this.hasRequestedRematch && !this.opponentRequestedRematch) {
+			return 'Waiting for your opponent...';
+		}
+		if (!this.hasRequestedRematch && this.opponentRequestedRematch) {
+			return 'Your opponent requested a rematch.';
+		}
+		return '';
+	}
+
+	get rematchActionLabel(): string {
+		if (this.isRequestingRematch) {
+			return 'SENDING...';
+		}
+		if (this.hasRequestedRematch) {
+			return 'REMATCH REQUESTED';
+		}
+		if (this.opponentRequestedRematch) {
+			return 'ACCEPT REMATCH';
+		}
+		return 'REQUEST REMATCH';
+	}
+
+	get rematchActionDisabled(): boolean {
+		return this.isRequestingRematch || !this.canRequestRematch();
+	}
+
 	handleSquareClick(rank: number, file: number): void {
 		if (!this.canInteractWithBoard()) return;
 		if (this.pendingPromotionMoves) return;
@@ -88,7 +150,33 @@ export class OnlineGameService implements IGameService {
 	}
 
 	resetGame(): void {
-		// Online reset will come later via room-level rematch/reset flows.
+		if (!this.canRequestRematch()) {
+			return;
+		}
+
+		this.isRequestingRematch = true;
+		this.lastSubmissionError = null;
+		this.requestRender();
+
+		this.onlineRoomService.requestRematch(this.session.roomCode, this.session.playerId).subscribe({
+			next: result => {
+				this.isRequestingRematch = false;
+				if (!result.ok) {
+					this.lastSubmissionError = this.getRematchErrorMessage(result.error);
+					this.soundService.playError();
+					this.requestRender();
+					return;
+				}
+				this.lastSubmissionError = null;
+				this.requestRender();
+			},
+			error: () => {
+				this.isRequestingRematch = false;
+				this.lastSubmissionError = 'Could not send the rematch request to the server.';
+				this.soundService.playError();
+				this.requestRender();
+			}
+		});
 	}
 
 	onPromotionSelected(pieceType: 'queen' | 'rook' | 'bishop' | 'knight'): void {
@@ -206,9 +294,12 @@ export class OnlineGameService implements IGameService {
 	private applyRoom(room: OnlineRoom): void {
 		const previousState = this.state;
 		const previousMoveCount = this.moveHistory.length;
+		const previousPlayerSide = this.currentPlayerSide;
 
 		this.room = room;
+		this.isRequestingRematch = false;
 		this.lastSubmissionError = null;
+		this.currentPlayerSide = this.findPlayerSide(room) ?? this.currentPlayerSide;
 		this.timeControl = room.timeControlSettings;
 		this.baseWhiteTimeMs = room.whiteTimeMs;
 		this.baseBlackTimeMs = room.blackTimeMs;
@@ -216,6 +307,16 @@ export class OnlineGameService implements IGameService {
 		this.clockUpdatedAt = room.clockUpdatedAt;
 		this.moveHistory = room.moves.map(entry => entry.move);
 		this.state = buildGameStateFromMoves(this.moveHistory);
+
+		const playerSideChanged = this.currentPlayerSide !== previousPlayerSide;
+		const gameRestarted = this.moveHistory.length < previousMoveCount
+			|| (previousState.result.type !== 'ongoing' && this.state.result.type === 'ongoing');
+
+		if (playerSideChanged || gameRestarted) {
+			this.clearSelection();
+			this.pendingPromotionMoves = null;
+			this.showPromotionDialog = false;
+		}
 
 		if (this.selectedSquare !== null) {
 			const selectedPiece = this.state.board.get(this.selectedSquare);
@@ -230,9 +331,7 @@ export class OnlineGameService implements IGameService {
 			this.closePromotionDialog();
 		}
 
-		if (room.status === 'finished' || this.state.result.type !== 'ongoing') {
-			this.showGameOverDialog = true;
-		}
+		this.showGameOverDialog = room.status === 'finished' || this.state.result.type !== 'ongoing';
 
 		if (this.moveHistory.length > previousMoveCount) {
 			const latestMove = this.moveHistory[this.moveHistory.length - 1];
@@ -256,6 +355,20 @@ export class OnlineGameService implements IGameService {
 		this.requestRenderCallback?.();
 	}
 
+	private canRequestRematch(): boolean {
+		return this.room?.status === 'finished' && !this.hasRequestedRematch;
+	}
+
+	private findPlayerSide(room: OnlineRoom): OnlineRoomSide | null {
+		if (room.whitePlayer?.id === this.session.playerId) {
+			return 'white';
+		}
+		if (room.blackPlayer?.id === this.session.playerId) {
+			return 'black';
+		}
+		return null;
+	}
+
 	private getMoveErrorMessage(error: SubmitOnlineMoveError): string {
 		switch (error) {
 			case 'notFound':
@@ -271,6 +384,19 @@ export class OnlineGameService implements IGameService {
 		}
 
 		return 'The move could not be processed.';
+	}
+
+	private getRematchErrorMessage(error: RequestOnlineRematchError): string {
+		switch (error) {
+			case 'notFound':
+				return 'The room no longer exists.';
+			case 'notParticipant':
+				return 'This session is not part of the room.';
+			case 'notFinished':
+				return 'The current game is still in progress.';
+		}
+
+		return 'The rematch request could not be processed.';
 	}
 
 	private getDisplayedTime(color: 'white' | 'black'): number {

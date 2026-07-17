@@ -7,6 +7,8 @@ import {
 	GetOnlineRoomResponse,
 	JoinOnlineRoomRequest,
 	JoinOnlineRoomResponse,
+	RequestOnlineRematchRequest,
+	RequestOnlineRematchResponse,
 	SubmitOnlineMoveRequest,
 	SubmitOnlineMoveResponse
 } from '../interfaces/online-backend-contract.interface';
@@ -14,6 +16,8 @@ import {
 	JoinOnlineRoomResult,
 	OnlineRoom,
 	OnlineRoomSession,
+	OnlineRoomSide,
+	RequestOnlineRematchResult,
 	SubmitOnlineMoveResult
 } from '../interfaces/online-room.interface';
 import { OnlineGameSettings } from '../interfaces/online-game-settings.interface';
@@ -131,10 +135,27 @@ export class OnlineRoomService {
 		);
 	}
 
+	requestRematch(rawCode: string, playerId: string): Observable<RequestOnlineRematchResult> {
+		const code = this.roomCodeService.normalizeCode(rawCode);
+		const request: RequestOnlineRematchRequest = { playerId };
+
+		return this.http.post<RequestOnlineRematchResponse>(`${this.apiBaseUrl}/api/online/rooms/${code}/rematch`, request).pipe(
+			tap(result => {
+				if (result.ok) {
+					this.updateRoom(result.room);
+				}
+			})
+		);
+	}
+
 	private fetchRoom(code: string): void {
 		this.http.get<GetOnlineRoomResponse>(`${this.apiBaseUrl}/api/online/rooms/${code}`).subscribe({
 			next: response => {
-				this.getOrCreateRoomSubject(code).next(response.room);
+				if (response.room) {
+					this.updateRoom(response.room);
+					return;
+				}
+				this.getOrCreateRoomSubject(code).next(null);
 			},
 			error: () => {
 				this.getOrCreateRoomSubject(code).next(null);
@@ -143,6 +164,7 @@ export class OnlineRoomService {
 	}
 
 	private updateRoom(room: OnlineRoom): void {
+		this.syncStoredSessionWithRoom(room);
 		this.getOrCreateRoomSubject(room.code).next(room);
 	}
 
@@ -252,10 +274,37 @@ export class OnlineRoomService {
 	private handleRoomMessage(code: string, message: IMessage): void {
 		try {
 			const payload = JSON.parse(message.body) as OnlineRoomUpdateEvent;
-			this.getOrCreateRoomSubject(code).next(payload.room);
+			this.updateRoom(payload.room);
 		} catch {
 			// Ignore malformed frames to keep the room stream alive.
 		}
+	}
+
+	private syncStoredSessionWithRoom(room: OnlineRoom): void {
+		const storedSession = this.getStoredSession(room.code);
+		if (!storedSession) {
+			return;
+		}
+
+		const playerSide = this.findPlayerSide(room, storedSession.playerId);
+		if (!playerSide || playerSide === storedSession.playerSide) {
+			return;
+		}
+
+		this.storeSession({
+			...storedSession,
+			playerSide
+		});
+	}
+
+	private findPlayerSide(room: OnlineRoom, playerId: string): OnlineRoomSide | null {
+		if (room.whitePlayer?.id === playerId) {
+			return 'white';
+		}
+		if (room.blackPlayer?.id === playerId) {
+			return 'black';
+		}
+		return null;
 	}
 
 	private buildApiBaseUrl(): string {

@@ -109,6 +109,9 @@
       @if (showGameOverDialog) {
         <app-game-over-dialog
           [message]="getResultMessage()"
+          [statusMessage]="onlineGameService?.rematchStatusMessage ?? ''"
+          [restartLabel]="onlineGameService?.rematchActionLabel ?? 'REMATCH'"
+          [restartDisabled]="onlineGameService?.rematchActionDisabled ?? false"
           (restart)="onRestart()"
           (close)="onCloseGameOverDialog()"
           (exit)="onExit()"

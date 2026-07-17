@@ -31,6 +31,8 @@ export interface OnlineRoom {
 	activeClockColor: OnlineRoomSide | null;
 	clockUpdatedAt: number | null;
 	timeoutWinner: OnlineRoomSide | null;
+	whiteRequestedRematch: boolean;
+	blackRequestedRematch: boolean;
 	moves: OnlineMoveRecord[];
 	createdAt: number;
 	startedAt: number | null;
@@ -54,3 +56,9 @@ export type SubmitOnlineMoveError = 'notFound' | 'notParticipant' | 'illegalMove
 export type SubmitOnlineMoveResult =
 	| { ok: true; room: OnlineRoom }
 	| { ok: false; error: SubmitOnlineMoveError };
+
+export type RequestOnlineRematchError = 'notFound' | 'notParticipant' | 'notFinished';
+
+export type RequestOnlineRematchResult =
+	| { ok: true; room: OnlineRoom }
+	| { ok: false; error: RequestOnlineRematchError };
