@@ -14,7 +14,7 @@ import { OnlineRoomService } from './online-room.service';
 import { SoundService } from './sound.service';
 import { Subscription } from 'rxjs';
 import { buildGameStateFromMoves } from '../core/rules/move-history';
-import { GameplayService } from './shared/gameplay-service';
+import { GameplayService } from './shared/gameplay-base';
 
 export class OnlineGameService extends GameplayService implements IGameService {
 	moveHistory: Move[] = [];

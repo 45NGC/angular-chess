@@ -1,6 +1,6 @@
 import { Move } from '../../core/rules/move';
 import { buildGameStateFromMoves } from '../../core/rules/move-history';
-import { GameplayService } from './gameplay-service';
+import { GameplayService } from './gameplay-base';
 
 export abstract class MoveNavigableGame extends GameplayService {
 	isPaused?: boolean;
