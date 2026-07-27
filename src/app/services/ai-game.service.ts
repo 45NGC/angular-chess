@@ -1,8 +1,7 @@
 import { GameState } from '../core/rules/game-state';
-import { Board, fromIndex, toIndex } from '../core/board/board';
+import { Board, fromIndex } from '../core/board/board';
 import { Move } from '../core/rules/move';
 import { AttackedSquares } from '../core/rules/attacked-squares';
-import { LegalMoveFinder } from '../core/rules/legal-move-finder';
 import { loadFEN } from '../core/board/fen';
 import { INITIAL_POSITION_FEN } from '../core/constants/chess.constants';
 import { IGameService } from '../interfaces/game-service.interface';
@@ -15,15 +14,8 @@ import { MoveNavigableGame } from './shared/move-navigation';
 type Side = 'white' | 'black';
 
 export class AiGameService extends MoveNavigableGame implements IGameService {
-	state!: GameState;
-	selectedSquare: number | null = null;
-	legalMoves: Move[] = [];
-	showGameOverDialog = false;
-	showPromotionDialog = false;
-	pendingPromotionMoves: Move[] | null = null;
 	override isPaused = false;
 
-	private moveFinder = new LegalMoveFinder();
 	private stockfish = new StockfishService();
 
 	private difficulty: AiModeSettings['difficulty'];
@@ -52,40 +44,12 @@ export class AiGameService extends MoveNavigableGame implements IGameService {
 		const board = new Board();
 		loadFEN(board, INITIAL_POSITION_FEN);
 		this.state = new GameState(board);
-		this.selectedSquare = null;
-		this.legalMoves = [];
-		this.showGameOverDialog = false;
-		this.showPromotionDialog = false;
-		this.pendingPromotionMoves = null;
-		this.moveHistory = [];
-		this.redoHistory = [];
+		this.resetInteractionState();
+		this.resetNavigationState();
 		this.isPaused = false;
-		this.reviewOnly = false;
-		this.gameOverDialogDismissed = false;
 
 		this.maybeQueueAiMove();
 		this.requestRender();
-	}
-
-	handleSquareClick(rank: number, file: number): void {
-		if (!this.canInteractWithBoard()) return;
-		if (this.pendingPromotionMoves) return;
-		if (this.state.turn !== this.playerColor) return;
-
-		const square = toIndex(rank, file);
-		const piece = this.state.board.get(square);
-
-		if (this.selectedSquare === null) {
-			this.trySelectSquare(piece, square);
-			return;
-		}
-
-		if (this.isCurrentPlayerPiece(piece)) {
-			this.showLegalMoves(square);
-			return;
-		}
-
-		this.tryMoveToSquare(square);
 	}
 
 	private resolvePlayerColor(color: AiModeSettings['playerColor']): Side {
@@ -93,94 +57,32 @@ export class AiGameService extends MoveNavigableGame implements IGameService {
 		return Math.random() < 0.5 ? 'white' : 'black';
 	}
 
-	private canInteractWithBoard(): boolean {
-		return this.state.result.type === 'ongoing' && !this.isPaused && !this.reviewOnly;
-	}
-
-	private isCurrentPlayerPiece(piece: ReturnType<Board['get']>): boolean {
-		return piece != null && piece.color === this.state.turn;
-	}
-
-	private trySelectSquare(piece: ReturnType<Board['get']>, square: number): void {
-		if (!piece) return;
-		if (piece.color !== this.playerColor) return;
-		if (this.state.turn !== this.playerColor) return;
-		this.showLegalMoves(square);
-	}
-
-	clearSelection(): void {
-		this.selectedSquare = null;
-		this.legalMoves = [];
-	}
-
-	private tryMoveToSquare(square: number): void {
-		const movesToSquare = this.legalMoves.filter(m => m.to === square);
-		if (movesToSquare.length === 0) {
-			this.soundService.playError();
-			this.clearSelection();
-			this.requestRender();
-			return;
-		}
-
-		if (movesToSquare.length === 1) {
-			this.applyMove(movesToSquare[0]);
-			this.clearSelection();
-			this.requestRender();
-			this.maybeQueueAiMove();
-			return;
-		}
-
-		this.pendingPromotionMoves = movesToSquare;
-		this.showPromotionDialog = true;
-		this.requestRender();
-	}
-
-	private showLegalMoves(square: number): void {
-		this.selectedSquare = square;
-		this.legalMoves = this.moveFinder.getLegalMoves(this.state.board, square);
-	}
-
-	onPromotionSelected(pieceType: 'queen' | 'rook' | 'bishop' | 'knight'): void {
-		if (!this.pendingPromotionMoves) return;
-		if (this.state.turn !== this.playerColor) return;
-
-		const move = this.pendingPromotionMoves.find(m => m.promotion === pieceType);
-		if (move) {
-			this.applyMove(move);
-		}
-		this.closePromotionDialog();
-		this.requestRender();
-		this.maybeQueueAiMove();
-	}
-
-	closePromotionDialog(): void {
-		this.pendingPromotionMoves = null;
-		this.showPromotionDialog = false;
-		this.clearSelection();
-		this.requestRender();
-	}
-
 	closeGameOverDialog(): void {
 		this.dismissGameOverDialog();
 		this.requestRender();
 	}
 
-	getResultMessage(): string {
-		const result = this.state.result;
-		switch (result.type) {
-			case 'checkmate':
-				return `${result.winner === 'white' ? 'WHITE' : 'BLACK'} WON`;
-			case 'draw':
-				return result.reason === 'insufficientMaterial'
-					? 'DRAW (INSUFFICIENT MATERIAL)'
-					: 'DRAW (THREEFOLD REPETITION)';
-			case 'stalemate':
-				return 'STALEMATE';
-			case 'timeout':
-				return `${result.winner === 'white' ? 'WHITE' : 'BLACK'} WON ON TIME`;
-			default:
-				return '';
-		}
+	protected override canInteractWithBoard(): boolean {
+		return this.state.result.type === 'ongoing'
+			&& !this.isPaused
+			&& !this.reviewOnly
+			&& this.state.turn === this.playerColor;
+	}
+
+	protected override canSubmitPromotionSelection(): boolean {
+		return this.state.turn === this.playerColor;
+	}
+
+	protected override handleIllegalMoveTarget(): void {
+		this.soundService.playError();
+	}
+
+	protected override submitResolvedMove(move: Move): void {
+		this.applyMove(move);
+	}
+
+	protected override afterMoveSubmitted(): void {
+		this.maybeQueueAiMove();
 	}
 
 	private applyMove(move: Move): void {

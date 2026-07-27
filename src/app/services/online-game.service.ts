@@ -1,8 +1,6 @@
 import { GameState } from '../core/rules/game-state';
-import { Board, toIndex } from '../core/board/board';
 import { Move } from '../core/rules/move';
 import { AttackedSquares } from '../core/rules/attacked-squares';
-import { LegalMoveFinder } from '../core/rules/legal-move-finder';
 import { IGameService } from '../interfaces/game-service.interface';
 import {
 	OnlineRoom,
@@ -16,21 +14,15 @@ import { OnlineRoomService } from './online-room.service';
 import { SoundService } from './sound.service';
 import { Subscription } from 'rxjs';
 import { buildGameStateFromMoves } from '../core/rules/move-history';
+import { GameplayService } from './shared/gameplay-service';
 
-export class OnlineGameService implements IGameService {
-	state!: GameState;
-	selectedSquare: number | null = null;
-	legalMoves: Move[] = [];
-	showGameOverDialog = false;
-	showPromotionDialog = false;
-	pendingPromotionMoves: Move[] | null = null;
+export class OnlineGameService extends GameplayService implements IGameService {
 	moveHistory: Move[] = [];
 
 	timeControl: TimeControl;
 	lastSubmissionError: string | null = null;
 	isRequestingRematch = false;
 
-	private readonly moveFinder = new LegalMoveFinder();
 	private readonly roomSubscription: Subscription;
 	private room: OnlineRoom | null = null;
 	private currentPlayerSide: OnlineRoomSide;
@@ -45,6 +37,7 @@ export class OnlineGameService implements IGameService {
 		private session: OnlineRoomSession,
 		private requestRenderCallback: (() => void) | null = null
 	) {
+		super();
 		this.currentPlayerSide = session.playerSide;
 		const initialRoom = this.onlineRoomService.getRoom(session.roomCode);
 		this.timeControl = initialRoom?.timeControlSettings ?? {
@@ -129,26 +122,6 @@ export class OnlineGameService implements IGameService {
 		return this.isRequestingRematch || !this.canRequestRematch();
 	}
 
-	handleSquareClick(rank: number, file: number): void {
-		if (!this.canInteractWithBoard()) return;
-		if (this.pendingPromotionMoves) return;
-
-		const square = toIndex(rank, file);
-		const piece = this.state.board.get(square);
-
-		if (this.selectedSquare === null) {
-			this.trySelectSquare(piece, square);
-			return;
-		}
-
-		if (this.isCurrentPlayerPiece(piece)) {
-			this.showLegalMoves(square);
-			return;
-		}
-
-		this.tryMoveToSquare(square);
-	}
-
 	resetGame(): void {
 		if (!this.canRequestRematch()) {
 			return;
@@ -179,95 +152,31 @@ export class OnlineGameService implements IGameService {
 		});
 	}
 
-	onPromotionSelected(pieceType: 'queen' | 'rook' | 'bishop' | 'knight'): void {
-		if (!this.pendingPromotionMoves) return;
-		const move = this.pendingPromotionMoves.find(candidate => candidate.promotion === pieceType);
-		if (!move) return;
-		this.submitMove(move);
-		this.closePromotionDialog();
-	}
-
-	closePromotionDialog(): void {
-		this.pendingPromotionMoves = null;
-		this.showPromotionDialog = false;
-		this.clearSelection();
-	}
-
 	closeGameOverDialog(): void {
 		this.showGameOverDialog = false;
-	}
-
-	getResultMessage(): string {
-		if (this.room?.timeoutWinner) {
-			return `${this.room.timeoutWinner === 'white' ? 'WHITE' : 'BLACK'} WON ON TIME`;
-		}
-
-		switch (this.state.result.type) {
-			case 'checkmate':
-				return `${this.state.result.winner === 'white' ? 'WHITE' : 'BLACK'} WON`;
-			case 'draw':
-				return this.state.result.reason === 'insufficientMaterial'
-					? 'DRAW (INSUFFICIENT MATERIAL)'
-					: 'DRAW (THREEFOLD REPETITION)';
-			case 'stalemate':
-				return 'STALEMATE';
-			case 'timeout':
-				return `${this.state.result.winner === 'white' ? 'WHITE' : 'BLACK'} WON ON TIME`;
-			default:
-				return '';
-		}
-	}
-
-	clearSelection(): void {
-		this.selectedSquare = null;
-		this.legalMoves = [];
 	}
 
 	destroy(): void {
 		this.roomSubscription.unsubscribe();
 	}
 
-	private canInteractWithBoard(): boolean {
+	protected override canInteractWithBoard(): boolean {
 		if (this.room?.status !== 'ready' && this.room?.status !== 'playing') return false;
 		if (this.state.result.type !== 'ongoing') return false;
 		if (this.baseActiveClockColor === this.playerSide && this.getDisplayedTime(this.playerSide) <= 0) return false;
 		return this.state.turn === this.playerSide;
 	}
 
-	private isCurrentPlayerPiece(piece: ReturnType<Board['get']>): boolean {
-		return piece != null && piece.color === this.state.turn;
+	protected override handleIllegalMoveTarget(): void {
+		this.soundService.playError();
 	}
 
-	private trySelectSquare(piece: ReturnType<Board['get']>, square: number): void {
-		if (!piece) return;
-		if (piece.color !== this.playerSide) return;
-		if (piece.color !== this.state.turn) return;
-		this.showLegalMoves(square);
+	protected override submitResolvedMove(move: Move): void {
+		this.submitMove(move);
 	}
 
-	private showLegalMoves(square: number): void {
-		this.selectedSquare = square;
-		this.legalMoves = this.moveFinder.getLegalMoves(this.state.board, square);
-	}
-
-	private tryMoveToSquare(square: number): void {
-		const movesToSquare = this.legalMoves.filter(move => move.to === square);
-		if (movesToSquare.length === 0) {
-			this.soundService.playError();
-			this.clearSelection();
-			this.requestRender();
-			return;
-		}
-
-		if (movesToSquare.length === 1) {
-			this.submitMove(movesToSquare[0]);
-			this.clearSelection();
-			return;
-		}
-
-		this.pendingPromotionMoves = movesToSquare;
-		this.showPromotionDialog = true;
-		this.requestRender();
+	protected override getTimeoutWinnerOverride(): 'white' | 'black' | null {
+		return this.room?.timeoutWinner ?? null;
 	}
 
 	private submitMove(move: Move): void {
@@ -351,7 +260,7 @@ export class OnlineGameService implements IGameService {
 		this.requestRender();
 	}
 
-	private requestRender(): void {
+	protected override requestRender(): void {
 		this.requestRenderCallback?.();
 	}
 

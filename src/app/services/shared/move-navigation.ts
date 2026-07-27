@@ -1,16 +1,8 @@
-import { IGameService } from '../../interfaces/game-service.interface';
 import { Move } from '../../core/rules/move';
 import { buildGameStateFromMoves } from '../../core/rules/move-history';
-import { GameState } from '../../core/rules/game-state';
+import { GameplayService } from './gameplay-service';
 
-export abstract class MoveNavigableGame implements IGameService {
-	abstract state: GameState;
-	abstract selectedSquare: number | null;
-	abstract legalMoves: Move[];
-	abstract showGameOverDialog: boolean;
-	abstract showPromotionDialog: boolean;
-	abstract pendingPromotionMoves: Move[] | null;
-
+export abstract class MoveNavigableGame extends GameplayService {
 	isPaused?: boolean;
 	moveHistory: Move[] = [];
 	protected redoHistory: Move[] = [];
@@ -21,13 +13,8 @@ export abstract class MoveNavigableGame implements IGameService {
 	protected reviewOnly = false;
 	protected gameOverDialogDismissed = false;
 
-	abstract handleSquareClick(rank: number, file: number): void;
-	abstract resetGame(): void;
-	abstract onPromotionSelected(pieceType: 'queen' | 'rook' | 'bishop' | 'knight'): void;
-	abstract closePromotionDialog(): void;
-	abstract closeGameOverDialog(): void;
-	abstract getResultMessage(): string;
-	abstract clearSelection(): void;
+	abstract override resetGame(): void;
+	abstract override closeGameOverDialog(): void;
 
 	destroy?(): void;
 
@@ -114,9 +101,16 @@ export abstract class MoveNavigableGame implements IGameService {
 		this.showGameOverDialog = false;
 	}
 
+	protected resetNavigationState(): void {
+		this.moveHistory = [];
+		this.redoHistory = [];
+		this.reviewOnly = false;
+		this.gameOverDialogDismissed = false;
+	}
+
 	// Hooks for concrete services
 	protected beforeHistoryNavigation(): void { }
 	protected onHistoryNavigationStep(): void { }
 	protected afterRedoMove(): void { }
-	protected requestRender(): void { }
+	protected override requestRender(): void { }
 }

@@ -1,9 +1,8 @@
 import { Inject, Injectable, InjectionToken, Optional } from '@angular/core';
 import { GameState } from '../core/rules/game-state';
-import { Board, toIndex } from '../core/board/board';
+import { Board } from '../core/board/board';
 import { Move } from '../core/rules/move';
 import { AttackedSquares } from '../core/rules/attacked-squares';
-import { LegalMoveFinder } from '../core/rules/legal-move-finder';
 import { loadFEN } from '../core/board/fen';
 import { INITIAL_POSITION_FEN } from '../core/constants/chess.constants';
 import { LOW_TIME_THRESHOLD_MS } from '../core/constants/time.constants';
@@ -17,13 +16,6 @@ export const LOCAL_TIME_CONTROL = new InjectionToken<TimeControl>('LOCAL_TIME_CO
 
 @Injectable()
 export class LocalGameService extends MoveNavigableGame implements IGameService {
-	state!: GameState;
-	selectedSquare: number | null = null;
-	legalMoves: Move[] = [];
-	showGameOverDialog = false;
-	showPromotionDialog = false;
-	pendingPromotionMoves: Move[] | null = null;
-
 	override isPaused = false;
 	private clockFrozenByHistoryNavigation = false;
 
@@ -33,7 +25,6 @@ export class LocalGameService extends MoveNavigableGame implements IGameService 
 	blackTimeMs = 0;
 	activeClockColor: 'white' | 'black' | null = null;
 
-	private moveFinder = new LegalMoveFinder();
 	private clock: LocalClock | null = null;
 	private pausedClockColor: 'white' | 'black' | null = null;
 
@@ -57,130 +48,33 @@ export class LocalGameService extends MoveNavigableGame implements IGameService 
 		const board = new Board();
 		loadFEN(board, INITIAL_POSITION_FEN);
 		this.state = new GameState(board);
-		this.selectedSquare = null;
-		this.legalMoves = [];
-		this.showGameOverDialog = false;
-		this.showPromotionDialog = false;
-		this.pendingPromotionMoves = null;
+		this.resetInteractionState();
 		this.isPaused = false;
 		this.pausedClockColor = null;
-		this.moveHistory = [];
-		this.redoHistory = [];
-		this.reviewOnly = false;
-		this.gameOverDialogDismissed = false;
+		this.resetNavigationState();
 		this.clockFrozenByHistoryNavigation = false;
 		this.resetClock();
 	}
 
-	handleSquareClick(rank: number, file: number): void {
-		// Ignore clicks when the game is over or when the promotion dialog is awaiting a choice
-		if (!this.canInteractWithBoard()) return;
-		if (this.pendingPromotionMoves) return;
-
-		const square = toIndex(rank, file);
-		const piece = this.state.board.get(square);
-
-		// First click: select a piece (only if it belongs to the side to move) and show its legal moves
-		if (this.selectedSquare === null) {
-			this.trySelectSquare(piece, square);
-			return;
-		}
-
-		// If a piece is already selected and the player clicks another own piece, just change selection
-		if (this.isCurrentPlayerPiece(piece)) {
-			this.showLegalMoves(square);
-			return;
-		}
-
-		// Otherwise, try to play one of the currently highlighted legal moves to the clicked square
-		this.tryMoveToSquare(square);
-	}
-
-	private canInteractWithBoard(): boolean {
+	protected override canInteractWithBoard(): boolean {
 		// Board interaction is disabled once a result has been reached
 		return this.state.result.type === 'ongoing' && !this.isPaused && !this.reviewOnly;
-	}
-
-	private isCurrentPlayerPiece(piece: ReturnType<Board['get']>): boolean {
-		// Convenience helper for "piece exists and belongs to the side to move"
-		return piece != null && piece.color === this.state.turn;
-	}
-
-	private trySelectSquare(piece: ReturnType<Board['get']>, square: number): void {
-		// Only allow selecting a piece of the side to move
-		if (!this.isCurrentPlayerPiece(piece)) return;
-		this.showLegalMoves(square);
-	}
-
-	clearSelection(): void {
-		// Clear UI selection and any cached legal moves
-		this.selectedSquare = null;
-		this.legalMoves = [];
-	}
-
-	private tryMoveToSquare(square: number): void {
-		// Filter current legal moves to the destination square
-		const movesToSquare = this.legalMoves.filter(m => m.to === square);
-		if (movesToSquare.length === 0) {
-			// Clicking an unrelated square cancels the current selection
-			this.soundService.playError();
-			this.clearSelection();
-			return;
-		}
-
-		if (movesToSquare.length === 1) {
-			// Single legal move: execute immediately.
-			this.applyMove(movesToSquare[0]);
-			this.clearSelection();
-			return;
-		}
-
-		// Multiple moves mean promotion choices: open the promotion dialog
-		this.pendingPromotionMoves = movesToSquare;
-		this.showPromotionDialog = true;
-	}
-
-	private showLegalMoves(square: number): void {
-		this.selectedSquare = square;
-		this.legalMoves = this.moveFinder.getLegalMoves(this.state.board, square);
-	}
-
-	onPromotionSelected(pieceType: 'queen' | 'rook' | 'bishop' | 'knight'): void {
-		if (this.isPaused) return;
-		if (!this.pendingPromotionMoves) return;
-		const move = this.pendingPromotionMoves.find(m => m.promotion === pieceType);
-		if (move) {
-			this.applyMove(move);
-		}
-		this.closePromotionDialog();
-	}
-
-	closePromotionDialog(): void {
-		this.pendingPromotionMoves = null;
-		this.showPromotionDialog = false;
-		this.clearSelection();
 	}
 
 	closeGameOverDialog(): void {
 		this.dismissGameOverDialog();
 	}
 
-	getResultMessage(): string {
-		const result = this.state.result;
-		switch (result.type) {
-			case 'checkmate':
-				return `${result.winner === 'white' ? 'WHITE' : 'BLACK'} WON`;
-			case 'draw':
-				return result.reason === 'insufficientMaterial'
-					? 'DRAW (INSUFFICIENT MATERIAL)'
-					: 'DRAW (THREEFOLD REPETITION)';
-			case 'stalemate':
-				return 'STALEMATE';
-			case 'timeout':
-				return `${result.winner === 'white' ? 'WHITE' : 'BLACK'} WON ON TIME`;
-			default:
-				return '';
-		}
+	protected override canSubmitPromotionSelection(): boolean {
+		return !this.isPaused;
+	}
+
+	protected override handleIllegalMoveTarget(): void {
+		this.soundService.playError();
+	}
+
+	protected override submitResolvedMove(move: Move): void {
+		this.applyMove(move);
 	}
 
 	private applyMove(move: Move): void {
