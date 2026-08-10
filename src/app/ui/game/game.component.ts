@@ -47,7 +47,8 @@ export class GameComponent implements OnInit, OnDestroy {
 	private readonly filesBlack = Array.from({ length: BOARD_SIZE }, (_, i) => 7 - i);
 
 	mode: 'local' | 'ai' | 'online' | null = null;
-	private manualBoardOrientation: 'white' | 'black' = 'white';
+	private playerSideBoardOrientation: 'white' | 'black' = 'white';
+	private manualBoardOrientation: 'white' | 'black' | null = 'white';
 	autoRotateBoardLocal = false;
 	@ViewChild('boardEl') private boardEl?: ElementRef<HTMLElement>;
 
@@ -64,12 +65,16 @@ export class GameComponent implements OnInit, OnDestroy {
 
 	get boardOrientation(): 'white' | 'black' {
 		if (this.mode === 'local' && this.autoRotateBoardLocal) {
-			return this.state?.turn ?? this.manualBoardOrientation;
+			return this.state?.turn ?? this.manualBoardOrientation ?? this.playerSideBoardOrientation;
 		}
 		if (this.mode === 'online') {
-			return this.onlineGameService?.playerSide ?? this.manualBoardOrientation;
+			const playerSide = this.onlineGameService?.playerSide;
+			if (playerSide) {
+				this.playerSideBoardOrientation = playerSide;
+			}
+			return this.manualBoardOrientation ?? this.playerSideBoardOrientation;
 		}
-		return this.manualBoardOrientation;
+		return this.manualBoardOrientation ?? this.playerSideBoardOrientation;
 	}
 
 	get ranks(): number[] {
@@ -442,6 +447,7 @@ export class GameComponent implements OnInit, OnDestroy {
 			case 'local':
 				this.mode = 'local';
 				this.autoRotateBoardLocal = false;
+				this.playerSideBoardOrientation = 'white';
 				this.manualBoardOrientation = 'white';
 				this.gameService = new LocalGameService(this.soundService, timeControl);
 				break;
@@ -451,6 +457,7 @@ export class GameComponent implements OnInit, OnDestroy {
 				{
 					const service = new AiGameService(this.soundService, aiMode, () => this.cdr.detectChanges());
 					this.gameService = service;
+					this.playerSideBoardOrientation = service.playerColor;
 					this.manualBoardOrientation = service.playerColor;
 				}
 				break;
@@ -473,7 +480,8 @@ export class GameComponent implements OnInit, OnDestroy {
 						() => this.cdr.detectChanges()
 					);
 					this.gameService = service;
-					this.manualBoardOrientation = service.playerSide;
+					this.playerSideBoardOrientation = service.playerSide;
+					this.manualBoardOrientation = null;
 				}
 				break;
 			default:
