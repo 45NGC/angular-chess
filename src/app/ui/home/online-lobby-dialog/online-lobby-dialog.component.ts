@@ -104,10 +104,12 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 		if (this.isSubmitting) return;
 		if (!this.roomCodeService.isValidCode(this.joinCode)) {
 			this.joinError = 'Enter a valid 6-character code.';
+			this.cdr.detectChanges();
 			return;
 		}
 		if (this.activeSession?.roomCode === this.joinCode) {
 			this.joinError = 'You are already the host of this room.';
+			this.cdr.detectChanges();
 			return;
 		}
 
@@ -117,6 +119,7 @@ export class OnlineLobbyDialogComponent implements OnDestroy {
 				if (!result.ok) {
 					this.joinError = this.getJoinErrorMessage(result.error);
 					this.isSubmitting = false;
+					this.cdr.detectChanges();
 					return;
 				}
 

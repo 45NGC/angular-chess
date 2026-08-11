@@ -1,10 +1,12 @@
 import { HttpClient } from '@angular/common/http';
+import { beforeEach, describe, expect, it } from 'vitest';
 import { OnlineRoom } from '../interfaces/online-room.interface';
 import { OnlineRoomCodeService } from './online-room-code.service';
 import { OnlineRoomService } from './online-room.service';
 
 describe('OnlineRoomService', () => {
 	const storageKey = 'angular-chess.online-session.ABC123';
+	let storage = new Map<string, string>();
 
 	function createRoom(participants: { whiteId: string; blackId: string }): OnlineRoom {
 		return {
@@ -41,6 +43,22 @@ describe('OnlineRoomService', () => {
 	}
 
 	beforeEach(() => {
+		storage = new Map<string, string>();
+		Object.defineProperty(globalThis, 'localStorage', {
+			value: {
+				getItem: (key: string) => storage.get(key) ?? null,
+				setItem: (key: string, value: string) => {
+					storage.set(key, value);
+				},
+				removeItem: (key: string) => {
+					storage.delete(key);
+				},
+				clear: () => {
+					storage.clear();
+				}
+			},
+			configurable: true
+		});
 		localStorage.clear();
 	});
 
