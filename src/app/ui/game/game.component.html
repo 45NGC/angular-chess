@@ -1,13 +1,17 @@
 @if (gameService) {
   <div class="game-container">
     <div class="board-area">
-      @if (showOnlineConnectionBanner) {
-        <div class="online-banner online-banner--warning">{{ onlineConnectionMessage }}</div>
-      }
+      @if (showOnlineConnectionBanner || showOnlineErrorBanner) {
+        <div class="online-banners">
+          @if (showOnlineConnectionBanner) {
+            <div class="online-banner online-banner--warning">{{ onlineConnectionMessage }}</div>
+          }
 
-      @if (showOnlineErrorBanner) {
-        <div class="online-banner online-banner--error">
-          {{ onlineGameService?.lastSubmissionError }}
+          @if (showOnlineErrorBanner) {
+            <div class="online-banner online-banner--error">
+              {{ onlineGameService?.lastSubmissionError }}
+            </div>
+          }
         </div>
       }
 
