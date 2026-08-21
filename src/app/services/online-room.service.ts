@@ -23,6 +23,7 @@ import {
 import { OnlineGameSettings } from '../interfaces/online-game-settings.interface';
 import { OnlineRoomCodeService } from './online-room-code.service';
 import { Move } from '../core/rules/move';
+import { environment } from '../../environments/environment';
 
 interface OnlineRoomUpdateEvent {
 	room: OnlineRoom;
@@ -41,8 +42,8 @@ export class OnlineRoomService {
 	private readonly topicSubscriptions = new Map<string, StompSubscription>();
 	private readonly connectionStateSubject = new BehaviorSubject<OnlineConnectionState>('idle');
 	private readonly connectionMessageSubject = new BehaviorSubject<string | null>(null);
-	private readonly apiBaseUrl = this.buildApiBaseUrl();
-	private readonly webSocketUrl = this.buildWebSocketUrl();
+	private readonly apiBaseUrl = environment.onlineBackend.apiBaseUrl;
+	private readonly webSocketUrl = environment.onlineBackend.webSocketUrl;
 
 	private stompClient: Client | null = null;
 	private connectionPromise: Promise<void> | null = null;
@@ -305,21 +306,6 @@ export class OnlineRoomService {
 			return 'black';
 		}
 		return null;
-	}
-
-	private buildApiBaseUrl(): string {
-		if (typeof window === 'undefined') {
-			return 'http://localhost:8080';
-		}
-		return `${window.location.protocol === 'https:' ? 'https' : 'http'}://${window.location.hostname}:8080`;
-	}
-
-	private buildWebSocketUrl(): string {
-		if (typeof window === 'undefined') {
-			return 'ws://localhost:8080/ws';
-		}
-		const protocol = window.location.protocol === 'https:' ? 'wss' : 'ws';
-		return `${protocol}://${window.location.hostname}:8080/ws`;
 	}
 
 	private storeSession(session: OnlineRoomSession): void {
