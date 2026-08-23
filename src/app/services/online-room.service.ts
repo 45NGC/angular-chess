@@ -186,7 +186,7 @@ export class OnlineRoomService {
 		}
 
 		this.connectionStateSubject.next('connecting');
-		this.connectionMessageSubject.next('Connecting to live updates...');
+		this.connectionMessageSubject.next(null);
 		void this.ensureStompConnection()
 			.then(() => {
 				this.subscribeToRoomTopic(code);

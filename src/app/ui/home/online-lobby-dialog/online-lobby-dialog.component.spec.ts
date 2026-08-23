@@ -4,6 +4,7 @@ import { Router } from '@angular/router';
 import { of } from 'rxjs';
 import { describe, expect, it, vi } from 'vitest';
 import { OnlineRoomCodeService } from '../../../services/online-room-code.service';
+import { OnlineConnectionState } from '../../../services/online-room.service';
 import { OnlineRoomService } from '../../../services/online-room.service';
 import { OnlineLobbyDialogComponent } from './online-lobby-dialog.component';
 
@@ -17,10 +18,12 @@ describe('OnlineLobbyDialogComponent', () => {
 	function createComponent(options?: {
 		joinRoom?: OnlineRoomService['joinRoom'];
 		detectChanges?: () => void;
+		connectionState?: OnlineConnectionState;
+		connectionMessage?: string | null;
 	}) {
 		const onlineRoomService = {
-			watchConnectionState: () => of('idle'),
-			watchConnectionMessage: () => of(null),
+			watchConnectionState: () => of(options?.connectionState ?? 'idle'),
+			watchConnectionMessage: () => of(options?.connectionMessage ?? null),
 			createRoom: vi.fn(),
 			joinRoom: options?.joinRoom ?? vi.fn(),
 			watchRoom: vi.fn()
@@ -59,5 +62,15 @@ describe('OnlineLobbyDialogComponent', () => {
 		expect(component.joinError).toBe('Room not found.');
 		expect(component.isSubmitting).toBe(false);
 		expect(detectChanges).toHaveBeenCalled();
+	});
+
+	it('shows the live updates warning when the connection is unavailable', () => {
+		const { component } = createComponent({
+			connectionState: 'disconnected',
+			connectionMessage: 'Live updates are temporarily unavailable.'
+		});
+
+		expect(component.showConnectionNotice).toBe(true);
+		expect(component.connectionMessage).toBe('Live updates are temporarily unavailable.');
 	});
 });
