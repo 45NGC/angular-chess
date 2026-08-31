@@ -48,10 +48,10 @@ When the user confirms, it navigates to:
 
 with these query params:
 
-- `baseW`
-- `incW`
-- `baseB`
-- `incB`
+- `baseTimeWhite`
+- `incrementWhite`
+- `baseTimeBlack`
+- `incrementBlack`
 
 These values represent the base time and increment for White and Black.
 
@@ -116,7 +116,7 @@ If the mode is not valid, the component does not create a game service and logs 
 
 ### Local Mode Parameters
 
-The values `baseW`, `incW`, `baseB`, and `incB` are transformed into a `TimeControl` object.
+The values `baseTimeWhite`, `incrementWhite`, `baseTimeBlack`, and `incrementBlack` are transformed into a `TimeControl` object.
 
 If they are missing or invalid, the component falls back to safe values:
 

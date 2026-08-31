@@ -23,10 +23,10 @@ When the user confirms, the application navigates to:
 
 with these query params:
 
-- `baseW`
-- `incW`
-- `baseB`
-- `incB`
+- `baseTimeWhite`
+- `incrementWhite`
+- `baseTimeBlack`
+- `incrementBlack`
 
 ## Creating The Game Service
 

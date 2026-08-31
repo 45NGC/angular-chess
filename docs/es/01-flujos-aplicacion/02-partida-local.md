@@ -23,10 +23,10 @@ Cuando el usuario confirma, la aplicación navega a:
 
 con estos query params:
 
-- `baseW`
-- `incW`
-- `baseB`
-- `incB`
+- `baseTimeWhite`
+- `incrementWhite`
+- `baseTimeBlack`
+- `incrementBlack`
 
 ## Creación Del Servicio De Juego
 

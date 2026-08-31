@@ -167,10 +167,10 @@ export class GameComponent implements OnInit, OnDestroy {
 		this.subscriptions.add(combineLatest([this.route.paramMap, this.route.queryParamMap]).subscribe(([params, query]) => {
 			const mode = params.get('mode');
 			const timeControl = this.parseTimeControl(
-				query.get('baseW'),
-				query.get('incW'),
-				query.get('baseB'),
-				query.get('incB')
+				query.get('baseTimeWhite'),
+				query.get('incrementWhite'),
+				query.get('baseTimeBlack'),
+				query.get('incrementBlack')
 			);
 			const aiMode = this.parseAiMode(query.get('difficulty'), query.get('color'));
 			this.selectService(mode, timeControl, aiMode, query.get('code'), query.get('playerId'), query.get('side'));
@@ -417,10 +417,15 @@ export class GameComponent implements OnInit, OnDestroy {
 		};
 	}
 
-	private parseTimeControl(baseW: string | null, incW: string | null, baseB: string | null, incB: string | null): TimeControl {
+	private parseTimeControl(
+		baseTimeWhite: string | null,
+		incrementWhite: string | null,
+		baseTimeBlack: string | null,
+		incrementBlack: string | null
+	): TimeControl {
 		return {
-			white: this.parseSide(baseW, incW),
-			black: this.parseSide(baseB, incB)
+			white: this.parseSide(baseTimeWhite, incrementWhite),
+			black: this.parseSide(baseTimeBlack, incrementBlack)
 		};
 	}
 

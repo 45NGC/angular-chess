@@ -58,10 +58,10 @@ export class HomeComponent {
 		this.showTimeControlDialog = false;
 		this.router.navigate(['/game', 'local'], {
 			queryParams: {
-				baseW: settings.white.baseMinutes,
-				incW: settings.white.incrementSeconds,
-				baseB: settings.black.baseMinutes,
-				incB: settings.black.incrementSeconds
+				baseTimeWhite: settings.white.baseMinutes,
+				incrementWhite: settings.white.incrementSeconds,
+				baseTimeBlack: settings.black.baseMinutes,
+				incrementBlack: settings.black.incrementSeconds
 			}
 		});
 	}
