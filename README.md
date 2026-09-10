@@ -21,7 +21,7 @@
 - Draw by threefold repetition
 - Draw by insufficient material
 
-### Play modes
+### Game modes
 
 - Local two-player mode
 - AI mode with Stockfish
