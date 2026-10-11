@@ -68,6 +68,10 @@ Game services orchestrate each mode:
 
 The online backend lives in the separate `springboot-chess` repository. It manages rooms in memory, validates moves authoritatively, and publishes full room snapshots through WebSocket.
 
+
+[![Architecture diagram of 45ngc/angular-chess](https://gitdiagram.com/45ngc/angular-chess/diagram.png)](https://gitdiagram.com/45ngc/angular-chess?utm_source=readme&utm_medium=picture)
+
+
 ## Documentation
 
 Detailed application-flow documentation is available in both languages:
